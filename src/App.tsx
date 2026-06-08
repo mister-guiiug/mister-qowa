@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
+import { MotionConfig } from "framer-motion";
 import { Home } from "./routes/Home";
 import { UpdatePrompt } from "./components/UpdatePrompt";
 import { Spinner } from "./lib/ui";
@@ -33,29 +34,31 @@ const History = lazy(() =>
 
 export function App() {
   return (
-    <HashRouter>
-      <Suspense
-        fallback={
-          <div className="flex min-h-dvh items-center justify-center">
-            <Spinner />
-          </div>
-        }
-      >
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/create" element={<Create />} />
-          <Route path="/create/ai" element={<AiGenerate />} />
-          <Route path="/create/new" element={<QuizEditor />} />
-          <Route path="/create/:quizId" element={<QuizEditor />} />
-          <Route path="/host/:sessionId" element={<Host />} />
-          <Route path="/join" element={<Join />} />
-          <Route path="/play/:sessionId" element={<Play />} />
-          <Route path="/solo" element={<Solo />} />
-          <Route path="/history" element={<History />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
-      <UpdatePrompt />
-    </HashRouter>
+    <MotionConfig reducedMotion="user">
+      <HashRouter>
+        <Suspense
+          fallback={
+            <div className="flex min-h-dvh items-center justify-center">
+              <Spinner />
+            </div>
+          }
+        >
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/create" element={<Create />} />
+            <Route path="/create/ai" element={<AiGenerate />} />
+            <Route path="/create/new" element={<QuizEditor />} />
+            <Route path="/create/:quizId" element={<QuizEditor />} />
+            <Route path="/host/:sessionId" element={<Host />} />
+            <Route path="/join" element={<Join />} />
+            <Route path="/play/:sessionId" element={<Play />} />
+            <Route path="/solo" element={<Solo />} />
+            <Route path="/history" element={<History />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+        <UpdatePrompt />
+      </HashRouter>
+    </MotionConfig>
   );
 }

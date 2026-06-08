@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Check, X, Play } from "lucide-react";
 import { Screen, Button, Card } from "../lib/ui";
 import { AnswerGrid } from "../components/AnswerGrid";
+import { feedback } from "../lib/feedback";
 import { DEMO_QUIZZES } from "@shared/seed";
 import { useQuizLibrary } from "../store/quizStore";
 import { isCorrect, basePointsOf, publicQuestionFields } from "@shared/game";
@@ -59,6 +60,7 @@ export function Solo() {
     setLastAwarded(awarded);
     setLastCorrect(correct);
     setPhase("reveal");
+    if (q.type !== "poll") (correct ? feedback.correct : feedback.wrong)();
   }
 
   // Temps écoulé -> on clôt la question (sans réponse).
@@ -85,6 +87,7 @@ export function Solo() {
     if (!quiz) return;
     if (index + 1 >= quiz.questions.length) {
       setPhase("done");
+      feedback.finish();
       return;
     }
     setIndex(index + 1);
@@ -178,7 +181,8 @@ export function Solo() {
       {q.mediaUrl ? (
         <img
           src={q.mediaUrl}
-          alt=""
+          alt={q.mediaAlt ?? ""}
+          decoding="async"
           className="mt-3 max-h-48 w-full rounded-2xl object-contain"
         />
       ) : null}
@@ -212,11 +216,16 @@ export function Solo() {
       ) : (
         <div className="mt-6 flex flex-col gap-6">
           {q.type === "poll" ? (
-            <div className="rounded-3xl bg-white/10 p-6 text-center">
+            <div
+              role="status"
+              className="rounded-3xl bg-white/10 p-6 text-center"
+            >
               <p className="font-display text-2xl">Vote enregistré 🗳️</p>
             </div>
           ) : (
             <div
+              role="status"
+              aria-live="polite"
               className={`rounded-3xl p-6 text-center ${lastCorrect ? "bg-answer-green/30" : "bg-answer-red/30"}`}
             >
               {lastCorrect ? (

@@ -100,6 +100,27 @@ function teamStandings(
     .sort((a, b) => b.total - a.total);
 }
 
+type PlayerLite = { pseudo: string; teamId?: string; avatar?: string };
+
+/** Classement tronqué (avec avatar quand présent) à partir des scores. */
+function buildRanking(
+  scores: Record<string, Score>,
+  players: Record<string, PlayerLite>,
+) {
+  return Object.entries(scores)
+    .map(([pid, s]) => {
+      const av = players[pid]?.avatar;
+      return {
+        uid: pid,
+        pseudo: players[pid]?.pseudo ?? "?",
+        total: s.total,
+        ...(av ? { avatar: av } : {}),
+      };
+    })
+    .sort((a, b) => b.total - a.total)
+    .slice(0, LEADERBOARD_TOP);
+}
+
 /* ---------- host ---------- */
 
 export async function createSession(
@@ -177,10 +198,7 @@ export async function closeQuestion(
     Record<string, AnswerNode>
   >;
   const scores = (scoresSnap.val() ?? {}) as Record<string, Score>;
-  const players = (playersSnap.val() ?? {}) as Record<
-    string,
-    { pseudo: string; teamId?: string }
-  >;
+  const players = (playersSnap.val() ?? {}) as Record<string, PlayerLite>;
 
   // Dédup par joueur (1re réponse retenue) — écriture multi-shard forgée neutralisée.
   const flat = new Map<string, AnswerNode>();
@@ -223,14 +241,7 @@ export async function closeQuestion(
   if (q.type !== "poll") {
     updates[`${revealPath(sessionId, q.id)}/correct`] = correctChoiceOf(q);
   }
-  updates[leaderboardPath(sessionId)] = Object.entries(scores)
-    .map(([pid, s]) => ({
-      uid: pid,
-      pseudo: players[pid]?.pseudo ?? "?",
-      total: s.total,
-    }))
-    .sort((a, b) => b.total - a.total)
-    .slice(0, LEADERBOARD_TOP);
+  updates[leaderboardPath(sessionId)] = buildRanking(scores, players);
   const teams = (metaSnap.val() as { teams?: Team[] } | null)?.teams;
   if (teams?.length) {
     updates[teamLeaderboardPath(sessionId)] = teamStandings(
@@ -252,18 +263,8 @@ export async function endGame(sessionId: string, quiz?: Quiz): Promise<void> {
     get(ref(db, metaPath(sessionId))),
   ]);
   const scores = (scoresSnap.val() ?? {}) as Record<string, Score>;
-  const players = (playersSnap.val() ?? {}) as Record<
-    string,
-    { pseudo: string; teamId?: string }
-  >;
-  const ranking = Object.entries(scores)
-    .map(([pid, s]) => ({
-      uid: pid,
-      pseudo: players[pid]?.pseudo ?? "?",
-      total: s.total,
-    }))
-    .sort((a, b) => b.total - a.total)
-    .slice(0, LEADERBOARD_TOP);
+  const players = (playersSnap.val() ?? {}) as Record<string, PlayerLite>;
+  const ranking = buildRanking(scores, players);
   const finalUpdate: Record<string, unknown> = {
     [leaderboardPath(sessionId)]: ranking,
     [statePath(sessionId)]: "PODIUM",
@@ -316,6 +317,7 @@ export async function joinSession(
   pin: string,
   pseudo: string,
   teamId?: string,
+  avatar?: string,
 ): Promise<{ sessionId: string }> {
   const user = await ensureAuth();
   const db = getDb();
@@ -323,6 +325,8 @@ export async function joinSession(
   if (!sid || typeof sid !== "string") throw new Error("PIN invalide.");
   const state = (await get(ref(db, statePath(sid)))).val();
   if (state !== "LOBBY") throw new Error("La partie a déjà commencé.");
+  const bannedSnap = await get(ref(db, `${metaPath(sid)}/banned/${user.uid}`));
+  if (bannedSnap.exists()) throw new Error("Tu as été retiré de cette partie.");
   const playersSnap = await get(ref(db, playersPath(sid)));
   const count = playersSnap.exists()
     ? Object.keys(playersSnap.val() as object).length
@@ -333,10 +337,54 @@ export async function joinSession(
     pseudo,
     joinedAt: Date.now(),
     ...(teamId ? { teamId } : {}),
+    ...(avatar ? { avatar } : {}),
   });
   // Présence : retire le joueur du lobby s'il se déconnecte.
   void onDisconnect(playerRef).remove();
   return { sessionId: sid };
+}
+
+/** Exclut un joueur (host) : retire son nœud et le bannit (anti re-join). */
+export async function kickPlayer(
+  sessionId: string,
+  uid: string,
+): Promise<void> {
+  await update(ref(getDb()), {
+    [playerPath(sessionId, uid)]: null,
+    [`${metaPath(sessionId)}/banned/${uid}`]: true,
+  });
+}
+
+/** Saute la question courante sans la scorer : passe à la suivante (ou au podium). */
+export async function skipQuestion(
+  sessionId: string,
+  quiz: Quiz,
+  index: number,
+): Promise<void> {
+  if (index + 1 < quiz.questions.length)
+    await nextQuestion(sessionId, quiz, index + 1);
+  else await endGame(sessionId, quiz);
+}
+
+/** Revanche : remet la session en LOBBY, purge la partie, conserve joueurs + PIN. */
+export async function restartSession(
+  sessionId: string,
+  quiz: Quiz,
+): Promise<void> {
+  const db = getDb();
+  const updates: Record<string, unknown> = {
+    [statePath(sessionId)]: "LOBBY",
+    [currentPath(sessionId)]: null,
+    [scoresPath(sessionId)]: null,
+    [leaderboardPath(sessionId)]: null,
+    [teamLeaderboardPath(sessionId)]: null,
+  };
+  // Purge réponses + reveal de CHAQUE question (sinon !data.exists() rebloque).
+  for (const q of quiz.questions) {
+    updates[answersQuestionPath(sessionId, q.id)] = null;
+    updates[revealPath(sessionId, q.id)] = null;
+  }
+  await hostWrite("restartSession", () => update(ref(db), updates));
 }
 
 /** Réaction emoji éphémère (push RTDB). */

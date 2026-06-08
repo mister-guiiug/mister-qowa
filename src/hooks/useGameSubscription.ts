@@ -19,6 +19,8 @@ import {
   leaderboardPath,
   playersPath,
   playerRevealPath,
+  revealPath,
+  metaPath,
   answersQuestionPath,
   reactionsPath,
   teamLeaderboardPath,
@@ -66,6 +68,10 @@ export interface PlayerView {
   current: PublicQuestion | undefined;
   score: Score | undefined;
   reveal: PlayerReveal | undefined;
+  /** Bonne réponse publiée (choix gagnant) — lisible après clôture. */
+  correctChoice: string | undefined;
+  /** Le joueur a-t-il été exclu par le host ? */
+  kicked: boolean;
   leaderboard: LeaderboardEntry[];
 }
 
@@ -90,11 +96,21 @@ export function usePlayerView(
       ? playerRevealPath(sessionId, current.questionId, uid)
       : null,
   );
+  const correctChoice = useRtdbValue<string>(
+    sessionId && current
+      ? `${revealPath(sessionId, current.questionId)}/correct`
+      : null,
+  );
+  const kicked = useRtdbValue<boolean>(
+    sessionId && uid ? `${metaPath(sessionId)}/banned/${uid}` : null,
+  );
   return {
     state,
     current,
     score,
     reveal,
+    correctChoice,
+    kicked: kicked === true,
     leaderboard: asArray<LeaderboardEntry>(leaderboardRaw),
   };
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useServerOffset } from "../hooks/useServerTime";
+import { feedback } from "../lib/feedback";
 
 /** Compte à rebours basé sur l'instant serveur `endsAt` (ms epoch), horloge alignée. */
 export function Countdown({ endsAt }: { endsAt: number }) {
@@ -10,6 +11,11 @@ export function Countdown({ endsAt }: { endsAt: number }) {
     return () => clearInterval(id);
   }, []);
   const remaining = Math.max(0, Math.ceil((endsAt - (now + offset)) / 1000));
+
+  // Tic des 3 dernières secondes (une fois par seconde entière).
+  useEffect(() => {
+    if (remaining > 0 && remaining <= 3) feedback.tick();
+  }, [remaining]);
   return (
     <div
       className="font-display text-4xl tabular-nums"

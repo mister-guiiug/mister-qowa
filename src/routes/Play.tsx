@@ -17,6 +17,7 @@ import { Countdown } from "../components/Countdown";
 import { Leaderboard } from "../components/Leaderboard";
 import { Podium } from "../components/Podium";
 import { ConnectionBanner } from "../components/ConnectionBanner";
+import { feedback } from "../lib/feedback";
 import { errMsg } from "../lib/err";
 
 export function Play() {
@@ -25,10 +26,8 @@ export function Play() {
   const uid = useAuthUid();
   const pseudo = useGameStore((s) => s.pseudo);
   const reset = useGameStore((s) => s.reset);
-  const { state, current, reveal, leaderboard, score } = usePlayerView(
-    sessionId ?? null,
-    uid,
-  );
+  const { state, current, reveal, correctChoice, kicked, leaderboard, score } =
+    usePlayerView(sessionId ?? null, uid);
   const reactions = useReactions(sessionId ?? null);
   const teamStandings = useTeamLeaderboard(sessionId ?? null);
   const [picked, setPicked] = useState<string | null>(null);
@@ -51,6 +50,18 @@ export function Play() {
     return () => clearTimeout(id);
   }, [state]);
 
+  // Son/vibration au résultat de la question.
+  useEffect(() => {
+    if (state !== "LEADERBOARD" || !reveal) return;
+    if (reveal.correct) feedback.correct();
+    else feedback.wrong();
+  }, [state, reveal]);
+
+  // Fanfare au podium.
+  useEffect(() => {
+    if (state === "PODIUM") feedback.finish();
+  }, [state]);
+
   async function pick(choice: string) {
     if (!sessionId || !current || picked) return;
     setPicked(choice);
@@ -64,6 +75,24 @@ export function Play() {
   }
 
   if (!sessionId) return <Navigate to="/" replace />;
+  if (kicked)
+    return (
+      <Screen className="justify-center">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <p className="font-display text-2xl">Tu as été retiré</p>
+          <p className="text-white/60">L’hôte t’a exclu de cette partie.</p>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              reset();
+              nav("/");
+            }}
+          >
+            Retour à l’accueil
+          </Button>
+        </div>
+      </Screen>
+    );
   if (!uid || !state)
     return (
       <Screen className="justify-center">
@@ -115,7 +144,8 @@ export function Play() {
           {current.mediaUrl ? (
             <img
               src={current.mediaUrl}
-              alt=""
+              alt={current.mediaAlt ?? ""}
+              decoding="async"
               className="max-h-48 w-full rounded-2xl object-contain"
             />
           ) : null}
@@ -165,11 +195,16 @@ export function Play() {
       {state === "LEADERBOARD" ? (
         <div className="flex flex-1 flex-col gap-6">
           {current && !current.scored ? (
-            <div className="rounded-3xl bg-white/10 p-6 text-center">
+            <div
+              role="status"
+              className="rounded-3xl bg-white/10 p-6 text-center"
+            >
               <p className="font-display text-2xl">Merci pour ton vote 🗳️</p>
             </div>
           ) : reveal ? (
             <div
+              role="status"
+              aria-live="polite"
               className={`rounded-3xl p-6 text-center ${
                 reveal.correct ? "bg-answer-green/30" : "bg-answer-red/30"
               }`}
@@ -185,13 +220,43 @@ export function Play() {
               <p className="text-white/80">+{reveal.awarded} pts</p>
             </div>
           ) : picked === null ? (
-            <div className="rounded-3xl bg-answer-red/20 p-6 text-center">
+            <div
+              role="status"
+              className="rounded-3xl bg-answer-red/20 p-6 text-center"
+            >
               <p className="font-display text-2xl">Pas de réponse</p>
               <p className="text-white/70">+0 pt</p>
             </div>
           ) : (
             <p className="text-center text-white/60">Résultats…</p>
           )}
+          {current?.options && correctChoice ? (
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {current.options.map((o) => {
+                const ok = o.id === correctChoice;
+                const myWrong = o.id === picked && !ok;
+                return (
+                  <div
+                    key={o.id}
+                    className={`flex items-center gap-2 rounded-xl p-3 text-sm font-semibold ${
+                      ok
+                        ? "bg-answer-green/40"
+                        : myWrong
+                          ? "bg-answer-red/40"
+                          : "bg-white/5 text-white/50"
+                    }`}
+                  >
+                    {ok ? (
+                      <Check className="size-4 shrink-0" />
+                    ) : myWrong ? (
+                      <X className="size-4 shrink-0" />
+                    ) : null}
+                    <span>{o.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : null}
           {teamStandings.length ? (
             <TeamLeaderboard standings={teamStandings} />
           ) : null}

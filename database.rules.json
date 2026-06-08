@@ -61,7 +61,7 @@
         "players": {
           ".read": true,
           "$uid": {
-            ".write": "auth != null && ($uid === auth.uid || root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid)",
+            ".write": "auth != null && ($uid === auth.uid || root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid) && !root.child('sessions').child($sid).child('meta').child('banned').child($uid).exists()",
             ".validate": "newData.hasChildren(['pseudo','joinedAt'])",
             "pseudo": {
               ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 20"
@@ -69,6 +69,9 @@
             "joinedAt": { ".validate": "newData.isNumber()" },
             "lastSeen": { ".validate": "newData.isNumber()" },
             "teamId": { ".validate": "newData.isString()" },
+            "avatar": {
+              ".validate": "newData.isString() && newData.val().length <= 8"
+            },
             "$other": { ".validate": false }
           }
         },
@@ -76,6 +79,7 @@
         "answers": {
           ".read": "auth != null && root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid",
           "$qid": {
+            ".write": "auth != null && root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid && !newData.exists()",
             "$shard": {
               "$uid": {
                 ".write": "auth != null && auth.uid === $uid && !data.exists() && root.child('sessions').child($sid).child('state').val() === 'QUESTION_ACTIVE' && now < (root.child('sessions').child($sid).child('current').child('activatedAt').val() + root.child('sessions').child($sid).child('current').child('timeLimitMs').val())",

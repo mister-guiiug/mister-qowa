@@ -6,6 +6,7 @@ import { lookupSession, joinSession } from "../firebase/api";
 import { useGameStore } from "../store/gameStore";
 import { errMsg } from "../lib/err";
 import { PIN_LENGTH, MAX_PSEUDO_LEN } from "@shared/gameState";
+import { AVATARS } from "@shared/avatars";
 import type { Team } from "@shared/teams";
 
 export function Join() {
@@ -16,6 +17,7 @@ export function Join() {
     (searchParams.get("pin") ?? "").replace(/\D/g, "").slice(0, PIN_LENGTH),
   );
   const [pseudo, setPseudo] = useState("");
+  const [avatar, setAvatar] = useState<string>(AVATARS[0]);
   const [teams, setTeams] = useState<Team[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +28,12 @@ export function Join() {
     setBusy(true);
     setError(null);
     try {
-      const { sessionId } = await joinSession(pin, pseudo.trim(), teamId);
+      const { sessionId } = await joinSession(
+        pin,
+        pseudo.trim(),
+        teamId,
+        avatar,
+      );
       setPlayer({ sessionId, pin, pseudo: pseudo.trim() });
       nav(`/play/${sessionId}`);
     } catch (e) {
@@ -88,19 +95,39 @@ export function Join() {
         </div>
       ) : (
         <form onSubmit={submit} className="mt-6 flex flex-col gap-4">
-          <label className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1">
             <span className="text-sm text-white/60">Code PIN</span>
-            <input
-              inputMode="numeric"
-              autoComplete="off"
-              value={pin}
-              onChange={(e) =>
-                setPin(e.target.value.replace(/\D/g, "").slice(0, PIN_LENGTH))
-              }
-              placeholder="12345678"
-              className="rounded-2xl bg-white/10 px-4 py-3 text-center font-display text-2xl tracking-[0.25em] outline-none ring-1 ring-white/15 focus:ring-brand"
-            />
-          </label>
+            {/* Un seul input réel (transparent, au-dessus) pilote 8 cases visuelles :
+                préserve collage, autofill et lecteurs d'écran. */}
+            <div className="relative">
+              <input
+                inputMode="numeric"
+                autoComplete="off"
+                value={pin}
+                onChange={(e) =>
+                  setPin(e.target.value.replace(/\D/g, "").slice(0, PIN_LENGTH))
+                }
+                aria-label={`Code PIN, ${pin.length} sur ${PIN_LENGTH} chiffres`}
+                className="absolute inset-0 z-10 w-full cursor-pointer text-transparent caret-transparent opacity-0"
+              />
+              <div aria-hidden className="flex justify-between gap-1.5">
+                {Array.from({ length: PIN_LENGTH }, (_, i) => (
+                  <div
+                    key={i}
+                    className={`flex h-12 flex-1 items-center justify-center rounded-xl font-display text-xl tabular-nums ring-1 transition ${
+                      pin.length === PIN_LENGTH
+                        ? "bg-answer-green/15 ring-answer-green"
+                        : i < pin.length
+                          ? "bg-white/10 ring-brand"
+                          : "bg-white/5 ring-white/15"
+                    }`}
+                  >
+                    {pin[i] ?? ""}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
           <label className="flex flex-col gap-1">
             <span className="text-sm text-white/60">Ton pseudo</span>
             <input
@@ -111,6 +138,28 @@ export function Join() {
               className="rounded-2xl bg-white/10 px-4 py-3 text-lg outline-none ring-1 ring-white/15 focus:ring-brand"
             />
           </label>
+
+          <div className="flex flex-col gap-1">
+            <span className="text-sm text-white/60">Ton avatar</span>
+            <div className="flex flex-wrap gap-2">
+              {AVATARS.map((a) => (
+                <button
+                  key={a}
+                  type="button"
+                  onClick={() => setAvatar(a)}
+                  aria-pressed={avatar === a}
+                  aria-label={`Avatar ${a}`}
+                  className={`flex size-10 items-center justify-center rounded-xl text-xl ring-1 transition ${
+                    avatar === a
+                      ? "bg-brand/30 ring-brand"
+                      : "bg-white/5 ring-white/15 hover:bg-white/10"
+                  }`}
+                >
+                  {a}
+                </button>
+              ))}
+            </div>
+          </div>
 
           {error ? (
             <p className="rounded-xl bg-rose-500/20 px-4 py-2 text-sm text-rose-200">

@@ -12,6 +12,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Screen, Button, Card, Spinner } from "../lib/ui";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { DEMO_QUIZZES } from "@shared/seed";
 import type { Quiz } from "@shared/contracts";
 import { createSession } from "../firebase/api";
@@ -32,6 +33,7 @@ export function Create() {
   const [error, setError] = useState<string | null>(null);
   const [teamMode, setTeamMode] = useState(false);
   const [teamCount, setTeamCount] = useState(2);
+  const [pendingDelete, setPendingDelete] = useState<Quiz | null>(null);
 
   async function host(quiz: Quiz) {
     setBusy(quiz.id);
@@ -180,10 +182,7 @@ export function Create() {
                   </Button>
                   <Button
                     variant="ghost"
-                    onClick={() => {
-                      if (window.confirm(`Supprimer « ${q.title} » ?`))
-                        remove(q.id);
-                    }}
+                    onClick={() => setPendingDelete(q)}
                     aria-label="Supprimer"
                   >
                     <Trash2 className="size-4" />
@@ -230,6 +229,20 @@ export function Create() {
       </section>
 
       {busy ? <Spinner label="Création de la partie…" /> : null}
+
+      {pendingDelete ? (
+        <ConfirmDialog
+          title={`Supprimer « ${pendingDelete.title} » ?`}
+          message="Cette action est définitive."
+          confirmLabel="Supprimer"
+          danger
+          onConfirm={() => {
+            remove(pendingDelete.id);
+            setPendingDelete(null);
+          }}
+          onCancel={() => setPendingDelete(null)}
+        />
+      ) : null}
     </Screen>
   );
 }

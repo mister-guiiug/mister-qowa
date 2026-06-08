@@ -26,6 +26,11 @@ export function Podium({ entries }: { entries: LeaderboardEntry[] }) {
               className="flex flex-1 flex-col items-center gap-2"
             >
               <span className="text-2xl">{MEDALS[rank]}</span>
+              {e.avatar ? (
+                <span className="text-xl" aria-hidden>
+                  {e.avatar}
+                </span>
+              ) : null}
               <span className="max-w-full truncate text-sm font-semibold">
                 {e.pseudo}
               </span>

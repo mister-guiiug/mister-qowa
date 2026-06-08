@@ -27,6 +27,8 @@ const baseQuestion = {
   id: z.string().min(1),
   prompt: z.string().min(1).max(300),
   mediaUrl: z.string().url().optional(),
+  /** Texte alternatif de l'image (a11y) — publiable, ne doit pas révéler la réponse. */
+  mediaAlt: z.string().max(200).optional(),
   timeLimitMs: z.number().int().positive(),
 };
 
@@ -82,6 +84,7 @@ export const publicQuestionSchema = z.object({
   type: questionTypeSchema,
   prompt: z.string(),
   mediaUrl: z.string().optional(),
+  mediaAlt: z.string().optional(),
   options: z.array(optionSchema).optional(),
   activatedAt: z.number().int(),
   timeLimitMs: z.number().int().positive(),
@@ -94,6 +97,7 @@ export const playerSchema = z.object({
   joinedAt: z.number().int(),
   lastSeen: z.number().int().optional(),
   teamId: z.string().optional(),
+  avatar: z.string().max(8).optional(),
 });
 export type Player = z.infer<typeof playerSchema>;
 
@@ -107,6 +111,7 @@ export const leaderboardEntrySchema = z.object({
   uid: z.string(),
   pseudo: z.string(),
   total: z.number().int().nonnegative(),
+  avatar: z.string().optional(),
 });
 export type LeaderboardEntry = z.infer<typeof leaderboardEntrySchema>;
 

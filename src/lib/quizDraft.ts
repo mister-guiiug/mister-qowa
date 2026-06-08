@@ -19,6 +19,7 @@ export interface DraftQuestion {
   acceptedAnswers: string[]; // free_text
   caseSensitive: boolean; // free_text
   mediaUrl?: string; // image optionnelle
+  mediaAlt?: string; // texte alternatif de l'image (a11y)
 }
 
 export interface DraftQuiz {
@@ -99,6 +100,7 @@ export function toDraft(quiz: Quiz): DraftQuiz {
       base.timeLimitMs = q.timeLimitMs;
       base.basePoints = q.type === "poll" ? DEFAULT_BASE_POINTS : q.basePoints;
       base.mediaUrl = q.mediaUrl;
+      base.mediaAlt = q.mediaAlt;
       if (q.type === "multiple_choice") {
         base.options = q.options;
         base.correctOptionId = q.correctOptionId;
@@ -118,7 +120,12 @@ export function toDraft(quiz: Quiz): DraftQuiz {
 export function toQuestion(d: DraftQuestion): Question {
   const prompt = d.prompt.trim();
   const opts = d.options.filter((o) => o.label.trim());
-  const media = d.mediaUrl?.trim() ? { mediaUrl: d.mediaUrl.trim() } : {};
+  const media = d.mediaUrl?.trim()
+    ? {
+        mediaUrl: d.mediaUrl.trim(),
+        ...(d.mediaAlt?.trim() ? { mediaAlt: d.mediaAlt.trim() } : {}),
+      }
+    : {};
   switch (d.type) {
     case "multiple_choice":
       return {
