@@ -1,4 +1,4 @@
-import { Coffee } from "lucide-react";
+import { Coffee, RotateCw } from "lucide-react";
 import { REPO_URL, SPONSOR_URL } from "../links";
 
 // lucide 1.x a retiré les icônes de marque : SVG GitHub en ligne (règle parc).
@@ -34,6 +34,13 @@ export function AppFooter() {
       >
         <Coffee className="size-4" /> Soutenir
       </a>
+      <button
+        type="button"
+        onClick={() => window.location.reload()}
+        className="inline-flex items-center gap-1.5 hover:text-white"
+      >
+        <RotateCw className="size-4" /> Recharger
+      </button>
     </footer>
   );
 }

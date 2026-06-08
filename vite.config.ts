@@ -22,7 +22,7 @@ export default defineConfig(({ command }) => {
       react(),
       tailwindcss(),
       VitePWA({
-        registerType: "autoUpdate",
+        registerType: "prompt",
         includeAssets: ["icons/icon.svg", "icons/apple-touch-icon.png"],
         workbox: {
           globPatterns: ["**/*.{js,css,html,svg,png,woff2,webmanifest}"],

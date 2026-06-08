@@ -5,6 +5,7 @@ import { QuizEditor } from "./routes/QuizEditor";
 import { Host } from "./routes/Host";
 import { Join } from "./routes/Join";
 import { Play } from "./routes/Play";
+import { UpdatePrompt } from "./components/UpdatePrompt";
 
 export function App() {
   return (
@@ -19,6 +20,7 @@ export function App() {
         <Route path="/play/:sessionId" element={<Play />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <UpdatePrompt />
     </HashRouter>
   );
 }
