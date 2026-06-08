@@ -1,0 +1,19 @@
+node_modules/
+dist/
+dev-dist/
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
+coverage/
+.vite/
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+database-debug.log
+ui-debug.log
+functions/lib/
+functions/node_modules/

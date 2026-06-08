@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+/*
+ * Univers « Mister Qowa » : énergie de plateau de quiz télévisé. Fond violet
+ * nuit, accents vifs, 4 couleurs/formes de réponse façon Kahoot (couleur ET
+ * forme — accessibilité : ne pas distinguer par la seule couleur).
+ */
+@theme {
+  --color-brand: #7c3aed;
+  --color-brand-soft: #a78bfa;
+  --color-answer-red: #e21b3c;
+  --color-answer-blue: #1368ce;
+  --color-answer-yellow: #d89e00;
+  --color-answer-green: #26890c;
+
+  --font-display: "Fredoka", system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+
+  --radius-card: 1.5rem;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  color: #f5f3ff;
+  font-family: var(--font-sans);
+  background:
+    radial-gradient(1200px 600px at 50% -10%, #3b1d72 0%, transparent 60%),
+    linear-gradient(160deg, #160b2e 0%, #0f0a1e 100%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display);
+}
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--color-brand-soft);
+  outline-offset: 2px;
+  border-radius: 0.75rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

@@ -1,0 +1,20 @@
+import { useEffect, useState } from "react";
+
+/** Compte à rebours basé sur l'instant serveur `endsAt` (ms epoch). */
+export function Countdown({ endsAt }: { endsAt: number }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 200);
+    return () => clearInterval(id);
+  }, []);
+  const remaining = Math.max(0, Math.ceil((endsAt - now) / 1000));
+  return (
+    <div
+      className="font-display text-4xl tabular-nums"
+      aria-live="polite"
+      aria-label={`${remaining} secondes restantes`}
+    >
+      {remaining}
+    </div>
+  );
+}

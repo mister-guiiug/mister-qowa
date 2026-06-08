@@ -1,0 +1,49 @@
+{
+  "rules": {
+    "pins": {
+      ".read": false,
+      ".write": false
+    },
+    "sessions": {
+      "$sid": {
+        "meta": { ".read": true, ".write": false },
+        "state": { ".read": true, ".write": false },
+        "current": { ".read": true, ".write": false },
+        "scores": { ".read": true, ".write": false },
+        "reveal": { ".read": true, ".write": false },
+        "leaderboard": { ".read": true, ".write": false },
+
+        "secret": { ".read": false, ".write": false },
+
+        "players": {
+          ".read": true,
+          "$uid": {
+            "lastSeen": {
+              ".write": "auth != null && auth.uid === $uid",
+              ".validate": "newData.isNumber()"
+            }
+          }
+        },
+
+        "answers": {
+          ".read": false,
+          "$qid": {
+            "$shard": {
+              "$uid": {
+                ".write": "auth != null && auth.uid === $uid && !data.exists() && root.child('sessions').child($sid).child('state').val() === 'QUESTION_ACTIVE' && now < root.child('sessions').child($sid).child('current').child('endsAt').val()",
+                ".validate": "newData.hasChildren(['choice','serverTs'])",
+                "choice": {
+                  ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 200"
+                },
+                "serverTs": {
+                  ".validate": "newData.val() === now"
+                },
+                "$other": { ".validate": false }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
