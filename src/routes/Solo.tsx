@@ -179,12 +179,14 @@ export function Solo() {
       </div>
       <h2 className="mt-4 font-display text-xl">{q.prompt}</h2>
       {q.mediaUrl ? (
-        <img
-          src={q.mediaUrl}
-          alt={q.mediaAlt ?? ""}
-          decoding="async"
-          className="mt-3 max-h-48 w-full rounded-2xl object-contain"
-        />
+        <div className="mt-3 h-48 w-full overflow-hidden rounded-2xl bg-white/5">
+          <img
+            src={q.mediaUrl}
+            alt={q.mediaAlt ?? ""}
+            decoding="async"
+            className="h-full w-full object-contain"
+          />
+        </div>
       ) : null}
 
       {phase === "question" ? (

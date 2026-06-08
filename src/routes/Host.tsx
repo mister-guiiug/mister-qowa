@@ -237,12 +237,14 @@ export function Host() {
           </div>
           <h2 className="font-display text-2xl">{current.prompt}</h2>
           {current.mediaUrl ? (
-            <img
-              src={current.mediaUrl}
-              alt={current.mediaAlt ?? ""}
-              decoding="async"
-              className="max-h-48 w-full rounded-2xl object-contain"
-            />
+            <div className="h-48 w-full overflow-hidden rounded-2xl bg-white/5">
+              <img
+                src={current.mediaUrl}
+                alt={current.mediaAlt ?? ""}
+                decoding="async"
+                className="h-full w-full object-contain"
+              />
+            </div>
           ) : null}
           {current.options ? (
             <ul className="grid grid-cols-2 gap-2">

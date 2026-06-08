@@ -40,13 +40,8 @@ import {
   STREAK_BONUS_PCT,
   LEADERBOARD_TOP,
 } from "@shared/gameState";
-import { computeScore } from "@shared/scoring";
-import {
-  isCorrect,
-  correctChoiceOf,
-  basePointsOf,
-  publicQuestionFields,
-} from "@shared/game";
+import { scoreRound, tallyAnswers, type RoundAnswer } from "@shared/round";
+import { publicQuestionFields } from "@shared/game";
 import type { Quiz, Score } from "@shared/contracts";
 
 type AnswerNode = { choice: string; serverTs: number };
@@ -208,38 +203,22 @@ export async function closeQuestion(
     }
   }
 
+  // Cœur métier PUR (testé dans shared/round.test.ts).
+  const round = scoreRound(
+    q,
+    Object.fromEntries(flat),
+    scores,
+    activatedAt,
+    STREAK_BONUS_PCT,
+  );
   const updates: Record<string, unknown> = {};
-  for (const [pid, ans] of flat) {
-    if (q.type === "poll") break; // sondage : ni score, ni série, ni reveal
-    const correct = isCorrect(q, ans.choice);
-    const responseTimeMs = Math.max(
-      0,
-      (ans.serverTs ?? activatedAt) - activatedAt,
-    );
-    const prev = scores[pid] ?? { total: 0, streak: 0 };
-    const awarded = computeScore({
-      correct,
-      responseTimeMs,
-      timeLimitMs: q.timeLimitMs,
-      basePoints: basePointsOf(q),
-      streakBefore: prev.streak,
-      streakBonusPct: STREAK_BONUS_PCT,
-    });
-    const newScore: Score = {
-      total: prev.total + awarded,
-      streak: correct ? prev.streak + 1 : 0,
-    };
-    scores[pid] = newScore;
-    updates[scorePath(sessionId, pid)] = newScore;
-    updates[playerRevealPath(sessionId, q.id, pid)] = {
-      correct,
-      awarded,
-      responseTimeMs,
-      total: newScore.total,
-    };
+  for (const [pid, sc] of Object.entries(round.scores)) {
+    scores[pid] = sc;
+    updates[scorePath(sessionId, pid)] = sc;
+    updates[playerRevealPath(sessionId, q.id, pid)] = round.reveals[pid];
   }
-  if (q.type !== "poll") {
-    updates[`${revealPath(sessionId, q.id)}/correct`] = correctChoiceOf(q);
+  if (round.correctChoice !== null) {
+    updates[`${revealPath(sessionId, q.id)}/correct`] = round.correctChoice;
   }
   updates[leaderboardPath(sessionId)] = buildRanking(scores, players);
   const teams = (metaSnap.val() as { teams?: Team[] } | null)?.teams;
@@ -257,14 +236,18 @@ export async function closeQuestion(
 export async function endGame(sessionId: string, quiz?: Quiz): Promise<void> {
   const user = await ensureAuth();
   const db = getDb();
-  const [scoresSnap, playersSnap, metaSnap] = await Promise.all([
+  const [scoresSnap, playersSnap, metaSnap, answersSnap] = await Promise.all([
     get(ref(db, scoresPath(sessionId))),
     get(ref(db, playersPath(sessionId))),
     get(ref(db, metaPath(sessionId))),
+    get(ref(db, `sessions/${sessionId}/answers`)),
   ]);
   const scores = (scoresSnap.val() ?? {}) as Record<string, Score>;
   const players = (playersSnap.val() ?? {}) as Record<string, PlayerLite>;
   const ranking = buildRanking(scores, players);
+  const questionStats = quiz
+    ? computeQuestionStats(quiz, answersSnap.val())
+    : [];
   const finalUpdate: Record<string, unknown> = {
     [leaderboardPath(sessionId)]: ranking,
     [statePath(sessionId)]: "PODIUM",
@@ -289,10 +272,33 @@ export async function endGame(sessionId: string, quiz?: Quiz): Promise<void> {
       finishedAt: Date.now(),
       playerCount: ranking.length,
       ranking,
+      ...(questionStats.length ? { questionStats } : {}),
     });
-  } catch {
-    /* archivage non critique */
+  } catch (e) {
+    console.error("[endGame] archivage Firestore échoué", e);
   }
+}
+
+/** Stats par question (taux de réussite) à partir du nœud answers RTDB. */
+function computeQuestionStats(
+  quiz: Quiz,
+  answersRaw: unknown,
+): { index: number; prompt: string; answered: number; correct: number }[] {
+  const all = (answersRaw ?? {}) as Record<
+    string,
+    Record<string, Record<string, RoundAnswer>>
+  >;
+  return quiz.questions.map((q, index) => {
+    // Dédup par joueur (1re réponse) à travers les shards de la question.
+    const flat: Record<string, RoundAnswer> = {};
+    for (const shard of Object.values(all[q.id] ?? {})) {
+      for (const [pid, ans] of Object.entries(shard)) {
+        if (!(pid in flat)) flat[pid] = ans;
+      }
+    }
+    const { answered, correct } = tallyAnswers(q, flat);
+    return { index, prompt: q.prompt, answered, correct };
+  });
 }
 
 /* ---------- joueur ---------- */

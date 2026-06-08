@@ -18,7 +18,8 @@ import {
   type Database,
 } from "firebase/database";
 import {
-  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
   connectFirestoreEmulator,
   type Firestore,
 } from "firebase/firestore";
@@ -74,7 +75,8 @@ function ensure(): void {
   initAppCheck(app); // doit précéder getDatabase/getFirestore
   auth = getAuth(app);
   db = getDatabase(app);
-  fs = getFirestore(app);
+  // Cache offline (IndexedDB) : historique consultable hors-ligne, lectures instantanées.
+  fs = initializeFirestore(app, { localCache: persistentLocalCache() });
 
   if (useEmulator) {
     connectAuthEmulator(auth, "http://127.0.0.1:9099", {

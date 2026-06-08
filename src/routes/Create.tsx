@@ -18,7 +18,12 @@ import type { Quiz } from "@shared/contracts";
 import { createSession } from "../firebase/api";
 import { useGameStore } from "../store/gameStore";
 import { useQuizLibrary } from "../store/quizStore";
-import { duplicateQuiz, exportQuiz, importQuizFile } from "../lib/quizIo";
+import {
+  duplicateQuiz,
+  exportQuiz,
+  importQuizFile,
+  findDuplicate,
+} from "../lib/quizIo";
 import { makeTeams } from "@shared/teams";
 import { errMsg } from "../lib/err";
 
@@ -55,7 +60,13 @@ export function Create() {
     if (!file) return;
     setError(null);
     try {
-      upsert(await importQuizFile(file));
+      const imported = await importQuizFile(file);
+      const dup = findDuplicate(imported, myQuizzes);
+      if (dup) {
+        setError(`« ${dup.title} » est déjà dans ta bibliothèque.`);
+        return;
+      }
+      upsert(imported);
     } catch (e) {
       setError(errMsg(e));
     }
