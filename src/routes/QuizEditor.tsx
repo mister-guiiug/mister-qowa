@@ -13,10 +13,10 @@ import {
   type DraftQuiz,
   type DraftQuestion,
 } from "../lib/quizDraft";
+import { loadDraft, saveDraft, clearDraft } from "../lib/draft";
 
 const field =
   "rounded-2xl bg-white/10 px-4 py-3 outline-none ring-1 ring-white/15 focus:ring-brand";
-const DRAFT_KEY = "mister-qowa:draft";
 
 export function QuizEditor() {
   const nav = useNavigate();
@@ -29,11 +29,9 @@ export function QuizEditor() {
       const existing = getQuiz(quizId);
       if (existing) return toDraft(existing);
     }
-    try {
-      const saved = localStorage.getItem(DRAFT_KEY);
-      if (!quizId && saved) return JSON.parse(saved) as DraftQuiz;
-    } catch {
-      /* brouillon corrompu : on repart à neuf */
+    if (!quizId) {
+      const saved = loadDraft();
+      if (saved) return saved;
     }
     return blankQuiz();
   });
@@ -42,20 +40,8 @@ export function QuizEditor() {
   // Autosave du brouillon « nouveau » (récupéré après un refresh).
   useEffect(() => {
     if (quizId) return;
-    try {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-    } catch {
-      /* quota plein : on ignore */
-    }
+    saveDraft(draft);
   }, [draft, quizId]);
-
-  const clearDraft = () => {
-    try {
-      localStorage.removeItem(DRAFT_KEY);
-    } catch {
-      /* ignore */
-    }
-  };
 
   const setQuestion = (i: number, q: DraftQuestion) =>
     setDraft((d) => ({

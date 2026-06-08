@@ -12,6 +12,9 @@ const Create = lazy(() =>
 const QuizEditor = lazy(() =>
   import("./routes/QuizEditor").then((m) => ({ default: m.QuizEditor })),
 );
+const AiGenerate = lazy(() =>
+  import("./routes/AiGenerate").then((m) => ({ default: m.AiGenerate })),
+);
 const Host = lazy(() =>
   import("./routes/Host").then((m) => ({ default: m.Host })),
 );
@@ -41,6 +44,7 @@ export function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/create" element={<Create />} />
+          <Route path="/create/ai" element={<AiGenerate />} />
           <Route path="/create/new" element={<QuizEditor />} />
           <Route path="/create/:quizId" element={<QuizEditor />} />
           <Route path="/host/:sessionId" element={<Host />} />
