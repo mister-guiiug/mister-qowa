@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Play } from "lucide-react";
 import { Screen, Button, Card, Spinner } from "../lib/ui";
 import { DEMO_QUIZZES } from "@shared/seed";
+import type { Quiz } from "@shared/contracts";
 import { createSession } from "../firebase/api";
 import { useGameStore } from "../store/gameStore";
 import { errMsg } from "../lib/err";
@@ -13,12 +14,12 @@ export function Create() {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function host(quizId: string) {
-    setBusy(quizId);
+  async function host(quiz: Quiz) {
+    setBusy(quiz.id);
     setError(null);
     try {
-      const { sessionId, pin } = await createSession(quizId);
-      setHost({ sessionId, pin, quizId });
+      const { sessionId, pin } = await createSession(quiz);
+      setHost({ sessionId, pin, quiz });
       nav(`/host/${sessionId}`);
     } catch (e) {
       setError(errMsg(e));
@@ -56,7 +57,7 @@ export function Create() {
                 {q.description ? ` · ${q.description}` : ""}
               </p>
             </div>
-            <Button onClick={() => host(q.id)} disabled={busy !== null}>
+            <Button onClick={() => host(q)} disabled={busy !== null}>
               <Play className="size-4" /> Lancer
             </Button>
           </Card>

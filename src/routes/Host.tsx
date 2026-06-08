@@ -14,6 +14,7 @@ export function Host() {
   const { sessionId } = useParams();
   const nav = useNavigate();
   const pin = useGameStore((s) => s.pin);
+  const quiz = useGameStore((s) => s.hostQuiz);
   const reset = useGameStore((s) => s.reset);
   const { state, current, players, playerCount, leaderboard } = useHostView(
     sessionId ?? null,
@@ -70,8 +71,8 @@ export function Host() {
           </div>
           <Button
             full
-            disabled={busy || playerCount === 0}
-            onClick={() => act(() => nextQuestion(sessionId))}
+            disabled={busy || playerCount === 0 || !quiz}
+            onClick={() => quiz && act(() => nextQuestion(sessionId, quiz, 0))}
           >
             Démarrer la partie
           </Button>
@@ -84,7 +85,7 @@ export function Host() {
             <span>
               Question {current.index + 1}/{current.total}
             </span>
-            <Countdown endsAt={current.endsAt} />
+            <Countdown endsAt={current.activatedAt + current.timeLimitMs} />
           </div>
           <h2 className="font-display text-2xl">{current.prompt}</h2>
           {current.options ? (
@@ -102,8 +103,10 @@ export function Host() {
           <Button
             full
             variant="danger"
-            disabled={busy}
-            onClick={() => act(() => closeQuestion(sessionId))}
+            disabled={busy || !quiz}
+            onClick={() =>
+              quiz && act(() => closeQuestion(sessionId, quiz, current.index))
+            }
           >
             Clore la question
           </Button>
@@ -118,8 +121,12 @@ export function Host() {
             {!isLast ? (
               <Button
                 full
-                disabled={busy}
-                onClick={() => act(() => nextQuestion(sessionId))}
+                disabled={busy || !quiz || !current}
+                onClick={() =>
+                  quiz &&
+                  current &&
+                  act(() => nextQuestion(sessionId, quiz, current.index + 1))
+                }
               >
                 Question suivante
               </Button>

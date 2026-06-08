@@ -1,43 +1,65 @@
 {
   "rules": {
     "pins": {
-      ".read": false,
-      ".write": false
+      "$pin": {
+        ".read": true,
+        ".write": "auth != null && !data.exists() && newData.isString()",
+        ".validate": "newData.isString()"
+      }
     },
     "sessions": {
       "$sid": {
-        "meta": { ".read": true, ".write": false },
-        "state": { ".read": true, ".write": false },
-        "current": { ".read": true, ".write": false },
-        "scores": { ".read": true, ".write": false },
-        "reveal": { ".read": true, ".write": false },
-        "leaderboard": { ".read": true, ".write": false },
+        "meta": {
+          ".read": true,
+          ".write": "auth != null && (!data.exists() ? newData.child('hostUid').val() === auth.uid : data.child('hostUid').val() === auth.uid)"
+        },
 
-        "secret": { ".read": false, ".write": false },
+        "state": {
+          ".read": true,
+          ".write": "auth != null && root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid"
+        },
+        "current": {
+          ".read": true,
+          ".write": "auth != null && root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid"
+        },
+        "scores": {
+          ".read": true,
+          ".write": "auth != null && root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid"
+        },
+        "reveal": {
+          ".read": true,
+          ".write": "auth != null && root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid"
+        },
+        "leaderboard": {
+          ".read": true,
+          ".write": "auth != null && root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid"
+        },
 
         "players": {
           ".read": true,
           "$uid": {
-            "lastSeen": {
-              ".write": "auth != null && auth.uid === $uid",
-              ".validate": "newData.isNumber()"
-            }
+            ".write": "auth != null && ($uid === auth.uid || root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid)",
+            ".validate": "newData.hasChildren(['pseudo','joinedAt'])",
+            "pseudo": {
+              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 20"
+            },
+            "joinedAt": { ".validate": "newData.isNumber()" },
+            "lastSeen": { ".validate": "newData.isNumber()" },
+            "$other": { ".validate": false }
           }
         },
 
         "answers": {
-          ".read": false,
+          ".read": "auth != null && root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid",
           "$qid": {
             "$shard": {
               "$uid": {
-                ".write": "auth != null && auth.uid === $uid && !data.exists() && root.child('sessions').child($sid).child('state').val() === 'QUESTION_ACTIVE' && now < root.child('sessions').child($sid).child('current').child('endsAt').val()",
+                ".write": "auth != null && auth.uid === $uid && !data.exists() && root.child('sessions').child($sid).child('state').val() === 'QUESTION_ACTIVE' && now < (root.child('sessions').child($sid).child('current').child('activatedAt').val() + root.child('sessions').child($sid).child('current').child('timeLimitMs').val())",
                 ".validate": "newData.hasChildren(['choice','serverTs'])",
                 "choice": {
                   ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 200"
                 },
-                "serverTs": {
-                  ".validate": "newData.val() === now"
-                },
+                "serverTs": { ".validate": "newData.val() === now" },
                 "$other": { ".validate": false }
               }
             }

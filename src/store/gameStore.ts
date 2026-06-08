@@ -1,6 +1,7 @@
 /** Identité de session locale (persistée pour survivre à un refresh). */
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { Quiz } from "@shared/contracts";
 
 export type Role = "host" | "player";
 
@@ -10,7 +11,9 @@ interface SessionState {
   pin: string | null;
   pseudo: string | null;
   quizId: string | null;
-  setHost: (p: { sessionId: string; pin: string; quizId: string }) => void;
+  /** Quiz complet (avec réponses) — détenu UNIQUEMENT par le host, jamais publié. */
+  hostQuiz: Quiz | null;
+  setHost: (p: { sessionId: string; pin: string; quiz: Quiz }) => void;
   setPlayer: (p: { sessionId: string; pin: string; pseudo: string }) => void;
   reset: () => void;
 }
@@ -23,8 +26,9 @@ export const useGameStore = create<SessionState>()(
       pin: null,
       pseudo: null,
       quizId: null,
-      setHost: ({ sessionId, pin, quizId }) =>
-        set({ role: "host", sessionId, pin, quizId }),
+      hostQuiz: null,
+      setHost: ({ sessionId, pin, quiz }) =>
+        set({ role: "host", sessionId, pin, quizId: quiz.id, hostQuiz: quiz }),
       setPlayer: ({ sessionId, pin, pseudo }) =>
         set({ role: "player", sessionId, pin, pseudo }),
       reset: () =>
@@ -34,6 +38,7 @@ export const useGameStore = create<SessionState>()(
           pin: null,
           pseudo: null,
           quizId: null,
+          hostQuiz: null,
         }),
     }),
     { name: "mister-qowa:session" },

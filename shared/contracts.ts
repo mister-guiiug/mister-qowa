@@ -84,7 +84,7 @@ export const publicQuestionSchema = z.object({
   mediaUrl: z.string().optional(),
   options: z.array(optionSchema).optional(),
   activatedAt: z.number().int(),
-  endsAt: z.number().int(),
+  timeLimitMs: z.number().int().positive(),
   scored: z.boolean(),
 });
 export type PublicQuestion = z.infer<typeof publicQuestionSchema>;

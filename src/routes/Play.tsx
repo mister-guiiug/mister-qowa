@@ -67,7 +67,7 @@ export function Play() {
             <span>
               Question {current.index + 1}/{current.total}
             </span>
-            <Countdown endsAt={current.endsAt} />
+            <Countdown endsAt={current.activatedAt + current.timeLimitMs} />
           </div>
           <h2 className="font-display text-xl">{current.prompt}</h2>
           {current.options ? (
