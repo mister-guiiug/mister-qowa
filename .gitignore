@@ -10,6 +10,11 @@ dev-dist/
 coverage/
 .vite/
 
+# Playwright
+playwright-report/
+test-results/
+.playwright/
+
 # Firebase
 .firebase/
 firebase-debug.log

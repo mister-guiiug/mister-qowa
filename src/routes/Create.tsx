@@ -9,6 +9,7 @@ import {
   Copy,
   Download,
   Upload,
+  Sparkles,
 } from "lucide-react";
 import { Screen, Button, Card, Spinner } from "../lib/ui";
 import { DEMO_QUIZZES } from "@shared/seed";
@@ -87,6 +88,13 @@ export function Create() {
             aria-label="Importer un quiz"
           >
             <Upload className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => nav("/create/ai")}
+            aria-label="Générer un quiz par IA"
+          >
+            <Sparkles className="size-4" />
           </Button>
           <Button onClick={() => nav("/create/new")}>
             <Plus className="size-4" /> Nouveau
