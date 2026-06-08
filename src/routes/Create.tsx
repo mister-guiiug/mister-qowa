@@ -17,6 +17,7 @@ import { createSession } from "../firebase/api";
 import { useGameStore } from "../store/gameStore";
 import { useQuizLibrary } from "../store/quizStore";
 import { duplicateQuiz, exportQuiz, importQuizFile } from "../lib/quizIo";
+import { makeTeams } from "@shared/teams";
 import { errMsg } from "../lib/err";
 
 export function Create() {
@@ -28,12 +29,17 @@ export function Create() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [teamMode, setTeamMode] = useState(false);
+  const [teamCount, setTeamCount] = useState(2);
 
   async function host(quiz: Quiz) {
     setBusy(quiz.id);
     setError(null);
     try {
-      const { sessionId, pin } = await createSession(quiz);
+      const { sessionId, pin } = await createSession(
+        quiz,
+        teamMode ? makeTeams(teamCount) : undefined,
+      );
       setHost({ sessionId, pin, quiz });
       nav(`/host/${sessionId}`);
     } catch (e) {
@@ -86,6 +92,32 @@ export function Create() {
             <Plus className="size-4" /> Nouveau
           </Button>
         </div>
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl bg-white/5 p-3 text-sm">
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={teamMode}
+            onChange={(e) => setTeamMode(e.target.checked)}
+            className="size-4 accent-brand"
+          />
+          Mode équipe
+        </label>
+        {teamMode ? (
+          <select
+            value={teamCount}
+            onChange={(e) => setTeamCount(Number(e.target.value))}
+            aria-label="Nombre d’équipes"
+            className="rounded-xl bg-white/10 px-3 py-1.5 outline-none ring-1 ring-white/15"
+          >
+            {[2, 3, 4].map((n) => (
+              <option key={n} value={n} className="bg-[#1a1230]">
+                {n} équipes
+              </option>
+            ))}
+          </select>
+        ) : null}
       </div>
 
       {error ? (

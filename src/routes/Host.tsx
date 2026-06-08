@@ -5,6 +5,7 @@ import {
   useHostView,
   useAnswerStats,
   useReactions,
+  useTeamLeaderboard,
 } from "../hooks/useGameSubscription";
 import { useServerOffset } from "../hooks/useServerTime";
 import { AnswerDistribution } from "../components/AnswerDistribution";
@@ -17,6 +18,7 @@ import {
   sendReaction,
 } from "../firebase/api";
 import { FloatingReactions, ReactionBar } from "../components/Reactions";
+import { TeamLeaderboard } from "../components/TeamLeaderboard";
 import { PinBadge } from "../components/PinBadge";
 import { Countdown } from "../components/Countdown";
 import { Leaderboard } from "../components/Leaderboard";
@@ -37,6 +39,7 @@ export function Host() {
   const offset = useServerOffset();
   const stats = useAnswerStats(sessionId ?? null, current?.questionId ?? null);
   const reactions = useReactions(sessionId ?? null);
+  const teamStandings = useTeamLeaderboard(sessionId ?? null);
 
   // Auto-clôture quand le compte à rebours atteint 0 (closeQuestion est idempotent).
   useEffect(() => {
@@ -178,6 +181,9 @@ export function Host() {
       {state === "LEADERBOARD" ? (
         <div className="flex flex-1 flex-col gap-6">
           <h2 className="text-center font-display text-2xl">Classement</h2>
+          {teamStandings.length ? (
+            <TeamLeaderboard standings={teamStandings} />
+          ) : null}
           {current?.options ? (
             <AnswerDistribution
               options={current.options}
@@ -216,6 +222,9 @@ export function Host() {
       {state === "PODIUM" ? (
         <div className="flex flex-1 flex-col justify-center gap-8">
           <h2 className="text-center font-display text-3xl">Podium 🎉</h2>
+          {teamStandings.length ? (
+            <TeamLeaderboard standings={teamStandings} />
+          ) : null}
           <Podium entries={leaderboard} />
           <Button
             full

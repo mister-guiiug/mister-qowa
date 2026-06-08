@@ -31,7 +31,9 @@ import {
   revealPath,
   playerRevealPath,
   reactionsPath,
+  teamLeaderboardPath,
 } from "@shared/paths";
+import type { Team } from "@shared/teams";
 import {
   PIN_LENGTH,
   MAX_PLAYERS,
@@ -55,10 +57,32 @@ function randomPin(): string {
   return Array.from(a, (n) => String(n % 10)).join("");
 }
 
+/** Agrège les scores individuels par équipe (mode équipe). */
+function teamStandings(
+  teams: Team[],
+  scores: Record<string, Score>,
+  players: Record<string, { teamId?: string }>,
+) {
+  const totals: Record<string, number> = {};
+  for (const [pid, s] of Object.entries(scores)) {
+    const tid = players[pid]?.teamId;
+    if (tid) totals[tid] = (totals[tid] ?? 0) + s.total;
+  }
+  return teams
+    .map((t) => ({
+      teamId: t.id,
+      name: t.name,
+      color: t.color,
+      total: totals[t.id] ?? 0,
+    }))
+    .sort((a, b) => b.total - a.total);
+}
+
 /* ---------- host ---------- */
 
 export async function createSession(
   quiz: Quiz,
+  teams?: Team[],
 ): Promise<{ sessionId: string; pin: string }> {
   const user = await ensureAuth();
   const db = getDb();
@@ -84,6 +108,7 @@ export async function createSession(
     pin,
     createdAt: Date.now(),
     totalQuestions: quiz.questions.length,
+    ...(teams && teams.length ? { teams } : {}),
   });
   await set(ref(db, statePath(sessionId)), "LOBBY");
   return { sessionId, pin };
@@ -114,12 +139,14 @@ export async function closeQuestion(
   if ((await get(ref(db, statePath(sessionId)))).val() !== "QUESTION_ACTIVE")
     return;
   const q = quiz.questions[index];
-  const [curSnap, ansSnap, scoresSnap, playersSnap] = await Promise.all([
-    get(ref(db, currentPath(sessionId))),
-    get(ref(db, answersQuestionPath(sessionId, q.id))),
-    get(ref(db, scoresPath(sessionId))),
-    get(ref(db, playersPath(sessionId))),
-  ]);
+  const [curSnap, ansSnap, scoresSnap, playersSnap, metaSnap] =
+    await Promise.all([
+      get(ref(db, currentPath(sessionId))),
+      get(ref(db, answersQuestionPath(sessionId, q.id))),
+      get(ref(db, scoresPath(sessionId))),
+      get(ref(db, playersPath(sessionId))),
+      get(ref(db, metaPath(sessionId))),
+    ]);
   const activatedAt = (curSnap.val()?.activatedAt as number) ?? Date.now();
   const shards = (ansSnap.val() ?? {}) as Record<
     string,
@@ -128,7 +155,7 @@ export async function closeQuestion(
   const scores = (scoresSnap.val() ?? {}) as Record<string, Score>;
   const players = (playersSnap.val() ?? {}) as Record<
     string,
-    { pseudo: string }
+    { pseudo: string; teamId?: string }
   >;
 
   // Dédup par joueur (1re réponse retenue) — écriture multi-shard forgée neutralisée.
@@ -180,6 +207,14 @@ export async function closeQuestion(
     }))
     .sort((a, b) => b.total - a.total)
     .slice(0, LEADERBOARD_TOP);
+  const teams = (metaSnap.val() as { teams?: Team[] } | null)?.teams;
+  if (teams?.length) {
+    updates[teamLeaderboardPath(sessionId)] = teamStandings(
+      teams,
+      scores,
+      players,
+    );
+  }
   updates[statePath(sessionId)] = "LEADERBOARD";
   await update(ref(db), updates);
 }
@@ -187,14 +222,15 @@ export async function closeQuestion(
 export async function endGame(sessionId: string, quiz?: Quiz): Promise<void> {
   const user = await ensureAuth();
   const db = getDb();
-  const [scoresSnap, playersSnap] = await Promise.all([
+  const [scoresSnap, playersSnap, metaSnap] = await Promise.all([
     get(ref(db, scoresPath(sessionId))),
     get(ref(db, playersPath(sessionId))),
+    get(ref(db, metaPath(sessionId))),
   ]);
   const scores = (scoresSnap.val() ?? {}) as Record<string, Score>;
   const players = (playersSnap.val() ?? {}) as Record<
     string,
-    { pseudo: string }
+    { pseudo: string; teamId?: string }
   >;
   const ranking = Object.entries(scores)
     .map(([pid, s]) => ({
@@ -204,10 +240,19 @@ export async function endGame(sessionId: string, quiz?: Quiz): Promise<void> {
     }))
     .sort((a, b) => b.total - a.total)
     .slice(0, LEADERBOARD_TOP);
-  await update(ref(db), {
+  const finalUpdate: Record<string, unknown> = {
     [leaderboardPath(sessionId)]: ranking,
     [statePath(sessionId)]: "PODIUM",
-  });
+  };
+  const teams = (metaSnap.val() as { teams?: Team[] } | null)?.teams;
+  if (teams?.length) {
+    finalUpdate[teamLeaderboardPath(sessionId)] = teamStandings(
+      teams,
+      scores,
+      players,
+    );
+  }
+  await update(ref(db), finalUpdate);
 
   // Archive durable (best-effort) — alimente l'historique des parties.
   try {
@@ -227,9 +272,25 @@ export async function endGame(sessionId: string, quiz?: Quiz): Promise<void> {
 
 /* ---------- joueur ---------- */
 
+/** Résout un PIN -> session + équipes (si mode équipe), avant de rejoindre. */
+export async function lookupSession(
+  pin: string,
+): Promise<{ sessionId: string; teams: Team[] | null }> {
+  const db = getDb();
+  const sid = (await get(ref(db, pinIndexPath(pin)))).val();
+  if (!sid || typeof sid !== "string") throw new Error("PIN invalide.");
+  if ((await get(ref(db, statePath(sid)))).val() !== "LOBBY")
+    throw new Error("La partie a déjà commencé.");
+  const meta = (await get(ref(db, metaPath(sid)))).val() as {
+    teams?: Team[];
+  } | null;
+  return { sessionId: sid, teams: meta?.teams ?? null };
+}
+
 export async function joinSession(
   pin: string,
   pseudo: string,
+  teamId?: string,
 ): Promise<{ sessionId: string }> {
   const user = await ensureAuth();
   const db = getDb();
@@ -243,7 +304,11 @@ export async function joinSession(
     : 0;
   if (count >= MAX_PLAYERS) throw new Error("Partie complète.");
   const playerRef = ref(db, playerPath(sid, user.uid));
-  await set(playerRef, { pseudo, joinedAt: Date.now() });
+  await set(playerRef, {
+    pseudo,
+    joinedAt: Date.now(),
+    ...(teamId ? { teamId } : {}),
+  });
   // Présence : retire le joueur du lobby s'il se déconnecte.
   void onDisconnect(playerRef).remove();
   return { sessionId: sid };

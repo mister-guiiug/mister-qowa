@@ -35,6 +35,11 @@
           ".write": "auth != null && root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid"
         },
 
+        "teamLeaderboard": {
+          ".read": true,
+          ".write": "auth != null && root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid"
+        },
+
         "reactions": {
           ".read": true,
           "$rid": {
@@ -58,6 +63,7 @@
             },
             "joinedAt": { ".validate": "newData.isNumber()" },
             "lastSeen": { ".validate": "newData.isNumber()" },
+            "teamId": { ".validate": "newData.isString()" },
             "$other": { ".validate": false }
           }
         },

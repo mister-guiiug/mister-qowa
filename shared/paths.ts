@@ -40,3 +40,7 @@ export const playerRevealPath = (sid: string, qid: string, uid: string) =>
 
 /** Réactions emoji éphémères (live). */
 export const reactionsPath = (sid: string) => `sessions/${sid}/reactions`;
+
+/** Classement par équipe (mode équipe). */
+export const teamLeaderboardPath = (sid: string) =>
+  `sessions/${sid}/teamLeaderboard`;

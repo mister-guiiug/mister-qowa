@@ -3,10 +3,15 @@ import { useParams, useNavigate, Navigate } from "react-router-dom";
 import { Check, X } from "lucide-react";
 import { Screen, Button, Spinner } from "../lib/ui";
 import { useAuthUid } from "../hooks/useAuthUid";
-import { usePlayerView, useReactions } from "../hooks/useGameSubscription";
+import {
+  usePlayerView,
+  useReactions,
+  useTeamLeaderboard,
+} from "../hooks/useGameSubscription";
 import { useGameStore } from "../store/gameStore";
 import { submitAnswer, sendReaction } from "../firebase/api";
 import { FloatingReactions, ReactionBar } from "../components/Reactions";
+import { TeamLeaderboard } from "../components/TeamLeaderboard";
 import { AnswerGrid } from "../components/AnswerGrid";
 import { Countdown } from "../components/Countdown";
 import { Leaderboard } from "../components/Leaderboard";
@@ -24,6 +29,7 @@ export function Play() {
     uid,
   );
   const reactions = useReactions(sessionId ?? null);
+  const teamStandings = useTeamLeaderboard(sessionId ?? null);
   const [picked, setPicked] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -155,6 +161,9 @@ export function Play() {
           ) : (
             <p className="text-center text-white/60">Résultats…</p>
           )}
+          {teamStandings.length ? (
+            <TeamLeaderboard standings={teamStandings} />
+          ) : null}
           <Leaderboard entries={leaderboard} highlightUid={uid} max={5} />
           {myRank >= 0 ? (
             <p className="text-center text-white/60">
@@ -166,6 +175,9 @@ export function Play() {
 
       {state === "PODIUM" ? (
         <div className="flex flex-1 flex-col justify-center gap-8">
+          {teamStandings.length ? (
+            <TeamLeaderboard standings={teamStandings} />
+          ) : null}
           <Podium entries={leaderboard} />
           {myRank >= 0 ? (
             <p className="text-center font-display text-xl">

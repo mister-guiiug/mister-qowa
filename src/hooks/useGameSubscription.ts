@@ -21,8 +21,10 @@ import {
   playerRevealPath,
   answersQuestionPath,
   reactionsPath,
+  teamLeaderboardPath,
 } from "@shared/paths";
 import type { GameState } from "@shared/gameState";
+import type { TeamStanding } from "@shared/teams";
 import type {
   PublicQuestion,
   Score,
@@ -158,6 +160,14 @@ export function useAnswerStats(
     return () => off();
   }, [sessionId, questionId]);
   return stats;
+}
+
+/** Classement par équipe (mode équipe ; vide en mode individuel). */
+export function useTeamLeaderboard(sessionId: string | null): TeamStanding[] {
+  const raw = useRtdbValue<unknown>(
+    sessionId ? teamLeaderboardPath(sessionId) : null,
+  );
+  return asArray<TeamStanding>(raw);
 }
 
 /** Flux de réactions emoji éphémères (live). */

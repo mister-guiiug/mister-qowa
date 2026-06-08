@@ -2,10 +2,11 @@ import { useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Screen, Button } from "../lib/ui";
-import { joinSession } from "../firebase/api";
+import { lookupSession, joinSession } from "../firebase/api";
 import { useGameStore } from "../store/gameStore";
 import { errMsg } from "../lib/err";
 import { PIN_LENGTH, MAX_PSEUDO_LEN } from "@shared/gameState";
+import type { Team } from "@shared/teams";
 
 export function Join() {
   const nav = useNavigate();
@@ -15,10 +16,24 @@ export function Join() {
     (searchParams.get("pin") ?? "").replace(/\D/g, "").slice(0, PIN_LENGTH),
   );
   const [pseudo, setPseudo] = useState("");
+  const [teams, setTeams] = useState<Team[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const ready = pin.length === PIN_LENGTH && pseudo.trim().length > 0;
+
+  async function go(teamId?: string) {
+    setBusy(true);
+    setError(null);
+    try {
+      const { sessionId } = await joinSession(pin, pseudo.trim(), teamId);
+      setPlayer({ sessionId, pin, pseudo: pseudo.trim() });
+      nav(`/play/${sessionId}`);
+    } catch (e) {
+      setError(errMsg(e));
+      setBusy(false);
+    }
+  }
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -26,9 +41,13 @@ export function Join() {
     setBusy(true);
     setError(null);
     try {
-      const { sessionId } = await joinSession(pin, pseudo.trim());
-      setPlayer({ sessionId, pin, pseudo: pseudo.trim() });
-      nav(`/play/${sessionId}`);
+      const { teams: t } = await lookupSession(pin);
+      if (t && t.length) {
+        setTeams(t);
+        setBusy(false);
+      } else {
+        await go();
+      }
     } catch (e2) {
       setError(errMsg(e2));
       setBusy(false);
@@ -39,48 +58,71 @@ export function Join() {
     <Screen>
       <button
         type="button"
-        onClick={() => nav("/")}
+        onClick={() => (teams ? setTeams(null) : nav("/"))}
         className="mb-4 inline-flex items-center gap-1 self-start text-sm text-white/60 hover:text-white"
       >
-        <ArrowLeft className="size-4" /> Accueil
+        <ArrowLeft className="size-4" /> {teams ? "Retour" : "Accueil"}
       </button>
       <h1 className="font-display text-3xl">Rejoindre une partie</h1>
 
-      <form onSubmit={submit} className="mt-6 flex flex-col gap-4">
-        <label className="flex flex-col gap-1">
-          <span className="text-sm text-white/60">Code PIN</span>
-          <input
-            inputMode="numeric"
-            autoComplete="off"
-            value={pin}
-            onChange={(e) =>
-              setPin(e.target.value.replace(/\D/g, "").slice(0, PIN_LENGTH))
-            }
-            placeholder="12345678"
-            className="rounded-2xl bg-white/10 px-4 py-3 text-center font-display text-2xl tracking-[0.25em] outline-none ring-1 ring-white/15 focus:ring-brand"
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm text-white/60">Ton pseudo</span>
-          <input
-            value={pseudo}
-            maxLength={MAX_PSEUDO_LEN}
-            onChange={(e) => setPseudo(e.target.value)}
-            placeholder="Alex"
-            className="rounded-2xl bg-white/10 px-4 py-3 text-lg outline-none ring-1 ring-white/15 focus:ring-brand"
-          />
-        </label>
+      {teams ? (
+        <div className="mt-6 flex flex-col gap-3">
+          <p className="text-white/60">Choisis ton équipe, {pseudo} :</p>
+          {teams.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              disabled={busy}
+              onClick={() => void go(t.id)}
+              className="rounded-2xl px-4 py-3 text-left text-lg font-bold text-white shadow-lg transition active:scale-[.98] disabled:opacity-60"
+              style={{ background: t.color }}
+            >
+              {t.name}
+            </button>
+          ))}
+          {error ? (
+            <p className="rounded-xl bg-rose-500/20 px-4 py-2 text-sm text-rose-200">
+              {error}
+            </p>
+          ) : null}
+        </div>
+      ) : (
+        <form onSubmit={submit} className="mt-6 flex flex-col gap-4">
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-white/60">Code PIN</span>
+            <input
+              inputMode="numeric"
+              autoComplete="off"
+              value={pin}
+              onChange={(e) =>
+                setPin(e.target.value.replace(/\D/g, "").slice(0, PIN_LENGTH))
+              }
+              placeholder="12345678"
+              className="rounded-2xl bg-white/10 px-4 py-3 text-center font-display text-2xl tracking-[0.25em] outline-none ring-1 ring-white/15 focus:ring-brand"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-white/60">Ton pseudo</span>
+            <input
+              value={pseudo}
+              maxLength={MAX_PSEUDO_LEN}
+              onChange={(e) => setPseudo(e.target.value)}
+              placeholder="Alex"
+              className="rounded-2xl bg-white/10 px-4 py-3 text-lg outline-none ring-1 ring-white/15 focus:ring-brand"
+            />
+          </label>
 
-        {error ? (
-          <p className="rounded-xl bg-rose-500/20 px-4 py-2 text-sm text-rose-200">
-            {error}
-          </p>
-        ) : null}
+          {error ? (
+            <p className="rounded-xl bg-rose-500/20 px-4 py-2 text-sm text-rose-200">
+              {error}
+            </p>
+          ) : null}
 
-        <Button type="submit" full disabled={!ready || busy}>
-          {busy ? "Connexion…" : "Entrer dans la partie"}
-        </Button>
-      </form>
+          <Button type="submit" full disabled={!ready || busy}>
+            {busy ? "Connexion…" : "Entrer dans la partie"}
+          </Button>
+        </form>
+      )}
     </Screen>
   );
 }
