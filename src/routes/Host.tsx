@@ -186,7 +186,7 @@ export function Host() {
               full
               variant={isLast ? "primary" : "ghost"}
               disabled={busy}
-              onClick={() => act(() => endGame(sessionId))}
+              onClick={() => act(() => endGame(sessionId, quiz ?? undefined))}
             >
               Terminer &amp; podium
             </Button>

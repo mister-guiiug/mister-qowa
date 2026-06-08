@@ -1,7 +1,7 @@
 /**
- * Init Firebase paresseuse (D8 : Auth + RTDB + Functions + App Check — briques
- * NOUVELLES pour le parc, absentes de mister-puzzle). Une seule initialisation,
- * branche les émulateurs si VITE_USE_EMULATOR=1 (jeu jouable sans projet cloud).
+ * Init Firebase paresseuse — mode SPARK : Auth (invité anonyme + Google),
+ * Realtime Database (jeu live), Firestore (historique des parties). Branche les
+ * émulateurs si VITE_USE_EMULATOR=1.
  */
 import { initializeApp, type FirebaseApp } from "firebase/app";
 import {
@@ -18,12 +18,11 @@ import {
   type Database,
 } from "firebase/database";
 import {
-  getFunctions,
-  connectFunctionsEmulator,
-  type Functions,
-} from "firebase/functions";
+  getFirestore,
+  connectFirestoreEmulator,
+  type Firestore,
+} from "firebase/firestore";
 
-const FUNCTIONS_REGION = "europe-west1";
 const useEmulator = import.meta.env.VITE_USE_EMULATOR === "1";
 
 const firebaseConfig = {
@@ -39,16 +38,15 @@ const firebaseConfig = {
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
 let db: Database | undefined;
-let fns: Functions | undefined;
+let fs: Firestore | undefined;
 
 function ensure(): void {
   if (app) return;
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   db = getDatabase(app);
-  fns = getFunctions(app, FUNCTIONS_REGION);
+  fs = getFirestore(app);
 
-  // App Check (anti-abus) — uniquement hors émulateur, si une clé est fournie.
   const appCheckKey = import.meta.env.VITE_FIREBASE_APPCHECK_KEY;
   if (appCheckKey && !useEmulator) {
     void import("firebase/app-check").then(
@@ -66,7 +64,7 @@ function ensure(): void {
       disableWarnings: true,
     });
     connectDatabaseEmulator(db, "127.0.0.1", 9000);
-    connectFunctionsEmulator(fns, "127.0.0.1", 5001);
+    connectFirestoreEmulator(fs, "127.0.0.1", 8080);
   }
 }
 
@@ -75,9 +73,9 @@ export function getDb(): Database {
   return db!;
 }
 
-export function getFns(): Functions {
+export function getFs(): Firestore {
   ensure();
-  return fns!;
+  return fs!;
 }
 
 export function getAuthInstance(): Auth {

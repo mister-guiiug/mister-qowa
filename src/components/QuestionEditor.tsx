@@ -118,6 +118,7 @@ export function QuestionEditor({
                     })
                   }
                   placeholder={`Réponse ${i + 1}`}
+                  aria-label={`Réponse ${i + 1}`}
                   className={`${field} flex-1`}
                 />
                 {q.options.length > 2 ? (
@@ -192,6 +193,7 @@ export function QuestionEditor({
                     })
                   }
                   placeholder={`Réponse acceptée ${i + 1}`}
+                  aria-label={`Réponse acceptée ${i + 1}`}
                   className={`${field} flex-1`}
                 />
                 {q.acceptedAnswers.length > 1 ? (

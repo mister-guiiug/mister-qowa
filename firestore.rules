@@ -16,7 +16,10 @@ service cloud.firestore {
     match /results/{gameId} {
       allow read: if request.auth != null
         && resource.data.hostUid == request.auth.uid;
-      allow write: if false;
+      // Le host archive sa propre partie (mode Spark, autorité côté host).
+      allow create: if request.auth != null
+        && request.resource.data.hostUid == request.auth.uid;
+      allow update, delete: if false;
     }
 
     match /users/{uid} {

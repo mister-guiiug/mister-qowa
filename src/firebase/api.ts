@@ -14,7 +14,8 @@ import {
   serverTimestamp,
   onDisconnect,
 } from "firebase/database";
-import { getDb, ensureAuth } from "./app";
+import { doc, setDoc } from "firebase/firestore";
+import { getDb, getFs, ensureAuth } from "./app";
 import {
   pinIndexPath,
   metaPath,
@@ -182,7 +183,8 @@ export async function closeQuestion(
   await update(ref(db), updates);
 }
 
-export async function endGame(sessionId: string): Promise<void> {
+export async function endGame(sessionId: string, quiz?: Quiz): Promise<void> {
+  const user = await ensureAuth();
   const db = getDb();
   const [scoresSnap, playersSnap] = await Promise.all([
     get(ref(db, scoresPath(sessionId))),
@@ -205,6 +207,21 @@ export async function endGame(sessionId: string): Promise<void> {
     [leaderboardPath(sessionId)]: ranking,
     [statePath(sessionId)]: "PODIUM",
   });
+
+  // Archive durable (best-effort) — alimente l'historique des parties.
+  try {
+    await setDoc(doc(getFs(), "results", sessionId), {
+      sessionId,
+      hostUid: user.uid,
+      quizId: quiz?.id ?? null,
+      quizTitle: quiz?.title ?? "Quiz",
+      finishedAt: Date.now(),
+      playerCount: ranking.length,
+      ranking,
+    });
+  } catch {
+    /* archivage non critique */
+  }
 }
 
 /* ---------- joueur ---------- */
