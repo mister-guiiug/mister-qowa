@@ -16,6 +16,7 @@ import { AnswerGrid } from "../components/AnswerGrid";
 import { Countdown } from "../components/Countdown";
 import { Leaderboard } from "../components/Leaderboard";
 import { Podium } from "../components/Podium";
+import { ConnectionBanner } from "../components/ConnectionBanner";
 import { errMsg } from "../lib/err";
 
 export function Play() {
@@ -33,11 +34,22 @@ export function Play() {
   const [picked, setPicked] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     setPicked(null);
     setText("");
   }, [current?.questionId]);
+
+  // Session injoignable après un délai : sortie de secours plutôt qu'un spinner figé.
+  useEffect(() => {
+    if (state) {
+      setNotFound(false);
+      return;
+    }
+    const id = setTimeout(() => setNotFound(true), 8000);
+    return () => clearTimeout(id);
+  }, [state]);
 
   async function pick(choice: string) {
     if (!sessionId || !current || picked) return;
@@ -55,7 +67,25 @@ export function Play() {
   if (!uid || !state)
     return (
       <Screen className="justify-center">
-        <Spinner label="Connexion…" />
+        {notFound ? (
+          <div className="flex flex-col items-center gap-4 text-center">
+            <p className="font-display text-2xl">Partie introuvable</p>
+            <p className="text-white/60">
+              Cette partie n’existe plus ou a été fermée.
+            </p>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                reset();
+                nav("/");
+              }}
+            >
+              Retour à l’accueil
+            </Button>
+          </div>
+        ) : (
+          <Spinner label="Connexion…" />
+        )}
       </Screen>
     );
 
@@ -65,6 +95,7 @@ export function Play() {
   return (
     <Screen>
       <FloatingReactions items={reactions} />
+      <ConnectionBanner />
       {state === "LOBBY" ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
           <p className="font-display text-2xl">Bienvenue {pseudo} !</p>

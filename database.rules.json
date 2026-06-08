@@ -2,7 +2,7 @@
   "rules": {
     "pins": {
       "$pin": {
-        ".read": true,
+        ".read": "auth != null",
         ".write": "auth != null && !data.exists() && newData.isString()",
         ".validate": "newData.isString()"
       }
@@ -27,8 +27,13 @@
           ".write": "auth != null && root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid"
         },
         "reveal": {
-          ".read": true,
-          ".write": "auth != null && root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid"
+          ".write": "auth != null && root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid",
+          "$qid": {
+            "correct": { ".read": true },
+            "$uid": {
+              ".read": "auth != null && (auth.uid === $uid || root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid)"
+            }
+          }
         },
         "leaderboard": {
           ".read": true,

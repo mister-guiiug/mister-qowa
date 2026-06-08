@@ -27,6 +27,10 @@ export const useQuizLibrary = create<QuizLibrary>()(
         set((s) => ({ quizzes: s.quizzes.filter((q) => q.id !== id) })),
       get: (id) => getState().quizzes.find((q) => q.id === id),
     }),
-    { name: "mister-qowa:quizzes" },
+    {
+      name: "mister-qowa:quizzes",
+      version: 1,
+      migrate: (persisted) => persisted as QuizLibrary,
+    },
   ),
 );

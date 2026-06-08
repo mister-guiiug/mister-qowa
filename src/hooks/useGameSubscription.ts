@@ -40,9 +40,16 @@ function useRtdbValue<T>(path: string | null): T | undefined {
       setValue(undefined);
       return;
     }
-    const off = onValue(ref(getDb(), path), (snap) => {
-      setValue((snap.val() ?? undefined) as T | undefined);
-    });
+    const off = onValue(
+      ref(getDb(), path),
+      (snap) => {
+        setValue((snap.val() ?? undefined) as T | undefined);
+      },
+      (err) => {
+        // Permission/réseau : on ne fige plus silencieusement, on trace.
+        console.error(`[RTDB] abonnement « ${path} » échoué`, err);
+      },
+    );
     return () => off();
   }, [path]);
   return value;
@@ -156,6 +163,7 @@ export function useAnswerStats(
         }
         setStats({ count: seen.size, byChoice });
       },
+      (err) => console.error("[RTDB] stats de réponses échouées", err),
     );
     return () => off();
   }, [sessionId, questionId]);

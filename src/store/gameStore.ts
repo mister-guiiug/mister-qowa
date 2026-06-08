@@ -41,6 +41,11 @@ export const useGameStore = create<SessionState>()(
           hostQuiz: null,
         }),
     }),
-    { name: "mister-qowa:session" },
+    {
+      name: "mister-qowa:session",
+      version: 1,
+      // v0 (sans numéro) → v1 : pas de changement de forme, on tolère l'ancien état.
+      migrate: (persisted) => persisted as SessionState,
+    },
   ),
 );

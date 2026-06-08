@@ -48,7 +48,11 @@ export const useAiSettings = create<AiSettings>()(
       setModel: (p, model) =>
         set((s) => ({ models: { ...s.models, [p]: model } })),
     }),
-    { name: "mister-qowa:ai-settings" },
+    {
+      name: "mister-qowa:ai-settings",
+      version: 1,
+      migrate: (persisted) => persisted as AiSettings,
+    },
   ),
 );
 

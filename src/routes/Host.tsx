@@ -7,7 +7,9 @@ import {
   useReactions,
   useTeamLeaderboard,
 } from "../hooks/useGameSubscription";
-import { useServerOffset } from "../hooks/useServerTime";
+import { useServerOffset, serverNow } from "../hooks/useServerTime";
+import { useAsyncAction } from "../hooks/useAsyncAction";
+import { ConnectionBanner } from "../components/ConnectionBanner";
 import { AnswerDistribution } from "../components/AnswerDistribution";
 import { QRCodeSVG } from "qrcode.react";
 import { useGameStore } from "../store/gameStore";
@@ -34,43 +36,73 @@ export function Host() {
   const { state, current, players, playerCount, leaderboard } = useHostView(
     sessionId ?? null,
   );
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { busy, error, setError, run: act } = useAsyncAction();
+  const [notFound, setNotFound] = useState(false);
   const offset = useServerOffset();
   const stats = useAnswerStats(sessionId ?? null, current?.questionId ?? null);
   const reactions = useReactions(sessionId ?? null);
   const teamStandings = useTeamLeaderboard(sessionId ?? null);
 
   // Auto-clôture quand le compte à rebours atteint 0 (closeQuestion est idempotent).
+  // Deps exhaustives (activatedAt/timeLimitMs/index) + erreurs remontées.
   useEffect(() => {
     if (state !== "QUESTION_ACTIVE" || !current || !quiz || !sessionId) return;
-    const ms =
-      current.activatedAt + current.timeLimitMs - (Date.now() + offset);
+    const ms = current.activatedAt + current.timeLimitMs - serverNow(offset);
     const id = setTimeout(
-      () => void closeQuestion(sessionId, quiz, current.index),
+      () =>
+        closeQuestion(sessionId, quiz, current.index).catch((e) =>
+          setError(errMsg(e)),
+        ),
       Math.max(0, ms) + 400,
     );
     return () => clearTimeout(id);
+    // deps volontairement primitives (pas l'objet `current` qui change à chaque snapshot)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state, current?.questionId, quiz, sessionId, offset]);
+  }, [
+    state,
+    current?.questionId,
+    current?.activatedAt,
+    current?.timeLimitMs,
+    current?.index,
+    quiz,
+    sessionId,
+    offset,
+    setError,
+  ]);
 
-  async function act(fn: () => Promise<unknown>) {
-    setBusy(true);
-    setError(null);
-    try {
-      await fn();
-    } catch (e) {
-      setError(errMsg(e));
-    } finally {
-      setBusy(false);
+  // Session injoignable après un délai : on ne reste pas bloqué sur le spinner.
+  useEffect(() => {
+    if (state) {
+      setNotFound(false);
+      return;
     }
-  }
+    const id = setTimeout(() => setNotFound(true), 8000);
+    return () => clearTimeout(id);
+  }, [state]);
 
   if (!sessionId) return <Navigate to="/" replace />;
   if (!state)
     return (
       <Screen className="justify-center">
-        <Spinner label="Connexion à la partie…" />
+        {notFound ? (
+          <div className="flex flex-col items-center gap-4 text-center">
+            <p className="font-display text-2xl">Partie introuvable</p>
+            <p className="text-white/60">
+              Cette partie n’existe plus ou a été fermée.
+            </p>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                reset();
+                nav("/");
+              }}
+            >
+              Retour à l’accueil
+            </Button>
+          </div>
+        ) : (
+          <Spinner label="Connexion à la partie…" />
+        )}
       </Screen>
     );
 
@@ -91,6 +123,7 @@ export function Host() {
   return (
     <Screen>
       <FloatingReactions items={reactions} />
+      <ConnectionBanner />
       {error ? (
         <p className="mb-4 rounded-xl bg-rose-500/20 px-4 py-2 text-sm text-rose-200">
           {error}

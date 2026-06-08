@@ -57,6 +57,28 @@ function randomPin(): string {
   return Array.from(a, (n) => String(n % 10)).join("");
 }
 
+const sleep = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Écriture host CRITIQUE (transition d'état, scoring) : une re-tentative après
+ * un court délai si le 1er essai échoue (coupure réseau passagère), puis on
+ * trace et on remonte l'erreur au lieu de la perdre silencieusement.
+ */
+async function hostWrite<T>(label: string, fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch {
+    await sleep(600); // re-tentative après une coupure réseau passagère
+    try {
+      return await fn();
+    } catch (second) {
+      console.error(`[host:${label}] échec après re-tentative`, second);
+      throw second instanceof Error ? second : new Error(String(second));
+    }
+  }
+}
+
 /** Agrège les scores individuels par équipe (mode équipe). */
 function teamStandings(
   teams: Team[],
@@ -122,11 +144,13 @@ export async function nextQuestion(
   if (index >= quiz.questions.length) throw new Error("Plus de questions.");
   const db = getDb();
   const q = quiz.questions[index];
-  await set(ref(db, currentPath(sessionId)), {
-    ...publicQuestionFields(q, index, quiz.questions.length),
-    activatedAt: serverTimestamp(),
+  await hostWrite("nextQuestion", async () => {
+    await set(ref(db, currentPath(sessionId)), {
+      ...publicQuestionFields(q, index, quiz.questions.length),
+      activatedAt: serverTimestamp(),
+    });
+    await set(ref(db, statePath(sessionId)), "QUESTION_ACTIVE");
   });
-  await set(ref(db, statePath(sessionId)), "QUESTION_ACTIVE");
 }
 
 export async function closeQuestion(
@@ -216,7 +240,7 @@ export async function closeQuestion(
     );
   }
   updates[statePath(sessionId)] = "LEADERBOARD";
-  await update(ref(db), updates);
+  await hostWrite("closeQuestion", () => update(ref(db), updates));
 }
 
 export async function endGame(sessionId: string, quiz?: Quiz): Promise<void> {
@@ -252,7 +276,7 @@ export async function endGame(sessionId: string, quiz?: Quiz): Promise<void> {
       players,
     );
   }
-  await update(ref(db), finalUpdate);
+  await hostWrite("endGame", () => update(ref(db), finalUpdate));
 
   // Archive durable (best-effort) — alimente l'historique des parties.
   try {
@@ -276,6 +300,7 @@ export async function endGame(sessionId: string, quiz?: Quiz): Promise<void> {
 export async function lookupSession(
   pin: string,
 ): Promise<{ sessionId: string; teams: Team[] | null }> {
+  await ensureAuth(); // la lecture de pins/ exige désormais une session Auth (anti-bot)
   const db = getDb();
   const sid = (await get(ref(db, pinIndexPath(pin)))).val();
   if (!sid || typeof sid !== "string") throw new Error("PIN invalide.");
