@@ -3,9 +3,10 @@ import { useParams, useNavigate, Navigate } from "react-router-dom";
 import { Check, X } from "lucide-react";
 import { Screen, Button, Spinner } from "../lib/ui";
 import { useAuthUid } from "../hooks/useAuthUid";
-import { usePlayerView } from "../hooks/useGameSubscription";
+import { usePlayerView, useReactions } from "../hooks/useGameSubscription";
 import { useGameStore } from "../store/gameStore";
-import { submitAnswer } from "../firebase/api";
+import { submitAnswer, sendReaction } from "../firebase/api";
+import { FloatingReactions, ReactionBar } from "../components/Reactions";
 import { AnswerGrid } from "../components/AnswerGrid";
 import { Countdown } from "../components/Countdown";
 import { Leaderboard } from "../components/Leaderboard";
@@ -22,6 +23,7 @@ export function Play() {
     sessionId ?? null,
     uid,
   );
+  const reactions = useReactions(sessionId ?? null);
   const [picked, setPicked] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +58,7 @@ export function Play() {
 
   return (
     <Screen>
+      <FloatingReactions items={reactions} />
       {state === "LOBBY" ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
           <p className="font-display text-2xl">Bienvenue {pseudo} !</p>
@@ -72,6 +75,13 @@ export function Play() {
             <Countdown endsAt={current.activatedAt + current.timeLimitMs} />
           </div>
           <h2 className="font-display text-xl">{current.prompt}</h2>
+          {current.mediaUrl ? (
+            <img
+              src={current.mediaUrl}
+              alt=""
+              className="max-h-48 w-full rounded-2xl object-contain"
+            />
+          ) : null}
           {current.options ? (
             <AnswerGrid
               options={current.options}
@@ -172,6 +182,12 @@ export function Play() {
           >
             Quitter
           </Button>
+        </div>
+      ) : null}
+
+      {state !== "LOBBY" ? (
+        <div className="mt-auto pt-4">
+          <ReactionBar onSend={(e) => void sendReaction(sessionId, e)} />
         </div>
       ) : null}
     </Screen>

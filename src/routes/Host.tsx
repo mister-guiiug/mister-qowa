@@ -1,12 +1,22 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Navigate } from "react-router-dom";
 import { Screen, Button, Spinner } from "../lib/ui";
-import { useHostView, useAnswerStats } from "../hooks/useGameSubscription";
+import {
+  useHostView,
+  useAnswerStats,
+  useReactions,
+} from "../hooks/useGameSubscription";
 import { useServerOffset } from "../hooks/useServerTime";
 import { AnswerDistribution } from "../components/AnswerDistribution";
 import { QRCodeSVG } from "qrcode.react";
 import { useGameStore } from "../store/gameStore";
-import { nextQuestion, closeQuestion, endGame } from "../firebase/api";
+import {
+  nextQuestion,
+  closeQuestion,
+  endGame,
+  sendReaction,
+} from "../firebase/api";
+import { FloatingReactions, ReactionBar } from "../components/Reactions";
 import { PinBadge } from "../components/PinBadge";
 import { Countdown } from "../components/Countdown";
 import { Leaderboard } from "../components/Leaderboard";
@@ -26,6 +36,7 @@ export function Host() {
   const [error, setError] = useState<string | null>(null);
   const offset = useServerOffset();
   const stats = useAnswerStats(sessionId ?? null, current?.questionId ?? null);
+  const reactions = useReactions(sessionId ?? null);
 
   // Auto-clôture quand le compte à rebours atteint 0 (closeQuestion est idempotent).
   useEffect(() => {
@@ -76,6 +87,7 @@ export function Host() {
 
   return (
     <Screen>
+      <FloatingReactions items={reactions} />
       {error ? (
         <p className="mb-4 rounded-xl bg-rose-500/20 px-4 py-2 text-sm text-rose-200">
           {error}
@@ -128,6 +140,13 @@ export function Host() {
             <Countdown endsAt={current.activatedAt + current.timeLimitMs} />
           </div>
           <h2 className="font-display text-2xl">{current.prompt}</h2>
+          {current.mediaUrl ? (
+            <img
+              src={current.mediaUrl}
+              alt=""
+              className="max-h-48 w-full rounded-2xl object-contain"
+            />
+          ) : null}
           {current.options ? (
             <ul className="grid grid-cols-2 gap-2">
               {current.options.map((o) => (
@@ -208,6 +227,12 @@ export function Host() {
           >
             Nouvelle partie
           </Button>
+        </div>
+      ) : null}
+
+      {state !== "LOBBY" ? (
+        <div className="mt-auto pt-4">
+          <ReactionBar onSend={(e) => void sendReaction(sessionId, e)} />
         </div>
       ) : null}
     </Screen>

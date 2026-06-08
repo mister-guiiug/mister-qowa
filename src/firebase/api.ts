@@ -30,6 +30,7 @@ import {
   answerPath,
   revealPath,
   playerRevealPath,
+  reactionsPath,
 } from "@shared/paths";
 import {
   PIN_LENGTH,
@@ -246,6 +247,17 @@ export async function joinSession(
   // Présence : retire le joueur du lobby s'il se déconnecte.
   void onDisconnect(playerRef).remove();
   return { sessionId: sid };
+}
+
+/** Réaction emoji éphémère (push RTDB). */
+export async function sendReaction(
+  sessionId: string,
+  emoji: string,
+): Promise<void> {
+  await push(ref(getDb(), reactionsPath(sessionId)), {
+    emoji,
+    ts: serverTimestamp(),
+  });
 }
 
 /** Soumission de réponse — écriture RTDB directe {choice, serverTs} (D2/D3). */

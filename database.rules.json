@@ -35,6 +35,19 @@
           ".write": "auth != null && root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid"
         },
 
+        "reactions": {
+          ".read": true,
+          "$rid": {
+            ".write": "auth != null && !data.exists()",
+            ".validate": "newData.hasChildren(['emoji','ts'])",
+            "emoji": {
+              ".validate": "newData.isString() && newData.val().length <= 12"
+            },
+            "ts": { ".validate": "newData.val() === now" },
+            "$other": { ".validate": false }
+          }
+        },
+
         "players": {
           ".read": true,
           "$uid": {

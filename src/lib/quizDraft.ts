@@ -18,6 +18,7 @@ export interface DraftQuestion {
   correct: boolean; // true_false
   acceptedAnswers: string[]; // free_text
   caseSensitive: boolean; // free_text
+  mediaUrl?: string; // image optionnelle
 }
 
 export interface DraftQuiz {
@@ -97,6 +98,7 @@ export function toDraft(quiz: Quiz): DraftQuiz {
       base.prompt = q.prompt;
       base.timeLimitMs = q.timeLimitMs;
       base.basePoints = q.type === "poll" ? DEFAULT_BASE_POINTS : q.basePoints;
+      base.mediaUrl = q.mediaUrl;
       if (q.type === "multiple_choice") {
         base.options = q.options;
         base.correctOptionId = q.correctOptionId;
@@ -116,6 +118,7 @@ export function toDraft(quiz: Quiz): DraftQuiz {
 export function toQuestion(d: DraftQuestion): Question {
   const prompt = d.prompt.trim();
   const opts = d.options.filter((o) => o.label.trim());
+  const media = d.mediaUrl?.trim() ? { mediaUrl: d.mediaUrl.trim() } : {};
   switch (d.type) {
     case "multiple_choice":
       return {
@@ -126,6 +129,7 @@ export function toQuestion(d: DraftQuestion): Question {
         basePoints: d.basePoints,
         options: opts,
         correctOptionId: d.correctOptionId,
+        ...media,
       };
     case "true_false":
       return {
@@ -135,6 +139,7 @@ export function toQuestion(d: DraftQuestion): Question {
         timeLimitMs: d.timeLimitMs,
         basePoints: d.basePoints,
         correct: d.correct,
+        ...media,
       };
     case "free_text":
       return {
@@ -145,6 +150,7 @@ export function toQuestion(d: DraftQuestion): Question {
         basePoints: d.basePoints,
         acceptedAnswers: d.acceptedAnswers.map((a) => a.trim()).filter(Boolean),
         caseSensitive: d.caseSensitive,
+        ...media,
       };
     case "poll":
       return {
@@ -153,6 +159,7 @@ export function toQuestion(d: DraftQuestion): Question {
         prompt,
         timeLimitMs: d.timeLimitMs,
         options: opts,
+        ...media,
       };
   }
 }

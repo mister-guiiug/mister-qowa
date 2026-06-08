@@ -4,7 +4,13 @@
  * (`players` à 1000 entrées). L'arbre joueurs est réservé au host.
  */
 import { useEffect, useState } from "react";
-import { onValue, ref } from "firebase/database";
+import {
+  onValue,
+  onChildAdded,
+  query,
+  limitToLast,
+  ref,
+} from "firebase/database";
 import { getDb } from "../firebase/app";
 import {
   statePath,
@@ -14,6 +20,7 @@ import {
   playersPath,
   playerRevealPath,
   answersQuestionPath,
+  reactionsPath,
 } from "@shared/paths";
 import type { GameState } from "@shared/gameState";
 import type {
@@ -151,4 +158,40 @@ export function useAnswerStats(
     return () => off();
   }, [sessionId, questionId]);
   return stats;
+}
+
+/** Flux de réactions emoji éphémères (live). */
+export function useReactions(
+  sessionId: string | null,
+): { id: number; emoji: string }[] {
+  const [items, setItems] = useState<{ id: number; emoji: string }[]>([]);
+  useEffect(() => {
+    if (!sessionId) {
+      setItems([]);
+      return;
+    }
+    let counter = 0;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const off = onChildAdded(
+      query(ref(getDb(), reactionsPath(sessionId)), limitToLast(6)),
+      (snap) => {
+        const v = snap.val() as { emoji?: string; ts?: number } | null;
+        if (!v?.emoji) return;
+        if (v.ts && Date.now() - v.ts > 6000) return; // ignore les anciennes au montage
+        const id = ++counter;
+        setItems((cur) => [...cur, { id, emoji: v.emoji as string }]);
+        timers.push(
+          setTimeout(
+            () => setItems((cur) => cur.filter((x) => x.id !== id)),
+            3500,
+          ),
+        );
+      },
+    );
+    return () => {
+      off();
+      timers.forEach(clearTimeout);
+    };
+  }, [sessionId]);
+  return items;
 }

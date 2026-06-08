@@ -37,3 +37,6 @@ export const revealPath = (sid: string, qid: string) =>
   `sessions/${sid}/reveal/${qid}`;
 export const playerRevealPath = (sid: string, qid: string, uid: string) =>
   `sessions/${sid}/reveal/${qid}/${uid}`;
+
+/** Réactions emoji éphémères (live). */
+export const reactionsPath = (sid: string) => `sessions/${sid}/reactions`;

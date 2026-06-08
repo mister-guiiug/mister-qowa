@@ -175,6 +175,13 @@ export function Solo() {
         <span className="font-display tabular-nums">{score} pts</span>
       </div>
       <h2 className="mt-4 font-display text-xl">{q.prompt}</h2>
+      {q.mediaUrl ? (
+        <img
+          src={q.mediaUrl}
+          alt=""
+          className="mt-3 max-h-48 w-full rounded-2xl object-contain"
+        />
+      ) : null}
 
       {phase === "question" ? (
         <div className="mt-6">

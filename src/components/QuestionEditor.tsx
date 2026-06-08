@@ -1,7 +1,10 @@
-import { Trash2, Plus, X, ArrowUp, ArrowDown } from "lucide-react";
+import { useState } from "react";
+import { Trash2, Plus, X, ArrowUp, ArrowDown, ImagePlus } from "lucide-react";
 import { QUESTION_TYPES, type QuestionType } from "@shared/gameState";
 import type { DraftQuestion } from "../lib/quizDraft";
 import { blankOption, retypeQuestion } from "../lib/quizDraft";
+import { uploadQuestionImage } from "../lib/media";
+import { errMsg } from "../lib/err";
 
 const TYPE_LABELS: Record<QuestionType, string> = {
   multiple_choice: "Choix multiple",
@@ -32,6 +35,21 @@ export function QuestionEditor({
 }) {
   const set = (patch: Partial<DraftQuestion>) => onChange({ ...q, ...patch });
   const hasOptions = q.type === "multiple_choice" || q.type === "poll";
+  const [uploading, setUploading] = useState(false);
+  const [mediaErr, setMediaErr] = useState<string | null>(null);
+
+  async function onPickImage(file: File | undefined) {
+    if (!file) return;
+    setUploading(true);
+    setMediaErr(null);
+    try {
+      set({ mediaUrl: await uploadQuestionImage(file) });
+    } catch (e) {
+      setMediaErr(errMsg(e));
+    } finally {
+      setUploading(false);
+    }
+  }
 
   return (
     <div className="rounded-3xl bg-white/5 p-4 ring-1 ring-white/10">
@@ -91,6 +109,39 @@ export function QuestionEditor({
           placeholder="Énoncé de la question"
           className={field}
         />
+
+        {/* Image optionnelle */}
+        {q.mediaUrl ? (
+          <div className="flex items-center gap-3">
+            <img
+              src={q.mediaUrl}
+              alt=""
+              className="max-h-24 rounded-lg object-contain"
+            />
+            <button
+              type="button"
+              onClick={() => set({ mediaUrl: undefined })}
+              className="text-sm text-rose-300 hover:text-rose-200"
+            >
+              Retirer l’image
+            </button>
+          </div>
+        ) : (
+          <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-sm hover:bg-white/15">
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                void onPickImage(e.target.files?.[0]);
+                e.target.value = "";
+              }}
+            />
+            <ImagePlus className="size-4" />{" "}
+            {uploading ? "Envoi…" : "Ajouter une image"}
+          </label>
+        )}
+        {mediaErr ? <p className="text-sm text-rose-300">{mediaErr}</p> : null}
 
         {/* Choix multiple / Sondage : options */}
         {hasOptions ? (
