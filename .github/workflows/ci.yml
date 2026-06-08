@@ -16,4 +16,4 @@ jobs:
     uses: mister-guiiug/dev-wpa-config/.github/workflows/pwa-ci.yml@v1
     secrets: inherit
     with:
-      run-e2e: false
+      run-e2e: true
