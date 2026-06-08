@@ -16,6 +16,7 @@ import {
   type CallableRequest,
 } from "firebase-functions/v2/https";
 import { setGlobalOptions } from "firebase-functions/v2";
+import { logger } from "firebase-functions";
 import type { ZodType } from "zod";
 import { rtdb, firestore } from "./lib/admin";
 import { allocatePin } from "./lib/pin";
@@ -367,14 +368,19 @@ export const endGame = onCall(opts, async (req) => {
     .sort((a, b) => b.total - a.total);
 
   // Snapshot durable Firestore — inclus DÈS le MVP (pas de perte de données).
-  await firestore.collection("results").doc(sessionId).set({
-    sessionId,
-    quizId: meta.quizId,
-    hostUid: uid,
-    finishedAt: Date.now(),
-    playerCount: ranking.length,
-    ranking,
-  });
+  // Résilient : un échec de snapshot ne doit pas empêcher de terminer la partie.
+  try {
+    await firestore.collection("results").doc(sessionId).set({
+      sessionId,
+      quizId: meta.quizId,
+      hostUid: uid,
+      finishedAt: Date.now(),
+      playerCount: ranking.length,
+      ranking,
+    });
+  } catch (e) {
+    logger.error("endGame: échec du snapshot Firestore", { sessionId, error: String(e) });
+  }
 
   await rtdb.ref().update({
     [leaderboardPath(sessionId)]: ranking.slice(0, LEADERBOARD_TOP),
