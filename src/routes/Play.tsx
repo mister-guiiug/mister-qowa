@@ -23,10 +23,12 @@ export function Play() {
     uid,
   );
   const [picked, setPicked] = useState<string | null>(null);
+  const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setPicked(null);
+    setText("");
   }, [current?.questionId]);
 
   async function pick(choice: string) {
@@ -78,9 +80,29 @@ export function Play() {
               picked={picked}
             />
           ) : (
-            <p className="text-white/60">
-              Type de question non supporté au MVP.
-            </p>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (text.trim()) pick(text.trim());
+              }}
+              className="flex flex-col gap-3"
+            >
+              <input
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                disabled={picked !== null}
+                maxLength={200}
+                placeholder="Ta réponse…"
+                className="rounded-2xl bg-white/10 px-4 py-3 text-lg outline-none ring-1 ring-white/15 focus:ring-brand"
+              />
+              <Button
+                type="submit"
+                full
+                disabled={picked !== null || !text.trim()}
+              >
+                Envoyer
+              </Button>
+            </form>
           )}
           {picked ? (
             <p className="text-center text-white/60">
@@ -95,7 +117,11 @@ export function Play() {
 
       {state === "LEADERBOARD" ? (
         <div className="flex flex-1 flex-col gap-6">
-          {reveal ? (
+          {current && !current.scored ? (
+            <div className="rounded-3xl bg-white/10 p-6 text-center">
+              <p className="font-display text-2xl">Merci pour ton vote 🗳️</p>
+            </div>
+          ) : reveal ? (
             <div
               className={`rounded-3xl p-6 text-center ${
                 reveal.correct ? "bg-answer-green/30" : "bg-answer-red/30"
@@ -110,6 +136,11 @@ export function Play() {
                 {reveal.correct ? "Bonne réponse !" : "Raté !"}
               </p>
               <p className="text-white/80">+{reveal.awarded} pts</p>
+            </div>
+          ) : picked === null ? (
+            <div className="rounded-3xl bg-answer-red/20 p-6 text-center">
+              <p className="font-display text-2xl">Pas de réponse</p>
+              <p className="text-white/70">+0 pt</p>
             </div>
           ) : (
             <p className="text-center text-white/60">Résultats…</p>

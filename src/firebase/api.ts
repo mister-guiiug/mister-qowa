@@ -135,6 +135,7 @@ export async function closeQuestion(
 
   const updates: Record<string, unknown> = {};
   for (const [pid, ans] of flat) {
+    if (q.type === "poll") break; // sondage : ni score, ni série, ni reveal
     const correct = isCorrect(q, ans.choice);
     const responseTimeMs = Math.max(
       0,
@@ -162,7 +163,9 @@ export async function closeQuestion(
       total: newScore.total,
     };
   }
-  updates[`${revealPath(sessionId, q.id)}/correct`] = correctChoiceOf(q);
+  if (q.type !== "poll") {
+    updates[`${revealPath(sessionId, q.id)}/correct`] = correctChoiceOf(q);
+  }
   updates[leaderboardPath(sessionId)] = Object.entries(scores)
     .map(([pid, s]) => ({
       uid: pid,
