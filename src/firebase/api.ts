@@ -12,6 +12,7 @@ import {
   push,
   runTransaction,
   serverTimestamp,
+  onDisconnect,
 } from "firebase/database";
 import { getDb, ensureAuth } from "./app";
 import {
@@ -107,6 +108,9 @@ export async function closeQuestion(
   index: number,
 ): Promise<void> {
   const db = getDb();
+  // Idempotence : on ne score qu'une fois (clôture manuelle + auto-clôture).
+  if ((await get(ref(db, statePath(sessionId)))).val() !== "QUESTION_ACTIVE")
+    return;
   const q = quiz.questions[index];
   const [curSnap, ansSnap, scoresSnap, playersSnap] = await Promise.all([
     get(ref(db, currentPath(sessionId))),
@@ -220,10 +224,10 @@ export async function joinSession(
     ? Object.keys(playersSnap.val() as object).length
     : 0;
   if (count >= MAX_PLAYERS) throw new Error("Partie complète.");
-  await set(ref(db, playerPath(sid, user.uid)), {
-    pseudo,
-    joinedAt: Date.now(),
-  });
+  const playerRef = ref(db, playerPath(sid, user.uid));
+  await set(playerRef, { pseudo, joinedAt: Date.now() });
+  // Présence : retire le joueur du lobby s'il se déconnecte.
+  void onDisconnect(playerRef).remove();
   return { sessionId: sid };
 }
 

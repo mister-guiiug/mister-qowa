@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Trophy } from "lucide-react";
 import type { LeaderboardEntry } from "@shared/contracts";
+import { Confetti } from "./Confetti";
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 const HEIGHTS = ["h-40", "h-28", "h-20"];
@@ -10,6 +11,7 @@ export function Podium({ entries }: { entries: LeaderboardEntry[] }) {
   const top = entries.slice(0, 3);
   return (
     <div className="flex flex-col items-center gap-6">
+      <Confetti />
       <Trophy className="size-12 text-answer-yellow" />
       <div className="flex w-full items-end justify-center gap-2">
         {ORDER.map((rank) => {

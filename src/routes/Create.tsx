@@ -1,19 +1,31 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Play, Plus, Pencil, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Play,
+  Plus,
+  Pencil,
+  Trash2,
+  Copy,
+  Download,
+  Upload,
+} from "lucide-react";
 import { Screen, Button, Card, Spinner } from "../lib/ui";
 import { DEMO_QUIZZES } from "@shared/seed";
 import type { Quiz } from "@shared/contracts";
 import { createSession } from "../firebase/api";
 import { useGameStore } from "../store/gameStore";
 import { useQuizLibrary } from "../store/quizStore";
+import { duplicateQuiz, exportQuiz, importQuizFile } from "../lib/quizIo";
 import { errMsg } from "../lib/err";
 
 export function Create() {
   const nav = useNavigate();
   const setHost = useGameStore((s) => s.setHost);
   const myQuizzes = useQuizLibrary((s) => s.quizzes);
+  const upsert = useQuizLibrary((s) => s.upsert);
   const remove = useQuizLibrary((s) => s.remove);
+  const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,6 +42,16 @@ export function Create() {
     }
   }
 
+  async function onImport(file: File | undefined) {
+    if (!file) return;
+    setError(null);
+    try {
+      upsert(await importQuizFile(file));
+    } catch (e) {
+      setError(errMsg(e));
+    }
+  }
+
   return (
     <Screen>
       <button
@@ -42,9 +64,28 @@ export function Create() {
 
       <div className="flex items-center justify-between gap-3">
         <h1 className="font-display text-3xl">Quiz</h1>
-        <Button onClick={() => nav("/create/new")}>
-          <Plus className="size-4" /> Nouveau
-        </Button>
+        <div className="flex items-center gap-2">
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            onChange={(e) => {
+              void onImport(e.target.files?.[0]);
+              e.target.value = "";
+            }}
+          />
+          <Button
+            variant="ghost"
+            onClick={() => fileRef.current?.click()}
+            aria-label="Importer un quiz"
+          >
+            <Upload className="size-4" />
+          </Button>
+          <Button onClick={() => nav("/create/new")}>
+            <Plus className="size-4" /> Nouveau
+          </Button>
+        </div>
       </div>
 
       {error ? (
@@ -85,6 +126,20 @@ export function Create() {
                   </Button>
                   <Button
                     variant="ghost"
+                    onClick={() => upsert(duplicateQuiz(q))}
+                    aria-label="Dupliquer"
+                  >
+                    <Copy className="size-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => exportQuiz(q)}
+                    aria-label="Exporter"
+                  >
+                    <Download className="size-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
                     onClick={() => {
                       if (window.confirm(`Supprimer « ${q.title} » ?`))
                         remove(q.id);
@@ -117,9 +172,18 @@ export function Create() {
                   {q.description ? ` · ${q.description}` : ""}
                 </p>
               </div>
-              <Button onClick={() => host(q)} disabled={busy !== null}>
-                <Play className="size-4" /> Lancer
-              </Button>
+              <div className="flex shrink-0 gap-2">
+                <Button
+                  variant="ghost"
+                  onClick={() => upsert(duplicateQuiz(q))}
+                  aria-label="Copier dans mes quiz pour l’éditer"
+                >
+                  <Copy className="size-4" />
+                </Button>
+                <Button onClick={() => host(q)} disabled={busy !== null}>
+                  <Play className="size-4" /> Lancer
+                </Button>
+              </div>
             </Card>
           ))}
         </div>

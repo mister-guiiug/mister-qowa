@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Plus, Save } from "lucide-react";
 import { Screen, Button } from "../lib/ui";
@@ -16,6 +16,7 @@ import {
 
 const field =
   "rounded-2xl bg-white/10 px-4 py-3 outline-none ring-1 ring-white/15 focus:ring-brand";
+const DRAFT_KEY = "mister-qowa:draft";
 
 export function QuizEditor() {
   const nav = useNavigate();
@@ -28,9 +29,33 @@ export function QuizEditor() {
       const existing = getQuiz(quizId);
       if (existing) return toDraft(existing);
     }
+    try {
+      const saved = localStorage.getItem(DRAFT_KEY);
+      if (!quizId && saved) return JSON.parse(saved) as DraftQuiz;
+    } catch {
+      /* brouillon corrompu : on repart à neuf */
+    }
     return blankQuiz();
   });
   const [errors, setErrors] = useState<string[]>([]);
+
+  // Autosave du brouillon « nouveau » (récupéré après un refresh).
+  useEffect(() => {
+    if (quizId) return;
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    } catch {
+      /* quota plein : on ignore */
+    }
+  }, [draft, quizId]);
+
+  const clearDraft = () => {
+    try {
+      localStorage.removeItem(DRAFT_KEY);
+    } catch {
+      /* ignore */
+    }
+  };
 
   const setQuestion = (i: number, q: DraftQuestion) =>
     setDraft((d) => ({
@@ -58,6 +83,7 @@ export function QuizEditor() {
     setErrors(errs);
     if (errs.length > 0) return;
     upsert(toQuiz(draft));
+    clearDraft();
     nav("/create");
   }
 
@@ -65,7 +91,10 @@ export function QuizEditor() {
     <Screen>
       <button
         type="button"
-        onClick={() => nav("/create")}
+        onClick={() => {
+          clearDraft();
+          nav("/create");
+        }}
         className="mb-4 inline-flex items-center gap-1 self-start text-sm text-white/60 hover:text-white"
       >
         <ArrowLeft className="size-4" /> Annuler

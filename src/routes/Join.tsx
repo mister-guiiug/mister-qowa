@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Screen, Button } from "../lib/ui";
 import { joinSession } from "../firebase/api";
@@ -10,7 +10,10 @@ import { PIN_LENGTH, MAX_PSEUDO_LEN } from "@shared/gameState";
 export function Join() {
   const nav = useNavigate();
   const setPlayer = useGameStore((s) => s.setPlayer);
-  const [pin, setPin] = useState("");
+  const [searchParams] = useSearchParams();
+  const [pin, setPin] = useState(() =>
+    (searchParams.get("pin") ?? "").replace(/\D/g, "").slice(0, PIN_LENGTH),
+  );
   const [pseudo, setPseudo] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);

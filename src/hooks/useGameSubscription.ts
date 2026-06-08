@@ -13,6 +13,7 @@ import {
   leaderboardPath,
   playersPath,
   playerRevealPath,
+  answersQuestionPath,
 } from "@shared/paths";
 import type { GameState } from "@shared/gameState";
 import type {
@@ -110,4 +111,44 @@ export function useHostView(sessionId: string | null): HostView {
     playerCount: players ? Object.keys(players).length : 0,
     leaderboard: asArray<LeaderboardEntry>(leaderboardRaw),
   };
+}
+
+export interface AnswerStats {
+  count: number;
+  byChoice: Record<string, number>;
+}
+
+/** Stats de réponses de la question courante (HOST uniquement — lit /answers). */
+export function useAnswerStats(
+  sessionId: string | null,
+  questionId: string | null,
+): AnswerStats {
+  const [stats, setStats] = useState<AnswerStats>({ count: 0, byChoice: {} });
+  useEffect(() => {
+    if (!sessionId || !questionId) {
+      setStats({ count: 0, byChoice: {} });
+      return;
+    }
+    const off = onValue(
+      ref(getDb(), answersQuestionPath(sessionId, questionId)),
+      (snap) => {
+        const shards = (snap.val() ?? {}) as Record<
+          string,
+          Record<string, { choice: string }>
+        >;
+        const byChoice: Record<string, number> = {};
+        const seen = new Set<string>();
+        for (const shard of Object.values(shards)) {
+          for (const [pid, a] of Object.entries(shard)) {
+            if (seen.has(pid)) continue;
+            seen.add(pid);
+            byChoice[a.choice] = (byChoice[a.choice] ?? 0) + 1;
+          }
+        }
+        setStats({ count: seen.size, byChoice });
+      },
+    );
+    return () => off();
+  }, [sessionId, questionId]);
+  return stats;
 }

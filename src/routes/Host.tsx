@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate, Navigate } from "react-router-dom";
 import { Screen, Button, Spinner } from "../lib/ui";
-import { useHostView } from "../hooks/useGameSubscription";
+import { useHostView, useAnswerStats } from "../hooks/useGameSubscription";
+import { useServerOffset } from "../hooks/useServerTime";
+import { AnswerDistribution } from "../components/AnswerDistribution";
+import { QRCodeSVG } from "qrcode.react";
 import { useGameStore } from "../store/gameStore";
 import { nextQuestion, closeQuestion, endGame } from "../firebase/api";
 import { PinBadge } from "../components/PinBadge";
@@ -21,6 +24,21 @@ export function Host() {
   );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const offset = useServerOffset();
+  const stats = useAnswerStats(sessionId ?? null, current?.questionId ?? null);
+
+  // Auto-clôture quand le compte à rebours atteint 0 (closeQuestion est idempotent).
+  useEffect(() => {
+    if (state !== "QUESTION_ACTIVE" || !current || !quiz || !sessionId) return;
+    const ms =
+      current.activatedAt + current.timeLimitMs - (Date.now() + offset);
+    const id = setTimeout(
+      () => void closeQuestion(sessionId, quiz, current.index),
+      Math.max(0, ms) + 400,
+    );
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state, current?.questionId, quiz, sessionId, offset]);
 
   async function act(fn: () => Promise<unknown>) {
     setBusy(true);
@@ -43,6 +61,18 @@ export function Host() {
     );
 
   const isLast = current ? current.index >= current.total - 1 : false;
+  const curQ = quiz && current ? quiz.questions[current.index] : undefined;
+  const correctId =
+    curQ?.type === "multiple_choice"
+      ? curQ.correctOptionId
+      : curQ?.type === "true_false"
+        ? curQ.correct
+          ? "true"
+          : "false"
+        : undefined;
+  const joinUrl = pin
+    ? `${window.location.origin}${import.meta.env.BASE_URL}#/join?pin=${pin}`
+    : "";
 
   return (
     <Screen>
@@ -55,6 +85,16 @@ export function Host() {
       {state === "LOBBY" ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-8">
           {pin ? <PinBadge pin={pin} /> : null}
+          {pin ? (
+            <div className="rounded-2xl bg-white p-3">
+              <QRCodeSVG
+                value={joinUrl}
+                size={148}
+                bgColor="#ffffff"
+                fgColor="#0f0a1e"
+              />
+            </div>
+          ) : null}
           <p className="text-white/70">
             {playerCount} joueur{playerCount > 1 ? "s" : ""} connecté
             {playerCount > 1 ? "s" : ""}
@@ -100,6 +140,9 @@ export function Host() {
               ))}
             </ul>
           ) : null}
+          <p className="text-center text-white/70">
+            {stats.count}/{playerCount} ont répondu
+          </p>
           <Button
             full
             variant="danger"
@@ -108,7 +151,7 @@ export function Host() {
               quiz && act(() => closeQuestion(sessionId, quiz, current.index))
             }
           >
-            Clore la question
+            Clore maintenant
           </Button>
         </div>
       ) : null}
@@ -116,6 +159,14 @@ export function Host() {
       {state === "LEADERBOARD" ? (
         <div className="flex flex-1 flex-col gap-6">
           <h2 className="text-center font-display text-2xl">Classement</h2>
+          {current?.options ? (
+            <AnswerDistribution
+              options={current.options}
+              byChoice={stats.byChoice}
+              total={stats.count}
+              correctId={correctId}
+            />
+          ) : null}
           <Leaderboard entries={leaderboard} />
           <div className="mt-auto flex flex-col gap-2">
             {!isLast ? (
