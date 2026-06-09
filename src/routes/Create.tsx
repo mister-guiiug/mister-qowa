@@ -12,12 +12,18 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Screen, Button, Card, Spinner } from "../lib/ui";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { DEMO_QUIZZES } from "@shared/seed";
 import type { Quiz } from "@shared/contracts";
 import { createSession } from "../firebase/api";
 import { useGameStore } from "../store/gameStore";
 import { useQuizLibrary } from "../store/quizStore";
-import { duplicateQuiz, exportQuiz, importQuizFile } from "../lib/quizIo";
+import {
+  duplicateQuiz,
+  exportQuiz,
+  importQuizFile,
+  findDuplicate,
+} from "../lib/quizIo";
 import { makeTeams } from "@shared/teams";
 import { errMsg } from "../lib/err";
 
@@ -32,6 +38,7 @@ export function Create() {
   const [error, setError] = useState<string | null>(null);
   const [teamMode, setTeamMode] = useState(false);
   const [teamCount, setTeamCount] = useState(2);
+  const [pendingDelete, setPendingDelete] = useState<Quiz | null>(null);
 
   async function host(quiz: Quiz) {
     setBusy(quiz.id);
@@ -53,7 +60,13 @@ export function Create() {
     if (!file) return;
     setError(null);
     try {
-      upsert(await importQuizFile(file));
+      const imported = await importQuizFile(file);
+      const dup = findDuplicate(imported, myQuizzes);
+      if (dup) {
+        setError(`« ${dup.title} » est déjà dans ta bibliothèque.`);
+        return;
+      }
+      upsert(imported);
     } catch (e) {
       setError(errMsg(e));
     }
@@ -180,10 +193,7 @@ export function Create() {
                   </Button>
                   <Button
                     variant="ghost"
-                    onClick={() => {
-                      if (window.confirm(`Supprimer « ${q.title} » ?`))
-                        remove(q.id);
-                    }}
+                    onClick={() => setPendingDelete(q)}
                     aria-label="Supprimer"
                   >
                     <Trash2 className="size-4" />
@@ -230,6 +240,20 @@ export function Create() {
       </section>
 
       {busy ? <Spinner label="Création de la partie…" /> : null}
+
+      {pendingDelete ? (
+        <ConfirmDialog
+          title={`Supprimer « ${pendingDelete.title} » ?`}
+          message="Cette action est définitive."
+          confirmLabel="Supprimer"
+          danger
+          onConfirm={() => {
+            remove(pendingDelete.id);
+            setPendingDelete(null);
+          }}
+          onCancel={() => setPendingDelete(null)}
+        />
+      ) : null}
     </Screen>
   );
 }

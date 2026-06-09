@@ -15,4 +15,20 @@ export function useServerOffset(): number {
   return offset;
 }
 
+/**
+ * État de connexion socket RTDB (`.info/connected`, pseudo-nœud natif, gratuit
+ * en Spark). `true` tant qu'on n'a pas eu de signal contraire pour éviter un
+ * faux « hors ligne » au tout premier rendu.
+ */
+export function useConnectionState(): boolean {
+  const [online, setOnline] = useState(true);
+  useEffect(() => {
+    const off = onValue(ref(getDb(), ".info/connected"), (snap) => {
+      setOnline(snap.val() === true);
+    });
+    return () => off();
+  }, []);
+  return online;
+}
+
 export const serverNow = (offset: number): number => Date.now() + offset;

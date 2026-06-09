@@ -1,9 +1,12 @@
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 const COLORS = ["#e21b3c", "#1368ce", "#d89e00", "#26890c", "#7c3aed"];
 
 /** Pluie de confettis (overlay) — joue une fois au montage. */
 export function Confetti({ count = 28 }: { count?: number }) {
+  // `top` n'est pas un transform : MotionConfig ne le neutralise pas, on coupe ici.
+  const reduce = useReducedMotion();
+  if (reduce) return null;
   return (
     <div className="pointer-events-none fixed inset-0 z-40 overflow-hidden">
       {Array.from({ length: count }, (_, i) => {

@@ -112,19 +112,35 @@ export function QuestionEditor({
 
         {/* Image optionnelle */}
         {q.mediaUrl ? (
-          <div className="flex items-center gap-3">
-            <img
-              src={q.mediaUrl}
-              alt=""
-              className="max-h-24 rounded-lg object-contain"
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-3">
+              <img
+                src={q.mediaUrl}
+                alt={q.mediaAlt ?? ""}
+                className="max-h-24 rounded-lg object-contain"
+              />
+              <button
+                type="button"
+                onClick={() =>
+                  set({ mediaUrl: undefined, mediaAlt: undefined })
+                }
+                className="text-sm text-rose-300 hover:text-rose-200"
+              >
+                Retirer l’image
+              </button>
+            </div>
+            <input
+              value={q.mediaAlt ?? ""}
+              maxLength={200}
+              onChange={(e) => set({ mediaAlt: e.target.value })}
+              placeholder="Description de l’image (lecteurs d’écran)"
+              aria-label={`Description de l’image de la question ${index + 1}`}
+              className={field}
             />
-            <button
-              type="button"
-              onClick={() => set({ mediaUrl: undefined })}
-              className="text-sm text-rose-300 hover:text-rose-200"
-            >
-              Retirer l’image
-            </button>
+            <p className="text-xs text-white/40">
+              Décris l’image sans révéler la réponse (visible des joueurs
+              malvoyants).
+            </p>
           </div>
         ) : (
           <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-sm hover:bg-white/15">

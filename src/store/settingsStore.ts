@@ -32,9 +32,12 @@ interface AiSettings {
   keys: Partial<Record<AiProvider, string>>;
   /** Modèle par fournisseur (vide = défaut). */
   models: Partial<Record<AiProvider, string>>;
+  /** Sons & vibrations de jeu (réglage global). */
+  soundOn: boolean;
   setProvider: (p: AiProvider) => void;
   setKey: (p: AiProvider, key: string) => void;
   setModel: (p: AiProvider, model: string) => void;
+  setSoundOn: (on: boolean) => void;
 }
 
 export const useAiSettings = create<AiSettings>()(
@@ -43,12 +46,18 @@ export const useAiSettings = create<AiSettings>()(
       provider: "gemini",
       keys: {},
       models: {},
+      soundOn: true,
       setProvider: (provider) => set({ provider }),
       setKey: (p, key) => set((s) => ({ keys: { ...s.keys, [p]: key } })),
       setModel: (p, model) =>
         set((s) => ({ models: { ...s.models, [p]: model } })),
+      setSoundOn: (soundOn) => set({ soundOn }),
     }),
-    { name: "mister-qowa:ai-settings" },
+    {
+      name: "mister-qowa:ai-settings",
+      version: 1,
+      migrate: (persisted) => persisted as AiSettings,
+    },
   ),
 );
 

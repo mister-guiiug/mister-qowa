@@ -18,10 +18,15 @@ import {
   type Database,
 } from "firebase/database";
 import {
-  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
   connectFirestoreEmulator,
   type Firestore,
 } from "firebase/firestore";
+import {
+  initializeAppCheck,
+  ReCaptchaEnterpriseProvider,
+} from "firebase/app-check";
 
 const useEmulator = import.meta.env.VITE_USE_EMULATOR === "1";
 
@@ -40,24 +45,38 @@ let auth: Auth | undefined;
 let db: Database | undefined;
 let fs: Firestore | undefined;
 
+/**
+ * App Check AVANT toute autre init Firebase : sinon les premières requêtes
+ * RTDB/Firestore partent sans jeton et passent à travers une enforcement
+ * serveur. En prod, l'absence de clé est un trou de sécurité → on alerte fort.
+ */
+function initAppCheck(application: FirebaseApp): void {
+  if (useEmulator) return;
+  const appCheckKey = import.meta.env.VITE_FIREBASE_APPCHECK_KEY;
+  if (!appCheckKey) {
+    if (import.meta.env.PROD) {
+      console.warn(
+        "[Mister Qowa] App Check non configuré (VITE_FIREBASE_APPCHECK_KEY absente) : " +
+          "la production n'est PAS protégée contre les bots. Activez App Check dans la " +
+          "console Firebase (RTDB + Firestore → Enforce) et fournissez la clé reCAPTCHA Enterprise.",
+      );
+    }
+    return;
+  }
+  initializeAppCheck(application, {
+    provider: new ReCaptchaEnterpriseProvider(appCheckKey),
+    isTokenAutoRefreshEnabled: true,
+  });
+}
+
 function ensure(): void {
   if (app) return;
   app = initializeApp(firebaseConfig);
+  initAppCheck(app); // doit précéder getDatabase/getFirestore
   auth = getAuth(app);
   db = getDatabase(app);
-  fs = getFirestore(app);
-
-  const appCheckKey = import.meta.env.VITE_FIREBASE_APPCHECK_KEY;
-  if (appCheckKey && !useEmulator) {
-    void import("firebase/app-check").then(
-      ({ initializeAppCheck, ReCaptchaEnterpriseProvider }) => {
-        initializeAppCheck(app!, {
-          provider: new ReCaptchaEnterpriseProvider(appCheckKey),
-          isTokenAutoRefreshEnabled: true,
-        });
-      },
-    );
-  }
+  // Cache offline (IndexedDB) : historique consultable hors-ligne, lectures instantanées.
+  fs = initializeFirestore(app, { localCache: persistentLocalCache() });
 
   if (useEmulator) {
     connectAuthEmulator(auth, "http://127.0.0.1:9099", {

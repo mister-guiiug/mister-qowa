@@ -19,6 +19,8 @@ import {
   leaderboardPath,
   playersPath,
   playerRevealPath,
+  revealPath,
+  metaPath,
   answersQuestionPath,
   reactionsPath,
   teamLeaderboardPath,
@@ -40,9 +42,16 @@ function useRtdbValue<T>(path: string | null): T | undefined {
       setValue(undefined);
       return;
     }
-    const off = onValue(ref(getDb(), path), (snap) => {
-      setValue((snap.val() ?? undefined) as T | undefined);
-    });
+    const off = onValue(
+      ref(getDb(), path),
+      (snap) => {
+        setValue((snap.val() ?? undefined) as T | undefined);
+      },
+      (err) => {
+        // Permission/réseau : on ne fige plus silencieusement, on trace.
+        console.error(`[RTDB] abonnement « ${path} » échoué`, err);
+      },
+    );
     return () => off();
   }, [path]);
   return value;
@@ -59,6 +68,10 @@ export interface PlayerView {
   current: PublicQuestion | undefined;
   score: Score | undefined;
   reveal: PlayerReveal | undefined;
+  /** Bonne réponse publiée (choix gagnant) — lisible après clôture. */
+  correctChoice: string | undefined;
+  /** Le joueur a-t-il été exclu par le host ? */
+  kicked: boolean;
   leaderboard: LeaderboardEntry[];
 }
 
@@ -83,11 +96,21 @@ export function usePlayerView(
       ? playerRevealPath(sessionId, current.questionId, uid)
       : null,
   );
+  const correctChoice = useRtdbValue<string>(
+    sessionId && current
+      ? `${revealPath(sessionId, current.questionId)}/correct`
+      : null,
+  );
+  const kicked = useRtdbValue<boolean>(
+    sessionId && uid ? `${metaPath(sessionId)}/banned/${uid}` : null,
+  );
   return {
     state,
     current,
     score,
     reveal,
+    correctChoice,
+    kicked: kicked === true,
     leaderboard: asArray<LeaderboardEntry>(leaderboardRaw),
   };
 }
@@ -156,6 +179,7 @@ export function useAnswerStats(
         }
         setStats({ count: seen.size, byChoice });
       },
+      (err) => console.error("[RTDB] stats de réponses échouées", err),
     );
     return () => off();
   }, [sessionId, questionId]);

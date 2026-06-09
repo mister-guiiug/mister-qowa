@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Navigate } from "react-router-dom";
+import { X, Share2, SkipForward, RefreshCw } from "lucide-react";
 import { Screen, Button, Spinner } from "../lib/ui";
 import {
   useHostView,
@@ -7,7 +8,10 @@ import {
   useReactions,
   useTeamLeaderboard,
 } from "../hooks/useGameSubscription";
-import { useServerOffset } from "../hooks/useServerTime";
+import { useServerOffset, serverNow } from "../hooks/useServerTime";
+import { useAsyncAction } from "../hooks/useAsyncAction";
+import { ConnectionBanner } from "../components/ConnectionBanner";
+import { feedback } from "../lib/feedback";
 import { AnswerDistribution } from "../components/AnswerDistribution";
 import { QRCodeSVG } from "qrcode.react";
 import { useGameStore } from "../store/gameStore";
@@ -16,7 +20,11 @@ import {
   closeQuestion,
   endGame,
   sendReaction,
+  skipQuestion,
+  restartSession,
+  kickPlayer,
 } from "../firebase/api";
+import { shareOrCopy } from "../lib/share";
 import { FloatingReactions, ReactionBar } from "../components/Reactions";
 import { TeamLeaderboard } from "../components/TeamLeaderboard";
 import { PinBadge } from "../components/PinBadge";
@@ -34,43 +42,79 @@ export function Host() {
   const { state, current, players, playerCount, leaderboard } = useHostView(
     sessionId ?? null,
   );
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { busy, error, setError, run: act } = useAsyncAction();
+  const [notFound, setNotFound] = useState(false);
+  const [info, setInfo] = useState<string | null>(null);
   const offset = useServerOffset();
   const stats = useAnswerStats(sessionId ?? null, current?.questionId ?? null);
   const reactions = useReactions(sessionId ?? null);
   const teamStandings = useTeamLeaderboard(sessionId ?? null);
 
   // Auto-clôture quand le compte à rebours atteint 0 (closeQuestion est idempotent).
+  // Deps exhaustives (activatedAt/timeLimitMs/index) + erreurs remontées.
   useEffect(() => {
     if (state !== "QUESTION_ACTIVE" || !current || !quiz || !sessionId) return;
-    const ms =
-      current.activatedAt + current.timeLimitMs - (Date.now() + offset);
+    const ms = current.activatedAt + current.timeLimitMs - serverNow(offset);
     const id = setTimeout(
-      () => void closeQuestion(sessionId, quiz, current.index),
+      () =>
+        closeQuestion(sessionId, quiz, current.index).catch((e) =>
+          setError(errMsg(e)),
+        ),
       Math.max(0, ms) + 400,
     );
     return () => clearTimeout(id);
+    // deps volontairement primitives (pas l'objet `current` qui change à chaque snapshot)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state, current?.questionId, quiz, sessionId, offset]);
+  }, [
+    state,
+    current?.questionId,
+    current?.activatedAt,
+    current?.timeLimitMs,
+    current?.index,
+    quiz,
+    sessionId,
+    offset,
+    setError,
+  ]);
 
-  async function act(fn: () => Promise<unknown>) {
-    setBusy(true);
-    setError(null);
-    try {
-      await fn();
-    } catch (e) {
-      setError(errMsg(e));
-    } finally {
-      setBusy(false);
+  // Session injoignable après un délai : on ne reste pas bloqué sur le spinner.
+  useEffect(() => {
+    if (state) {
+      setNotFound(false);
+      return;
     }
-  }
+    const id = setTimeout(() => setNotFound(true), 8000);
+    return () => clearTimeout(id);
+  }, [state]);
+
+  // Fanfare au podium (host).
+  useEffect(() => {
+    if (state === "PODIUM") feedback.finish();
+  }, [state]);
 
   if (!sessionId) return <Navigate to="/" replace />;
   if (!state)
     return (
       <Screen className="justify-center">
-        <Spinner label="Connexion à la partie…" />
+        {notFound ? (
+          <div className="flex flex-col items-center gap-4 text-center">
+            <p className="font-display text-2xl">Partie introuvable</p>
+            <p className="text-white/60">
+              Cette partie n’existe plus ou a été fermée.
+            </p>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                reset();
+                nav("/");
+              }}
+            >
+              Retour à l’accueil
+            </Button>
+          </div>
+        ) : (
+          <Spinner label="Connexion à la partie…" />
+        )}
       </Screen>
     );
 
@@ -88,12 +132,43 @@ export function Host() {
     ? `${window.location.origin}${import.meta.env.BASE_URL}#/join?pin=${pin}`
     : "";
 
+  const flash = (r: "shared" | "copied" | "failed") =>
+    setInfo(
+      r === "copied"
+        ? "Lien copié !"
+        : r === "failed"
+          ? "Partage indisponible"
+          : null,
+    );
+  const invite = () =>
+    shareOrCopy({
+      title: "Mister Qowa",
+      text: "Rejoins ma partie de quiz !",
+      url: joinUrl,
+    }).then(flash);
+  const shareResult = () => {
+    const top = leaderboard
+      .slice(0, 3)
+      .map((e, i) => `${i + 1}. ${e.pseudo} (${e.total})`)
+      .join("\n");
+    return shareOrCopy({
+      title: "Résultats Mister Qowa",
+      text: `🏆 Podium Mister Qowa\n${top}`,
+    }).then(flash);
+  };
+
   return (
     <Screen>
       <FloatingReactions items={reactions} />
+      <ConnectionBanner />
       {error ? (
         <p className="mb-4 rounded-xl bg-rose-500/20 px-4 py-2 text-sm text-rose-200">
           {error}
+        </p>
+      ) : null}
+      {info ? (
+        <p className="mb-4 rounded-xl bg-white/10 px-4 py-2 text-center text-sm text-white/80">
+          {info}
         </p>
       ) : null}
 
@@ -115,22 +190,40 @@ export function Host() {
             {playerCount > 1 ? "s" : ""}
           </p>
           <div className="flex max-h-40 flex-wrap justify-center gap-2 overflow-auto">
-            {Object.values(players).map((p, i) => (
+            {Object.entries(players).map(([puid, p]) => (
               <span
-                key={i}
-                className="rounded-full bg-white/10 px-3 py-1 text-sm"
+                key={puid}
+                className="inline-flex items-center gap-1.5 rounded-full bg-white/10 py-1 pl-3 pr-1 text-sm"
               >
+                {p.avatar ? <span aria-hidden>{p.avatar}</span> : null}
                 {p.pseudo}
+                <button
+                  type="button"
+                  onClick={() => void kickPlayer(sessionId, puid)}
+                  aria-label={`Exclure ${p.pseudo}`}
+                  className="rounded-full p-0.5 text-white/40 hover:bg-rose-500/30 hover:text-rose-200"
+                >
+                  <X className="size-3.5" />
+                </button>
               </span>
             ))}
           </div>
-          <Button
-            full
-            disabled={busy || playerCount === 0 || !quiz}
-            onClick={() => quiz && act(() => nextQuestion(sessionId, quiz, 0))}
-          >
-            Démarrer la partie
-          </Button>
+          <div className="flex w-full flex-col gap-2">
+            {pin ? (
+              <Button full variant="ghost" onClick={() => void invite()}>
+                <Share2 className="size-4" /> Inviter
+              </Button>
+            ) : null}
+            <Button
+              full
+              disabled={busy || playerCount === 0 || !quiz}
+              onClick={() =>
+                quiz && act(() => nextQuestion(sessionId, quiz, 0))
+              }
+            >
+              Démarrer la partie
+            </Button>
+          </div>
         </div>
       ) : null}
 
@@ -144,11 +237,14 @@ export function Host() {
           </div>
           <h2 className="font-display text-2xl">{current.prompt}</h2>
           {current.mediaUrl ? (
-            <img
-              src={current.mediaUrl}
-              alt=""
-              className="max-h-48 w-full rounded-2xl object-contain"
-            />
+            <div className="h-48 w-full overflow-hidden rounded-2xl bg-white/5">
+              <img
+                src={current.mediaUrl}
+                alt={current.mediaAlt ?? ""}
+                decoding="async"
+                className="h-full w-full object-contain"
+              />
+            </div>
           ) : null}
           {current.options ? (
             <ul className="grid grid-cols-2 gap-2">
@@ -165,16 +261,28 @@ export function Host() {
           <p className="text-center text-white/70">
             {stats.count}/{playerCount} ont répondu
           </p>
-          <Button
-            full
-            variant="danger"
-            disabled={busy || !quiz}
-            onClick={() =>
-              quiz && act(() => closeQuestion(sessionId, quiz, current.index))
-            }
-          >
-            Clore maintenant
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              full
+              variant="ghost"
+              disabled={busy || !quiz}
+              onClick={() =>
+                quiz && act(() => skipQuestion(sessionId, quiz, current.index))
+              }
+            >
+              <SkipForward className="size-4" /> Passer
+            </Button>
+            <Button
+              full
+              variant="danger"
+              disabled={busy || !quiz}
+              onClick={() =>
+                quiz && act(() => closeQuestion(sessionId, quiz, current.index))
+              }
+            >
+              Clore maintenant
+            </Button>
+          </div>
         </div>
       ) : null}
 
@@ -226,16 +334,28 @@ export function Host() {
             <TeamLeaderboard standings={teamStandings} />
           ) : null}
           <Podium entries={leaderboard} />
-          <Button
-            full
-            variant="ghost"
-            onClick={() => {
-              reset();
-              nav("/");
-            }}
-          >
-            Nouvelle partie
-          </Button>
+          <div className="flex flex-col gap-2">
+            <Button
+              full
+              disabled={busy || !quiz}
+              onClick={() => quiz && act(() => restartSession(sessionId, quiz))}
+            >
+              <RefreshCw className="size-4" /> Rejouer avec les mêmes
+            </Button>
+            <Button full variant="ghost" onClick={() => void shareResult()}>
+              <Share2 className="size-4" /> Partager le résultat
+            </Button>
+            <Button
+              full
+              variant="ghost"
+              onClick={() => {
+                reset();
+                nav("/");
+              }}
+            >
+              Nouvelle partie
+            </Button>
+          </div>
         </div>
       ) : null}
 

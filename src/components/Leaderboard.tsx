@@ -31,6 +31,7 @@ export function Leaderboard({
             <span className="w-6 text-right font-display text-white/70">
               {i + 1}
             </span>
+            {e.avatar ? <span aria-hidden>{e.avatar}</span> : null}
             <span className="font-semibold">{e.pseudo}</span>
           </span>
           <span className="font-display tabular-nums">{e.total}</span>

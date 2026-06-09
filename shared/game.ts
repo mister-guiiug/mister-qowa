@@ -50,6 +50,7 @@ export function publicQuestionFields(
     timeLimitMs: q.timeLimitMs,
     scored: q.type !== "poll",
     ...(q.mediaUrl ? { mediaUrl: q.mediaUrl } : {}),
+    ...(q.mediaAlt ? { mediaAlt: q.mediaAlt } : {}),
   };
   if (q.type === "multiple_choice" || q.type === "poll") {
     return { ...base, options: q.options };

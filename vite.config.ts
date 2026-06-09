@@ -28,6 +28,21 @@ export default defineConfig(({ command }) => {
           globPatterns: ["**/*.{js,css,html,svg,png,woff2,webmanifest}"],
           navigateFallback: "index.html",
           cleanupOutdatedCaches: true,
+          runtimeCaching: [
+            {
+              // Images de question (Firebase Storage) : URL immuable par fichier.
+              urlPattern: /^https:\/\/firebasestorage\.googleapis\.com\/.*/i,
+              handler: "CacheFirst",
+              options: {
+                cacheName: "qowa-media",
+                expiration: {
+                  maxEntries: 60,
+                  maxAgeSeconds: 60 * 60 * 24 * 30,
+                },
+                cacheableResponse: { statuses: [0, 200] },
+              },
+            },
+          ],
         },
         manifest: {
           id: "/mister-qowa/",

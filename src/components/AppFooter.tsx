@@ -1,5 +1,6 @@
-import { Coffee, RotateCw } from "lucide-react";
+import { Coffee, RotateCw, Volume2, VolumeX } from "lucide-react";
 import { REPO_URL, SPONSOR_URL } from "../links";
+import { useAiSettings } from "../store/settingsStore";
 
 // lucide 1.x a retiré les icônes de marque : SVG GitHub en ligne (règle parc).
 function GithubMark({ className }: { className?: string }) {
@@ -16,8 +17,24 @@ function GithubMark({ className }: { className?: string }) {
 }
 
 export function AppFooter() {
+  const soundOn = useAiSettings((s) => s.soundOn);
+  const setSoundOn = useAiSettings((s) => s.setSoundOn);
   return (
-    <footer className="mt-auto flex items-center justify-center gap-5 pt-8 text-sm text-white/50">
+    <footer className="mt-auto flex flex-wrap items-center justify-center gap-5 pt-8 text-sm text-white/50">
+      <button
+        type="button"
+        onClick={() => setSoundOn(!soundOn)}
+        aria-pressed={soundOn}
+        aria-label={soundOn ? "Couper le son" : "Activer le son"}
+        className="inline-flex items-center gap-1.5 hover:text-white"
+      >
+        {soundOn ? (
+          <Volume2 className="size-4" />
+        ) : (
+          <VolumeX className="size-4" />
+        )}
+        {soundOn ? "Son activé" : "Son coupé"}
+      </button>
       <a
         href={REPO_URL}
         target="_blank"

@@ -40,13 +40,8 @@ import {
   STREAK_BONUS_PCT,
   LEADERBOARD_TOP,
 } from "@shared/gameState";
-import { computeScore } from "@shared/scoring";
-import {
-  isCorrect,
-  correctChoiceOf,
-  basePointsOf,
-  publicQuestionFields,
-} from "@shared/game";
+import { scoreRound, tallyAnswers, type RoundAnswer } from "@shared/round";
+import { publicQuestionFields } from "@shared/game";
 import type { Quiz, Score } from "@shared/contracts";
 
 type AnswerNode = { choice: string; serverTs: number };
@@ -55,6 +50,28 @@ function randomPin(): string {
   const a = new Uint32Array(PIN_LENGTH);
   crypto.getRandomValues(a);
   return Array.from(a, (n) => String(n % 10)).join("");
+}
+
+const sleep = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Écriture host CRITIQUE (transition d'état, scoring) : une re-tentative après
+ * un court délai si le 1er essai échoue (coupure réseau passagère), puis on
+ * trace et on remonte l'erreur au lieu de la perdre silencieusement.
+ */
+async function hostWrite<T>(label: string, fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch {
+    await sleep(600); // re-tentative après une coupure réseau passagère
+    try {
+      return await fn();
+    } catch (second) {
+      console.error(`[host:${label}] échec après re-tentative`, second);
+      throw second instanceof Error ? second : new Error(String(second));
+    }
+  }
 }
 
 /** Agrège les scores individuels par équipe (mode équipe). */
@@ -76,6 +93,27 @@ function teamStandings(
       total: totals[t.id] ?? 0,
     }))
     .sort((a, b) => b.total - a.total);
+}
+
+type PlayerLite = { pseudo: string; teamId?: string; avatar?: string };
+
+/** Classement tronqué (avec avatar quand présent) à partir des scores. */
+function buildRanking(
+  scores: Record<string, Score>,
+  players: Record<string, PlayerLite>,
+) {
+  return Object.entries(scores)
+    .map(([pid, s]) => {
+      const av = players[pid]?.avatar;
+      return {
+        uid: pid,
+        pseudo: players[pid]?.pseudo ?? "?",
+        total: s.total,
+        ...(av ? { avatar: av } : {}),
+      };
+    })
+    .sort((a, b) => b.total - a.total)
+    .slice(0, LEADERBOARD_TOP);
 }
 
 /* ---------- host ---------- */
@@ -122,11 +160,13 @@ export async function nextQuestion(
   if (index >= quiz.questions.length) throw new Error("Plus de questions.");
   const db = getDb();
   const q = quiz.questions[index];
-  await set(ref(db, currentPath(sessionId)), {
-    ...publicQuestionFields(q, index, quiz.questions.length),
-    activatedAt: serverTimestamp(),
+  await hostWrite("nextQuestion", async () => {
+    await set(ref(db, currentPath(sessionId)), {
+      ...publicQuestionFields(q, index, quiz.questions.length),
+      activatedAt: serverTimestamp(),
+    });
+    await set(ref(db, statePath(sessionId)), "QUESTION_ACTIVE");
   });
-  await set(ref(db, statePath(sessionId)), "QUESTION_ACTIVE");
 }
 
 export async function closeQuestion(
@@ -153,10 +193,7 @@ export async function closeQuestion(
     Record<string, AnswerNode>
   >;
   const scores = (scoresSnap.val() ?? {}) as Record<string, Score>;
-  const players = (playersSnap.val() ?? {}) as Record<
-    string,
-    { pseudo: string; teamId?: string }
-  >;
+  const players = (playersSnap.val() ?? {}) as Record<string, PlayerLite>;
 
   // Dédup par joueur (1re réponse retenue) — écriture multi-shard forgée neutralisée.
   const flat = new Map<string, AnswerNode>();
@@ -166,47 +203,24 @@ export async function closeQuestion(
     }
   }
 
+  // Cœur métier PUR (testé dans shared/round.test.ts).
+  const round = scoreRound(
+    q,
+    Object.fromEntries(flat),
+    scores,
+    activatedAt,
+    STREAK_BONUS_PCT,
+  );
   const updates: Record<string, unknown> = {};
-  for (const [pid, ans] of flat) {
-    if (q.type === "poll") break; // sondage : ni score, ni série, ni reveal
-    const correct = isCorrect(q, ans.choice);
-    const responseTimeMs = Math.max(
-      0,
-      (ans.serverTs ?? activatedAt) - activatedAt,
-    );
-    const prev = scores[pid] ?? { total: 0, streak: 0 };
-    const awarded = computeScore({
-      correct,
-      responseTimeMs,
-      timeLimitMs: q.timeLimitMs,
-      basePoints: basePointsOf(q),
-      streakBefore: prev.streak,
-      streakBonusPct: STREAK_BONUS_PCT,
-    });
-    const newScore: Score = {
-      total: prev.total + awarded,
-      streak: correct ? prev.streak + 1 : 0,
-    };
-    scores[pid] = newScore;
-    updates[scorePath(sessionId, pid)] = newScore;
-    updates[playerRevealPath(sessionId, q.id, pid)] = {
-      correct,
-      awarded,
-      responseTimeMs,
-      total: newScore.total,
-    };
+  for (const [pid, sc] of Object.entries(round.scores)) {
+    scores[pid] = sc;
+    updates[scorePath(sessionId, pid)] = sc;
+    updates[playerRevealPath(sessionId, q.id, pid)] = round.reveals[pid];
   }
-  if (q.type !== "poll") {
-    updates[`${revealPath(sessionId, q.id)}/correct`] = correctChoiceOf(q);
+  if (round.correctChoice !== null) {
+    updates[`${revealPath(sessionId, q.id)}/correct`] = round.correctChoice;
   }
-  updates[leaderboardPath(sessionId)] = Object.entries(scores)
-    .map(([pid, s]) => ({
-      uid: pid,
-      pseudo: players[pid]?.pseudo ?? "?",
-      total: s.total,
-    }))
-    .sort((a, b) => b.total - a.total)
-    .slice(0, LEADERBOARD_TOP);
+  updates[leaderboardPath(sessionId)] = buildRanking(scores, players);
   const teams = (metaSnap.val() as { teams?: Team[] } | null)?.teams;
   if (teams?.length) {
     updates[teamLeaderboardPath(sessionId)] = teamStandings(
@@ -216,30 +230,24 @@ export async function closeQuestion(
     );
   }
   updates[statePath(sessionId)] = "LEADERBOARD";
-  await update(ref(db), updates);
+  await hostWrite("closeQuestion", () => update(ref(db), updates));
 }
 
 export async function endGame(sessionId: string, quiz?: Quiz): Promise<void> {
   const user = await ensureAuth();
   const db = getDb();
-  const [scoresSnap, playersSnap, metaSnap] = await Promise.all([
+  const [scoresSnap, playersSnap, metaSnap, answersSnap] = await Promise.all([
     get(ref(db, scoresPath(sessionId))),
     get(ref(db, playersPath(sessionId))),
     get(ref(db, metaPath(sessionId))),
+    get(ref(db, `sessions/${sessionId}/answers`)),
   ]);
   const scores = (scoresSnap.val() ?? {}) as Record<string, Score>;
-  const players = (playersSnap.val() ?? {}) as Record<
-    string,
-    { pseudo: string; teamId?: string }
-  >;
-  const ranking = Object.entries(scores)
-    .map(([pid, s]) => ({
-      uid: pid,
-      pseudo: players[pid]?.pseudo ?? "?",
-      total: s.total,
-    }))
-    .sort((a, b) => b.total - a.total)
-    .slice(0, LEADERBOARD_TOP);
+  const players = (playersSnap.val() ?? {}) as Record<string, PlayerLite>;
+  const ranking = buildRanking(scores, players);
+  const questionStats = quiz
+    ? computeQuestionStats(quiz, answersSnap.val())
+    : [];
   const finalUpdate: Record<string, unknown> = {
     [leaderboardPath(sessionId)]: ranking,
     [statePath(sessionId)]: "PODIUM",
@@ -252,7 +260,7 @@ export async function endGame(sessionId: string, quiz?: Quiz): Promise<void> {
       players,
     );
   }
-  await update(ref(db), finalUpdate);
+  await hostWrite("endGame", () => update(ref(db), finalUpdate));
 
   // Archive durable (best-effort) — alimente l'historique des parties.
   try {
@@ -264,10 +272,33 @@ export async function endGame(sessionId: string, quiz?: Quiz): Promise<void> {
       finishedAt: Date.now(),
       playerCount: ranking.length,
       ranking,
+      ...(questionStats.length ? { questionStats } : {}),
     });
-  } catch {
-    /* archivage non critique */
+  } catch (e) {
+    console.error("[endGame] archivage Firestore échoué", e);
   }
+}
+
+/** Stats par question (taux de réussite) à partir du nœud answers RTDB. */
+function computeQuestionStats(
+  quiz: Quiz,
+  answersRaw: unknown,
+): { index: number; prompt: string; answered: number; correct: number }[] {
+  const all = (answersRaw ?? {}) as Record<
+    string,
+    Record<string, Record<string, RoundAnswer>>
+  >;
+  return quiz.questions.map((q, index) => {
+    // Dédup par joueur (1re réponse) à travers les shards de la question.
+    const flat: Record<string, RoundAnswer> = {};
+    for (const shard of Object.values(all[q.id] ?? {})) {
+      for (const [pid, ans] of Object.entries(shard)) {
+        if (!(pid in flat)) flat[pid] = ans;
+      }
+    }
+    const { answered, correct } = tallyAnswers(q, flat);
+    return { index, prompt: q.prompt, answered, correct };
+  });
 }
 
 /* ---------- joueur ---------- */
@@ -276,6 +307,7 @@ export async function endGame(sessionId: string, quiz?: Quiz): Promise<void> {
 export async function lookupSession(
   pin: string,
 ): Promise<{ sessionId: string; teams: Team[] | null }> {
+  await ensureAuth(); // la lecture de pins/ exige désormais une session Auth (anti-bot)
   const db = getDb();
   const sid = (await get(ref(db, pinIndexPath(pin)))).val();
   if (!sid || typeof sid !== "string") throw new Error("PIN invalide.");
@@ -291,6 +323,7 @@ export async function joinSession(
   pin: string,
   pseudo: string,
   teamId?: string,
+  avatar?: string,
 ): Promise<{ sessionId: string }> {
   const user = await ensureAuth();
   const db = getDb();
@@ -298,6 +331,8 @@ export async function joinSession(
   if (!sid || typeof sid !== "string") throw new Error("PIN invalide.");
   const state = (await get(ref(db, statePath(sid)))).val();
   if (state !== "LOBBY") throw new Error("La partie a déjà commencé.");
+  const bannedSnap = await get(ref(db, `${metaPath(sid)}/banned/${user.uid}`));
+  if (bannedSnap.exists()) throw new Error("Tu as été retiré de cette partie.");
   const playersSnap = await get(ref(db, playersPath(sid)));
   const count = playersSnap.exists()
     ? Object.keys(playersSnap.val() as object).length
@@ -308,10 +343,54 @@ export async function joinSession(
     pseudo,
     joinedAt: Date.now(),
     ...(teamId ? { teamId } : {}),
+    ...(avatar ? { avatar } : {}),
   });
   // Présence : retire le joueur du lobby s'il se déconnecte.
   void onDisconnect(playerRef).remove();
   return { sessionId: sid };
+}
+
+/** Exclut un joueur (host) : retire son nœud et le bannit (anti re-join). */
+export async function kickPlayer(
+  sessionId: string,
+  uid: string,
+): Promise<void> {
+  await update(ref(getDb()), {
+    [playerPath(sessionId, uid)]: null,
+    [`${metaPath(sessionId)}/banned/${uid}`]: true,
+  });
+}
+
+/** Saute la question courante sans la scorer : passe à la suivante (ou au podium). */
+export async function skipQuestion(
+  sessionId: string,
+  quiz: Quiz,
+  index: number,
+): Promise<void> {
+  if (index + 1 < quiz.questions.length)
+    await nextQuestion(sessionId, quiz, index + 1);
+  else await endGame(sessionId, quiz);
+}
+
+/** Revanche : remet la session en LOBBY, purge la partie, conserve joueurs + PIN. */
+export async function restartSession(
+  sessionId: string,
+  quiz: Quiz,
+): Promise<void> {
+  const db = getDb();
+  const updates: Record<string, unknown> = {
+    [statePath(sessionId)]: "LOBBY",
+    [currentPath(sessionId)]: null,
+    [scoresPath(sessionId)]: null,
+    [leaderboardPath(sessionId)]: null,
+    [teamLeaderboardPath(sessionId)]: null,
+  };
+  // Purge réponses + reveal de CHAQUE question (sinon !data.exists() rebloque).
+  for (const q of quiz.questions) {
+    updates[answersQuestionPath(sessionId, q.id)] = null;
+    updates[revealPath(sessionId, q.id)] = null;
+  }
+  await hostWrite("restartSession", () => update(ref(db), updates));
 }
 
 /** Réaction emoji éphémère (push RTDB). */

@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Download, Trophy } from "lucide-react";
+import { ArrowLeft, Download, Trophy, TrendingDown } from "lucide-react";
 import { Screen, Card, Button, Spinner } from "../lib/ui";
 import {
   fetchMyResults,
   resultsCsv,
   downloadCsv,
+  hardestQuestion,
   type GameResult,
 } from "../lib/results";
 import { errMsg } from "../lib/err";
@@ -67,10 +68,26 @@ export function History() {
                   </p>
                   {r.ranking[0] ? (
                     <p className="mt-1 inline-flex items-center gap-1 text-sm text-answer-yellow">
-                      <Trophy className="size-4" /> {r.ranking[0].pseudo} ·{" "}
-                      {r.ranking[0].total} pts
+                      <Trophy className="size-4" />
+                      {r.ranking[0].avatar ? (
+                        <span aria-hidden>{r.ranking[0].avatar}</span>
+                      ) : null}{" "}
+                      {r.ranking[0].pseudo} · {r.ranking[0].total} pts
                     </p>
                   ) : null}
+                  {(() => {
+                    const hard = hardestQuestion(r);
+                    return hard ? (
+                      <p className="mt-1 inline-flex items-start gap-1 text-sm text-white/50">
+                        <TrendingDown className="mt-0.5 size-4 shrink-0" />
+                        <span>
+                          Plus ratée : « {hard.prompt} » —{" "}
+                          {Math.round((100 * hard.correct) / hard.answered)}% de
+                          réussite
+                        </span>
+                      </p>
+                    ) : null;
+                  })()}
                 </div>
                 <Button
                   variant="ghost"

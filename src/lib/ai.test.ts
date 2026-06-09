@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { parseJsonLoose, aiQuizToDraft, buildPrompt, type AiQuiz } from "./ai";
+import {
+  parseJsonLoose,
+  aiQuizToDraft,
+  buildPrompt,
+  demoDraft,
+  type AiQuiz,
+} from "./ai";
 import { validateDraft } from "./quizDraft";
 
 describe("parseJsonLoose", () => {
@@ -108,5 +114,37 @@ describe("buildPrompt", () => {
     expect(p).toContain("7 questions");
     expect(p).toContain("difficile");
     expect(p).toContain("JSON");
+  });
+
+  it("utilise le texte source quand fourni (plutôt que le sujet)", () => {
+    const p = buildPrompt({
+      topic: "ignoré",
+      count: 3,
+      difficulty: "facile",
+      sourceText: "La photosynthèse transforme la lumière en énergie.",
+    });
+    expect(p).toContain("photosynthèse");
+    expect(p).toContain("Base EXCLUSIVEMENT");
+    expect(p).not.toContain("« ignoré »");
+  });
+
+  it("intègre la langue demandée", () => {
+    const p = buildPrompt({
+      topic: "x",
+      count: 3,
+      difficulty: "moyen",
+      language: "anglais",
+    });
+    expect(p).toContain("anglais");
+  });
+});
+
+describe("demoDraft", () => {
+  it("produit un brouillon valide au titre honnête", () => {
+    const d = demoDraft("Volcans");
+    expect(validateDraft(d)).toEqual([]);
+    expect(d.title).toContain("Démo —");
+    expect(d.title).toContain("Volcans");
+    expect(d.questions.length).toBeGreaterThan(0);
   });
 });
