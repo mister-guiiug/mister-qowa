@@ -40,6 +40,7 @@ import { FloatingReactions, ReactionBar } from "../components/Reactions";
 import { TeamLeaderboard } from "../components/TeamLeaderboard";
 import { PinBadge } from "../components/PinBadge";
 import { Countdown } from "../components/Countdown";
+import { TimerBar } from "../components/TimerBar";
 import { Leaderboard } from "../components/Leaderboard";
 import { Podium } from "../components/Podium";
 import { useErr, useT } from "../i18n";
@@ -268,6 +269,13 @@ export function Host() {
               <Countdown endsAt={current.activatedAt + current.timeLimitMs} />
             )}
           </div>
+          {!paused ? (
+            <TimerBar
+              endsAt={current.activatedAt + current.timeLimitMs}
+              timeLimitMs={current.timeLimitMs}
+              offset={offset}
+            />
+          ) : null}
           <h2 className="font-display text-2xl">{current.prompt}</h2>
           {current.mediaUrl ? (
             <div className="h-48 w-full overflow-hidden rounded-2xl bg-white/5">

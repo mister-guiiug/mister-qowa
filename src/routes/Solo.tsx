@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Check, X, Play } from "lucide-react";
 import { Screen, Button, Card } from "../lib/ui";
 import { AnswerGrid } from "../components/AnswerGrid";
+import { TimerBar } from "../components/TimerBar";
 import { feedback } from "../lib/feedback";
 import { DEMO_QUIZZES } from "@shared/seed";
 import { useQuizLibrary } from "../store/quizStore";
@@ -182,9 +183,22 @@ export function Solo() {
           {phase === "question" ? t("solo.secondsShort", { n: remaining }) : ""}
         </span>
         <span className="font-display tabular-nums">
+          {streak >= 2 ? (
+            <span aria-hidden className="mr-2 text-amber-300">
+              🔥{streak}
+            </span>
+          ) : null}
           {t("common.pts", { n: score })}
         </span>
       </div>
+      {phase === "question" ? (
+        <div className="mt-3">
+          <TimerBar
+            endsAt={startedAt + q.timeLimitMs}
+            timeLimitMs={q.timeLimitMs}
+          />
+        </div>
+      ) : null}
       <h2 className="mt-4 font-display text-xl">{q.prompt}</h2>
       {q.mediaUrl ? (
         <div className="mt-3 h-48 w-full overflow-hidden rounded-2xl bg-white/5">
