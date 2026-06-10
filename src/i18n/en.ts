@@ -248,4 +248,43 @@ export const en = {
   "pin.label": "PIN code",
   "update.available": "New version available",
   "update.later": "Later",
+
+  // errors
+  "err.generic": "Something went wrong.",
+  "err.crashTitle": "Oops…",
+  "err.crashBody": "Something went wrong. Reload the app to recover.",
+  "err.pinAllocFailed": "Could not allocate a PIN.",
+  "err.noMoreQuestions": "No more questions.",
+  "err.pinInvalid": "Invalid PIN.",
+  "err.gameStarted": "The game has already started.",
+  "err.youAreBanned": "You’ve been removed from this game.",
+  "err.gameFull": "Game full.",
+  "err.pickImage": "Choose an image.",
+  "err.imageTooHeavy": "Image too heavy even compressed (max 3 MB).",
+  "err.fileUnreadable": "Unreadable file (invalid JSON).",
+  "err.notAQuiz": "This file is not a valid quiz.",
+  "err.aiNoKey": "Enter your API key first.",
+  "err.aiUnreadable": "Unreadable AI response (no JSON found).",
+  "err.aiNoContent": (v) => `${v.provider} returned no content.`,
+  "err.aiKeyRejected": (v) =>
+    `${v.provider} key rejected (check it’s valid and active).`,
+  "err.aiQuota": (v) => `${v.provider} quota exceeded — try again later.`,
+  "err.aiStatus": (v) =>
+    `${v.provider} responded ${v.status}${v.detail ? `: ${v.detail}` : ""}.`,
+  "err.aiTimeout": "Generation timed out — try again.",
+  "err.aiNetwork": "Could not reach the provider (network or CORS).",
+  "err.aiBadFormat": "The AI produced a malformed quiz — try again.",
+  "err.aiRegenFailed": "Regeneration failed — try again.",
+  "err.aiInvalidQuiz": "Generated quiz is invalid — try again.",
+  "err.vTitle": "Give the quiz a title.",
+  "err.vAtLeastOneQuestion": "Add at least one question.",
+  "err.vEmptyPrompt": (v) => `Q${v.n}: the prompt is empty.`,
+  "err.vFillTwoOptions": (v) =>
+    `Q${v.n}: fill at least 2 answers (some are empty).`,
+  "err.vAtLeastTwoOptions": (v) => `Q${v.n}: at least 2 answers are required.`,
+  "err.vDuplicateOptions": (v) => `Q${v.n}: two answers are identical.`,
+  "err.vDuplicateOptionIds": (v) => `Q${v.n}: duplicate answer ids.`,
+  "err.vSelectCorrect": (v) => `Q${v.n}: select the correct answer.`,
+  "err.vAtLeastOneAccepted": (v) =>
+    `Q${v.n}: add at least one accepted answer.`,
 } satisfies Record<Key, Msg>;

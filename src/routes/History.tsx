@@ -10,11 +10,11 @@ import {
   aggregateByQuiz,
   type GameResult,
 } from "../lib/results";
-import { errMsg } from "../lib/err";
-import { useT, useLang } from "../i18n";
+import { useErr, useT, useLang } from "../i18n";
 
 export function History() {
   const t = useT();
+  const err = useErr();
   const lang = useLang((s) => s.lang);
   const dateLocale = lang === "fr" ? "fr-FR" : "en-GB";
   const nav = useNavigate();
@@ -27,7 +27,7 @@ export function History() {
       .then((r) => alive && setResults(r))
       .catch((e) => {
         if (alive) {
-          setError(errMsg(e));
+          setError(err(e));
           setResults([]);
         }
       });

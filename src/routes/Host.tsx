@@ -42,11 +42,11 @@ import { PinBadge } from "../components/PinBadge";
 import { Countdown } from "../components/Countdown";
 import { Leaderboard } from "../components/Leaderboard";
 import { Podium } from "../components/Podium";
-import { errMsg } from "../lib/err";
-import { useT } from "../i18n";
+import { useErr, useT } from "../i18n";
 
 export function Host() {
   const t = useT();
+  const err = useErr();
   const { sessionId } = useParams();
   const nav = useNavigate();
   const pin = useGameStore((s) => s.pin);
@@ -84,7 +84,7 @@ export function Host() {
     const id = setTimeout(
       () =>
         closeQuestion(sessionId, quiz, current.index).catch((e) =>
-          setError(errMsg(e)),
+          setError(err(e)),
         ),
       Math.max(0, ms) + 400,
     );

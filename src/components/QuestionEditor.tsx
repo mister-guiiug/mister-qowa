@@ -4,8 +4,7 @@ import { QUESTION_TYPES, type QuestionType } from "@shared/gameState";
 import type { DraftQuestion } from "../lib/quizDraft";
 import { blankOption, retypeQuestion } from "../lib/quizDraft";
 import { uploadQuestionImage } from "../lib/media";
-import { errMsg } from "../lib/err";
-import { useT, type Key } from "../i18n";
+import { useErr, useT, type Key } from "../i18n";
 
 const TYPE_KEYS: Record<QuestionType, Key> = {
   multiple_choice: "qe.typeMultipleChoice",
@@ -35,6 +34,7 @@ export function QuestionEditor({
   onMove: (dir: -1 | 1) => void;
 }) {
   const tr = useT();
+  const err = useErr();
   const set = (patch: Partial<DraftQuestion>) => onChange({ ...q, ...patch });
   const hasOptions = q.type === "multiple_choice" || q.type === "poll";
   const [uploading, setUploading] = useState(false);
@@ -47,7 +47,7 @@ export function QuestionEditor({
     try {
       set({ mediaUrl: await uploadQuestionImage(file) });
     } catch (e) {
-      setMediaErr(errMsg(e));
+      setMediaErr(err(e));
     } finally {
       setUploading(false);
     }

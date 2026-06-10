@@ -1,5 +1,6 @@
 /** Duplication + import/export JSON d'un quiz (quiz local-first). */
 import { quizSchema, type Quiz } from "@shared/contracts";
+import { AppError } from "./appError";
 
 /**
  * Empreinte de CONTENU d'un quiz (ignore id/createdAt/ownerUid) : sert à
@@ -48,9 +49,9 @@ export async function importQuizFile(file: File): Promise<Quiz> {
   try {
     json = JSON.parse(await file.text());
   } catch {
-    throw new Error("Fichier illisible (JSON invalide).");
+    throw new AppError("err.fileUnreadable");
   }
   const parsed = quizSchema.safeParse(json);
-  if (!parsed.success) throw new Error("Ce fichier n’est pas un quiz valide.");
+  if (!parsed.success) throw new AppError("err.notAQuiz");
   return { ...parsed.data, id: crypto.randomUUID(), createdAt: Date.now() };
 }

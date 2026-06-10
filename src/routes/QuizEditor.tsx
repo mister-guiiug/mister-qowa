@@ -12,6 +12,7 @@ import {
   validateDraft,
   type DraftQuiz,
   type DraftQuestion,
+  type DraftError,
 } from "../lib/quizDraft";
 import { loadDraft, saveDraft, clearDraft } from "../lib/draft";
 import { useT } from "../i18n";
@@ -37,7 +38,7 @@ export function QuizEditor() {
     }
     return blankQuiz();
   });
-  const [errors, setErrors] = useState<string[]>([]);
+  const [errors, setErrors] = useState<DraftError[]>([]);
 
   // Autosave du brouillon « nouveau » (récupéré après un refresh).
   useEffect(() => {
@@ -129,7 +130,7 @@ export function QuizEditor() {
       {errors.length > 0 ? (
         <ul className="mt-4 flex flex-col gap-1 rounded-2xl bg-rose-500/15 p-4 text-sm text-rose-200">
           {errors.map((e, i) => (
-            <li key={i}>• {e}</li>
+            <li key={i}>• {t(e.key, e.vars)}</li>
           ))}
         </ul>
       ) : null}

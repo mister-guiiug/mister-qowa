@@ -4,14 +4,14 @@ import { ArrowLeft } from "lucide-react";
 import { Screen, Button } from "../lib/ui";
 import { lookupSession, joinSession } from "../firebase/api";
 import { useGameStore } from "../store/gameStore";
-import { errMsg } from "../lib/err";
 import { PIN_LENGTH, MAX_PSEUDO_LEN } from "@shared/gameState";
 import { AVATARS } from "@shared/avatars";
 import type { Team } from "@shared/teams";
-import { useT } from "../i18n";
+import { useErr, useT } from "../i18n";
 
 export function Join() {
   const t = useT();
+  const err = useErr();
   const nav = useNavigate();
   const setPlayer = useGameStore((s) => s.setPlayer);
   const [searchParams] = useSearchParams();
@@ -39,7 +39,7 @@ export function Join() {
       setPlayer({ sessionId, pin, pseudo: pseudo.trim() });
       nav(`/play/${sessionId}`);
     } catch (e) {
-      setError(errMsg(e));
+      setError(err(e));
       setBusy(false);
     }
   }
@@ -58,7 +58,7 @@ export function Join() {
         await go();
       }
     } catch (e2) {
-      setError(errMsg(e2));
+      setError(err(e2));
       setBusy(false);
     }
   }

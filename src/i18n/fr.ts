@@ -246,6 +246,51 @@ export const fr = {
   "pin.label": "Code PIN",
   "update.available": "Nouvelle version disponible",
   "update.later": "Plus tard",
+
+  // erreurs
+  "err.generic": "Une erreur est survenue.",
+  "err.crashTitle": "Oups…",
+  "err.crashBody":
+    "Une erreur est survenue. Recharge l’application pour repartir.",
+  // session / partie (api)
+  "err.pinAllocFailed": "Impossible d’allouer un PIN.",
+  "err.noMoreQuestions": "Plus de questions.",
+  "err.pinInvalid": "PIN invalide.",
+  "err.gameStarted": "La partie a déjà commencé.",
+  "err.youAreBanned": "Tu as été retiré de cette partie.",
+  "err.gameFull": "Partie complète.",
+  // médias / import
+  "err.pickImage": "Choisis une image.",
+  "err.imageTooHeavy": "Image trop lourde même compressée (max 3 Mo).",
+  "err.fileUnreadable": "Fichier illisible (JSON invalide).",
+  "err.notAQuiz": "Ce fichier n’est pas un quiz valide.",
+  // IA
+  "err.aiNoKey": "Renseigne d’abord ta clé API.",
+  "err.aiUnreadable": "Réponse IA illisible (JSON introuvable).",
+  "err.aiNoContent": (v) => `${v.provider} n’a renvoyé aucun contenu.`,
+  "err.aiKeyRejected": (v) =>
+    `Clé ${v.provider} refusée (vérifie qu’elle est valide et active).`,
+  "err.aiQuota": (v) => `Quota ${v.provider} dépassé — réessaie plus tard.`,
+  "err.aiStatus": (v) =>
+    `${v.provider} a répondu ${v.status}${v.detail ? ` : ${v.detail}` : ""}.`,
+  "err.aiTimeout": "La génération a expiré — réessaie.",
+  "err.aiNetwork": "Connexion au fournisseur impossible (réseau ou CORS).",
+  "err.aiBadFormat": "L’IA a produit un quiz au mauvais format — réessaie.",
+  "err.aiRegenFailed": "Régénération impossible — réessaie.",
+  "err.aiInvalidQuiz": "Quiz généré invalide — réessaie.",
+  // validation de quiz (éditeur)
+  "err.vTitle": "Donne un titre au quiz.",
+  "err.vAtLeastOneQuestion": "Ajoute au moins une question.",
+  "err.vEmptyPrompt": (v) => `Q${v.n} : l’énoncé est vide.`,
+  "err.vFillTwoOptions": (v) =>
+    `Q${v.n} : remplis au moins 2 réponses (certaines sont vides).`,
+  "err.vAtLeastTwoOptions": (v) => `Q${v.n} : il faut au moins 2 réponses.`,
+  "err.vDuplicateOptions": (v) => `Q${v.n} : deux réponses sont identiques.`,
+  "err.vDuplicateOptionIds": (v) =>
+    `Q${v.n} : identifiants de réponse en double.`,
+  "err.vSelectCorrect": (v) => `Q${v.n} : sélectionne la bonne réponse.`,
+  "err.vAtLeastOneAccepted": (v) =>
+    `Q${v.n} : ajoute au moins une réponse acceptée.`,
 } satisfies Record<string, Msg>;
 
 export type Key = keyof typeof fr;

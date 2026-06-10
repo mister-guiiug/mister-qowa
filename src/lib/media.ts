@@ -5,6 +5,7 @@
  */
 import { getApp } from "firebase/app";
 import { ensureAuth } from "../firebase/app";
+import { AppError } from "./appError";
 
 const MAX_BYTES = 3 * 1024 * 1024;
 const MAX_DIMENSION = 1280;
@@ -57,11 +58,11 @@ export async function compressImage(
 }
 
 export async function uploadQuestionImage(file: File): Promise<string> {
-  if (!file.type.startsWith("image/")) throw new Error("Choisis une image.");
+  if (!file.type.startsWith("image/")) throw new AppError("err.pickImage");
   const user = await ensureAuth();
   const { blob, contentType } = await compressImage(file);
   if (blob.size > MAX_BYTES) {
-    throw new Error("Image trop lourde même compressée (max 3 Mo).");
+    throw new AppError("err.imageTooHeavy");
   }
   const { getStorage, ref, uploadBytes, getDownloadURL } =
     await import("firebase/storage");

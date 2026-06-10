@@ -48,6 +48,7 @@ import {
 } from "@shared/round";
 import { publicQuestionFields } from "@shared/game";
 import type { Quiz, Score } from "@shared/contracts";
+import { AppError } from "../lib/appError";
 
 type AnswerNode = { choice: string; serverTs: number };
 
@@ -143,7 +144,7 @@ export async function createSession(
       break;
     }
   }
-  if (!pin) throw new Error("Impossible d’allouer un PIN.");
+  if (!pin) throw new AppError("err.pinAllocFailed");
 
   // meta EN PREMIER (les Rules host se basent sur meta/hostUid).
   await set(ref(db, metaPath(sessionId)), {
@@ -164,7 +165,7 @@ export async function nextQuestion(
   quiz: Quiz,
   index: number,
 ): Promise<void> {
-  if (index >= quiz.questions.length) throw new Error("Plus de questions.");
+  if (index >= quiz.questions.length) throw new AppError("err.noMoreQuestions");
   const db = getDb();
   const q = quiz.questions[index];
   await hostWrite("nextQuestion", async () => {
@@ -339,9 +340,9 @@ export async function lookupSession(
   await ensureAuth(); // la lecture de pins/ exige désormais une session Auth (anti-bot)
   const db = getDb();
   const sid = (await get(ref(db, pinIndexPath(pin)))).val();
-  if (!sid || typeof sid !== "string") throw new Error("PIN invalide.");
+  if (!sid || typeof sid !== "string") throw new AppError("err.pinInvalid");
   if ((await get(ref(db, statePath(sid)))).val() !== "LOBBY")
-    throw new Error("La partie a déjà commencé.");
+    throw new AppError("err.gameStarted");
   const meta = (await get(ref(db, metaPath(sid)))).val() as {
     teams?: Team[];
   } | null;
@@ -357,16 +358,16 @@ export async function joinSession(
   const user = await ensureAuth();
   const db = getDb();
   const sid = (await get(ref(db, pinIndexPath(pin)))).val();
-  if (!sid || typeof sid !== "string") throw new Error("PIN invalide.");
+  if (!sid || typeof sid !== "string") throw new AppError("err.pinInvalid");
   const state = (await get(ref(db, statePath(sid)))).val();
-  if (state !== "LOBBY") throw new Error("La partie a déjà commencé.");
+  if (state !== "LOBBY") throw new AppError("err.gameStarted");
   const bannedSnap = await get(ref(db, `${metaPath(sid)}/banned/${user.uid}`));
-  if (bannedSnap.exists()) throw new Error("Tu as été retiré de cette partie.");
+  if (bannedSnap.exists()) throw new AppError("err.youAreBanned");
   const playersSnap = await get(ref(db, playersPath(sid)));
   const count = playersSnap.exists()
     ? Object.keys(playersSnap.val() as object).length
     : 0;
-  if (count >= MAX_PLAYERS) throw new Error("Partie complète.");
+  if (count >= MAX_PLAYERS) throw new AppError("err.gameFull");
   const playerRef = ref(db, playerPath(sid, user.uid));
   await set(playerRef, {
     pseudo,

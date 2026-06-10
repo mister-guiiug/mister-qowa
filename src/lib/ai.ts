@@ -21,6 +21,8 @@ import {
   type DraftQuestion,
   type DraftQuiz,
 } from "./quizDraft";
+import { AppError } from "./appError";
+import type { Key, Vars } from "../i18n";
 
 export type Difficulty = "facile" | "moyen" | "difficile";
 
@@ -114,7 +116,7 @@ export function parseJsonLoose(text: string): unknown {
   if (start !== -1 && end > start) {
     return JSON.parse(fenced.slice(start, end + 1));
   }
-  throw new Error("Réponse IA illisible (JSON introuvable).");
+  throw new AppError("err.aiUnreadable");
 }
 
 const clamp = (s: string, max: number) => s.trim().slice(0, max);
@@ -222,10 +224,10 @@ interface ProviderCfg {
   models: Partial<Record<AiProvider, string>>;
 }
 
-class ProviderHttpError extends Error {
+class ProviderHttpError extends AppError {
   retryable: boolean;
-  constructor(message: string, retryable: boolean) {
-    super(message);
+  constructor(key: Key, vars: Vars | undefined, retryable: boolean) {
+    super(key, vars);
     this.retryable = retryable;
   }
 }
@@ -255,7 +257,7 @@ async function callGemini(
     candidates?: { content?: { parts?: { text?: string }[] } }[];
   };
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error("Gemini n'a renvoyé aucun contenu.");
+  if (!text) throw new AppError("err.aiNoContent", { provider: "Gemini" });
   return text;
 }
 
@@ -296,7 +298,7 @@ async function callAnthropic(
   if (toolUse?.input) return JSON.stringify(toolUse.input);
   // Repli : concatène le texte (si le modèle a ignoré l'outil).
   const text = data.content?.map((c) => c.text ?? "").join("");
-  if (!text) throw new Error("Anthropic n'a renvoyé aucun contenu.");
+  if (!text) throw new AppError("err.aiNoContent", { provider: "Anthropic" });
   return text;
 }
 
@@ -313,18 +315,17 @@ async function providerError(
   }
   if (res.status === 401 || res.status === 403) {
     return new ProviderHttpError(
-      `Clé ${name} refusée (vérifie qu'elle est valide et active).`,
+      "err.aiKeyRejected",
+      { provider: name },
       false,
     );
   }
   if (res.status === 429) {
-    return new ProviderHttpError(
-      `Quota ${name} dépassé — réessaie plus tard.`,
-      true,
-    );
+    return new ProviderHttpError("err.aiQuota", { provider: name }, true);
   }
   return new ProviderHttpError(
-    `${name} a répondu ${res.status}${detail ? ` : ${detail}` : ""}.`,
+    "err.aiStatus",
+    { provider: name, status: res.status, detail },
     res.status >= 500,
   );
 }
@@ -339,10 +340,10 @@ function isRetryable(e: unknown): boolean {
 
 function friendly(e: unknown): Error {
   if (e instanceof DOMException && e.name === "AbortError") {
-    return new Error("La génération a expiré — réessaie.");
+    return new AppError("err.aiTimeout");
   }
   if (e instanceof TypeError) {
-    return new Error("Connexion au fournisseur impossible (réseau ou CORS).");
+    return new AppError("err.aiNetwork");
   }
   return e instanceof Error ? e : new Error(String(e));
 }
@@ -377,16 +378,16 @@ export async function generateQuiz(
   params: GenParams,
   cfg: ProviderCfg,
 ): Promise<DraftQuiz> {
-  if (!cfg.apiKey.trim()) throw new Error("Renseigne d'abord ta clé API.");
+  if (!cfg.apiKey.trim()) throw new AppError("err.aiNoKey");
   const raw = await callWithRetry(buildPrompt(params), cfg);
   const parsed = aiQuizSchema.safeParse(parseJsonLoose(raw));
   if (!parsed.success) {
-    throw new Error("L'IA a produit un quiz au mauvais format — réessaie.");
+    throw new AppError("err.aiBadFormat");
   }
   const draft = aiQuizToDraft(parsed.data);
   const errs = validateDraft(draft);
   if (errs.length > 0) {
-    throw new Error(`Quiz généré invalide : ${errs[0]}`);
+    throw new AppError("err.aiInvalidQuiz");
   }
   return draft;
 }
@@ -397,11 +398,11 @@ export async function generateOneQuestion(
   cfg: ProviderCfg,
   avoidPrompts: string[],
 ): Promise<DraftQuestion> {
-  if (!cfg.apiKey.trim()) throw new Error("Renseigne d'abord ta clé API.");
+  if (!cfg.apiKey.trim()) throw new AppError("err.aiNoKey");
   const raw = await callWithRetry(buildOnePrompt(params, avoidPrompts), cfg);
   const parsed = aiQuizSchema.safeParse(parseJsonLoose(raw));
   if (!parsed.success || parsed.data.questions.length === 0) {
-    throw new Error("Régénération impossible — réessaie.");
+    throw new AppError("err.aiRegenFailed");
   }
   const draft = aiQuizToDraft({
     title: "x",
