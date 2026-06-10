@@ -43,6 +43,22 @@ export const en = {
   "profile.badge.win": "Win",
   "profile.badge.veteran": "Veteran",
 
+  // text import + score sharing
+  "create.textImportAria": "Import from text",
+  "textImport.title": "Import from text",
+  "textImport.help":
+    "One question per line, fields separated by “;”:\n• Multiple choice: Prompt ; *Correct ; Wrong ; Wrong\n• True/False: Prompt ; V (or F)\n• Free text: Prompt ; =accepted answer\n• Poll: Prompt ; Option A ; Option B",
+  "textImport.titlePlaceholder": "Quiz title",
+  "textImport.placeholder":
+    "Capital of France ; *Paris ; Lyon ; Marseille\nThe Earth is flat ; F\nLargest ocean ; =Pacific",
+  "textImport.action": "Import",
+  "textImport.defaultTitle": "Imported quiz",
+  "play.shareScore": "Share my score",
+  "play.shareScoreText": (v) =>
+    `I finished ${v.rank} with ${v.pts} points on Mister Qowa!`,
+  "solo.bestStreak": (v) => `Best streak: ${v.n} 🔥`,
+  "solo.shareText": (v) => `${v.score} points in solo on Mister Qowa!`,
+
   // footer
   "footer.source": "Source code",
   "footer.support": "Support",

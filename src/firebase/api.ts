@@ -50,6 +50,7 @@ import { publicQuestionFields } from "@shared/game";
 import type { Quiz, Score } from "@shared/contracts";
 import { AppError } from "../lib/appError";
 import { reportError } from "../lib/report";
+import { addBreadcrumb } from "../lib/breadcrumbs";
 
 type AnswerNode = { choice: string; serverTs: number };
 
@@ -174,6 +175,7 @@ export async function nextQuestion(
   index: number,
 ): Promise<void> {
   if (index >= quiz.questions.length) throw new AppError("err.noMoreQuestions");
+  addBreadcrumb("host", `nextQuestion#${index}`);
   const db = getDb();
   const q = quiz.questions[index];
   await hostWrite("nextQuestion", async () => {
@@ -194,6 +196,7 @@ export async function closeQuestion(
   // Idempotence : on ne score qu'une fois (clôture manuelle + auto-clôture).
   if ((await get(ref(db, statePath(sessionId)))).val() !== "QUESTION_ACTIVE")
     return;
+  addBreadcrumb("host", `closeQuestion#${index}`);
   const q = quiz.questions[index];
   const [curSnap, ansSnap, scoresSnap, playersSnap, metaSnap] =
     await Promise.all([
@@ -271,6 +274,7 @@ export async function closeQuestion(
 }
 
 export async function endGame(sessionId: string, quiz?: Quiz): Promise<void> {
+  addBreadcrumb("host", "endGame");
   const user = await ensureAuth();
   const db = getDb();
   const [scoresSnap, playersSnap, metaSnap, answersSnap] = await Promise.all([
@@ -530,6 +534,7 @@ export async function submitAnswer(
   questionId: string,
   choice: string,
 ): Promise<void> {
+  addBreadcrumb("answer", questionId);
   const user = await ensureAuth();
   await set(ref(getDb(), answerPath(sessionId, questionId, user.uid)), {
     choice,

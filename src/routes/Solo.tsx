@@ -1,7 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Check, X, Play } from "lucide-react";
+import { ArrowLeft, Check, X, Play, Share2 } from "lucide-react";
 import { Screen, Button, Card } from "../lib/ui";
+import { shareOrCopy } from "../lib/share";
 import { AnswerGrid } from "../components/AnswerGrid";
 import { TimerBar } from "../components/TimerBar";
 import { feedback } from "../lib/feedback";
@@ -26,6 +27,7 @@ export function Solo() {
   );
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
+  const [maxStreak, setMaxStreak] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [startedAt, setStartedAt] = useState(0);
@@ -70,6 +72,7 @@ export function Solo() {
           });
     setScore((s) => s + awarded);
     setStreak(correct ? streak + 1 : 0);
+    if (correct) setMaxStreak((m) => Math.max(m, streak + 1));
     setPicked(choice);
     setLastAwarded(awarded);
     setLastCorrect(correct);
@@ -90,6 +93,7 @@ export function Solo() {
     setIndex(0);
     setScore(0);
     setStreak(0);
+    setMaxStreak(0);
     setPhase("question");
     setPicked(null);
     setText("");
@@ -160,9 +164,27 @@ export function Solo() {
         <p className="mt-4 font-display text-2xl text-brand-soft">
           {t("common.pts", { n: score })}
         </p>
+        {maxStreak >= 2 ? (
+          <p className="mt-1 text-white/70">
+            {t("solo.bestStreak", { n: maxStreak })}
+          </p>
+        ) : null}
         <div className="mt-10 flex flex-col gap-3">
           <Button full onClick={() => start(quiz)}>
             {t("solo.replay")}
+          </Button>
+          <Button
+            full
+            variant="ghost"
+            onClick={() =>
+              void shareOrCopy({
+                title: "Mister Qowa",
+                text: t("solo.shareText", { score }),
+                url: `${window.location.origin}${import.meta.env.BASE_URL}`,
+              })
+            }
+          >
+            <Share2 className="size-4" /> {t("play.shareScore")}
           </Button>
           <Button full variant="ghost" onClick={() => setQuiz(null)}>
             {t("solo.otherQuiz")}

@@ -39,6 +39,22 @@ export const de = {
   "profile.badge.win": "Sieg",
   "profile.badge.veteran": "Veteran",
 
+  // Textimport + Punktestand teilen
+  "create.textImportAria": "Aus Text importieren",
+  "textImport.title": "Aus Text importieren",
+  "textImport.help":
+    "Eine Frage pro Zeile, Felder getrennt durch „;“:\n• Multiple Choice: Frage ; *Richtig ; Falsch ; Falsch\n• Wahr/Falsch: Frage ; W (oder F)\n• Freitext: Frage ; =akzeptierte Antwort\n• Umfrage: Frage ; Option A ; Option B",
+  "textImport.titlePlaceholder": "Quiz-Titel",
+  "textImport.placeholder":
+    "Hauptstadt von Frankreich ; *Paris ; Lyon ; Marseille\nDie Erde ist flach ; F\nGrößter Ozean ; =Pazifik",
+  "textImport.action": "Importieren",
+  "textImport.defaultTitle": "Importiertes Quiz",
+  "play.shareScore": "Punktestand teilen",
+  "play.shareScoreText": (v) =>
+    `Ich wurde ${v.rank} mit ${v.pts} Punkten bei Mister Qowa!`,
+  "solo.bestStreak": (v) => `Beste Serie: ${v.n} 🔥`,
+  "solo.shareText": (v) => `${v.score} Punkte im Solo bei Mister Qowa!`,
+
   // Fußzeile
   "footer.source": "Quellcode",
   "footer.support": "Unterstützen",

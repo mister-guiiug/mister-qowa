@@ -1,5 +1,11 @@
 import { lazy, Suspense, useEffect } from "react";
-import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
+import {
+  HashRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 import { LazyMotion, domMax, MotionConfig } from "framer-motion";
 import { Home } from "./routes/Home";
 import { UpdatePrompt } from "./components/UpdatePrompt";
@@ -7,6 +13,7 @@ import { InstallPrompt } from "./components/InstallPrompt";
 import { Spinner } from "./lib/ui";
 import { useLang, tStatic } from "./i18n";
 import { isConfigOk } from "./firebase/env";
+import { addBreadcrumb } from "./lib/breadcrumbs";
 
 // Code-splitting : seul l'accueil est chargé d'emblée ; les écrans qui tirent
 // Firebase (host/join/play/historique) sont en chunks séparés, chargés à la demande.
@@ -18,6 +25,9 @@ const QuizEditor = lazy(() =>
 );
 const AiGenerate = lazy(() =>
   import("./routes/AiGenerate").then((m) => ({ default: m.AiGenerate })),
+);
+const TextImport = lazy(() =>
+  import("./routes/TextImport").then((m) => ({ default: m.TextImport })),
 );
 const Host = lazy(() =>
   import("./routes/Host").then((m) => ({ default: m.Host })),
@@ -34,6 +44,15 @@ const Solo = lazy(() =>
 const History = lazy(() =>
   import("./routes/History").then((m) => ({ default: m.History })),
 );
+
+/** Trace les changements de route dans le fil d'Ariane (diagnostic d'erreur). */
+function RouteBreadcrumbs() {
+  const loc = useLocation();
+  useEffect(() => {
+    addBreadcrumb("route", loc.pathname);
+  }, [loc.pathname]);
+  return null;
+}
 
 /** Écran bloquant si la config n'est pas exploitable (App Check requis manquant). */
 function ConfigError() {
@@ -61,6 +80,7 @@ export function App() {
     <LazyMotion features={domMax} strict>
       <MotionConfig reducedMotion="user">
         <HashRouter>
+          <RouteBreadcrumbs />
           <Suspense
             fallback={
               <div className="flex min-h-dvh items-center justify-center">
@@ -72,6 +92,7 @@ export function App() {
               <Route path="/" element={<Home />} />
               <Route path="/create" element={<Create />} />
               <Route path="/create/ai" element={<AiGenerate />} />
+              <Route path="/create/text" element={<TextImport />} />
               <Route path="/create/new" element={<QuizEditor />} />
               <Route path="/create/:quizId" element={<QuizEditor />} />
               <Route path="/host/:sessionId" element={<Host />} />
