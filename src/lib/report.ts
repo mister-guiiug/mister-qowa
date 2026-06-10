@@ -4,6 +4,8 @@
  * l'envoie en best-effort via `navigator.sendBeacon`. Sans endpoint = console
  * seule. Branche un collecteur (Sentry/own) en fournissant simplement l'URL.
  */
+import { dumpBreadcrumbs } from "./breadcrumbs";
+
 type Ctx = Record<string, unknown>;
 
 export function reportError(error: unknown, context?: Ctx): void {
@@ -15,6 +17,8 @@ export function reportError(error: unknown, context?: Ctx): void {
     url: typeof location !== "undefined" ? location.href : "",
     ua: typeof navigator !== "undefined" ? navigator.userAgent : "",
     ts: Date.now(),
+    // Fil d'Ariane des dernières actions (contexte « avant l'erreur »).
+    breadcrumbs: dumpBreadcrumbs(),
     ...context,
   };
   console.error("[report]", payload);

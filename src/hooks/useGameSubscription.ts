@@ -29,6 +29,7 @@ import type {
   Player,
   PlayerReveal,
 } from "@shared/contracts";
+import { reportError } from "../lib/report";
 
 function useRtdbValue<T>(path: string | null): T | undefined {
   const [value, setValue] = useState<T | undefined>(undefined);
@@ -43,8 +44,8 @@ function useRtdbValue<T>(path: string | null): T | undefined {
         setValue((snap.val() ?? undefined) as T | undefined);
       },
       (err) => {
-        // Permission/réseau : on ne fige plus silencieusement, on trace.
-        console.error(`[RTDB] abonnement « ${path} » échoué`, err);
+        // Permission/réseau : on route vers le reporter (console + breadcrumbs).
+        reportError(err, { type: "rtdb", path });
       },
     );
     return () => off();
@@ -224,7 +225,7 @@ export function useAnswerStats(
         }
         setStats({ count: seen.size, byChoice });
       },
-      (err) => console.error("[RTDB] stats de réponses échouées", err),
+      (err) => reportError(err, { type: "rtdb", path: "answers" }),
     );
     return () => off();
   }, [sessionId, questionId]);
