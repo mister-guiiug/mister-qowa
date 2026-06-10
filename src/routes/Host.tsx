@@ -43,8 +43,10 @@ import { Countdown } from "../components/Countdown";
 import { Leaderboard } from "../components/Leaderboard";
 import { Podium } from "../components/Podium";
 import { errMsg } from "../lib/err";
+import { useT } from "../i18n";
 
 export function Host() {
+  const t = useT();
   const { sessionId } = useParams();
   const nav = useNavigate();
   const pin = useGameStore((s) => s.pin);
@@ -123,10 +125,8 @@ export function Host() {
       <Screen className="justify-center">
         {notFound ? (
           <div className="flex flex-col items-center gap-4 text-center">
-            <p className="font-display text-2xl">Partie introuvable</p>
-            <p className="text-white/60">
-              Cette partie n’existe plus ou a été fermée.
-            </p>
+            <p className="font-display text-2xl">{t("common.notFound")}</p>
+            <p className="text-white/60">{t("common.sessionGone")}</p>
             <Button
               variant="ghost"
               onClick={() => {
@@ -134,11 +134,11 @@ export function Host() {
                 nav("/");
               }}
             >
-              Retour à l’accueil
+              {t("common.toHome")}
             </Button>
           </div>
         ) : (
-          <Spinner label="Connexion à la partie…" />
+          <Spinner label={t("host.connecting")} />
         )}
       </Screen>
     );
@@ -160,15 +160,15 @@ export function Host() {
   const flash = (r: "shared" | "copied" | "failed") =>
     setInfo(
       r === "copied"
-        ? "Lien copié !"
+        ? t("host.linkCopied")
         : r === "failed"
-          ? "Partage indisponible"
+          ? t("host.shareUnavailable")
           : null,
     );
   const invite = () =>
     shareOrCopy({
       title: "Mister Qowa",
-      text: "Rejoins ma partie de quiz !",
+      text: t("host.inviteText"),
       url: joinUrl,
     }).then(flash);
   const shareResult = () => {
@@ -177,8 +177,8 @@ export function Host() {
       .map((e, i) => `${i + 1}. ${e.pseudo} (${e.total})`)
       .join("\n");
     return shareOrCopy({
-      title: "Résultats Mister Qowa",
-      text: `🏆 Podium Mister Qowa\n${top}`,
+      title: t("host.resultTitle"),
+      text: `🏆 ${t("host.resultTitle")}\n${top}`,
     }).then(flash);
   };
 
@@ -211,8 +211,7 @@ export function Host() {
             </div>
           ) : null}
           <p className="text-white/70">
-            {playerCount} joueur{playerCount > 1 ? "s" : ""} connecté
-            {playerCount > 1 ? "s" : ""}
+            {t("host.playersConnected", { n: playerCount })}
           </p>
           <div className="flex max-h-40 flex-wrap justify-center gap-2 overflow-auto">
             {Object.entries(players).map(([puid, p]) => (
@@ -225,7 +224,7 @@ export function Host() {
                 <button
                   type="button"
                   onClick={() => void kickPlayer(sessionId, puid)}
-                  aria-label={`Exclure ${p.pseudo}`}
+                  aria-label={t("host.kickAria", { pseudo: p.pseudo })}
                   className="rounded-full p-0.5 text-white/40 hover:bg-rose-500/30 hover:text-rose-200"
                 >
                   <X className="size-3.5" />
@@ -236,7 +235,7 @@ export function Host() {
           <div className="flex w-full flex-col gap-2">
             {pin ? (
               <Button full variant="ghost" onClick={() => void invite()}>
-                <Share2 className="size-4" /> Inviter
+                <Share2 className="size-4" /> {t("host.invite")}
               </Button>
             ) : null}
             <Button
@@ -246,7 +245,7 @@ export function Host() {
                 quiz && act(() => nextQuestion(sessionId, quiz, 0))
               }
             >
-              Démarrer la partie
+              {t("host.start")}
             </Button>
           </div>
         </div>
@@ -256,11 +255,14 @@ export function Host() {
         <div className="flex flex-1 flex-col gap-6">
           <div className="flex items-center justify-between text-white/60">
             <span>
-              Question {current.index + 1}/{current.total}
+              {t("common.questionN", {
+                n: current.index + 1,
+                total: current.total,
+              })}
             </span>
             {paused ? (
               <span className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500/20 px-3 py-1 font-display text-amber-200">
-                <Pause className="size-4" /> Pause
+                <Pause className="size-4" /> {t("host.pause")}
               </span>
             ) : (
               <Countdown endsAt={current.activatedAt + current.timeLimitMs} />
@@ -290,8 +292,8 @@ export function Host() {
             </ul>
           ) : null}
           <p className="text-center text-white/70">
-            {stats.count}/{playerCount} ont répondu
-            {eliminationMode ? ` · 💀 ${survivors} en lice` : ""}
+            {t("host.answered", { count: stats.count, total: playerCount })}
+            {eliminationMode ? t("host.inPlaySuffix", { n: survivors }) : ""}
           </p>
           <div className="flex flex-col gap-2">
             <div className="flex gap-2">
@@ -303,11 +305,11 @@ export function Host() {
               >
                 {paused ? (
                   <>
-                    <Play className="size-4" /> Reprendre
+                    <Play className="size-4" /> {t("host.resume")}
                   </>
                 ) : (
                   <>
-                    <Pause className="size-4" /> Pause
+                    <Pause className="size-4" /> {t("host.pause")}
                   </>
                 )}
               </Button>
@@ -320,7 +322,7 @@ export function Host() {
                   act(() => replayQuestion(sessionId, quiz, current.index))
                 }
               >
-                <RotateCcw className="size-4" /> Re-poser
+                <RotateCcw className="size-4" /> {t("host.replay")}
               </Button>
             </div>
             <div className="flex gap-2">
@@ -333,7 +335,7 @@ export function Host() {
                   act(() => skipQuestion(sessionId, quiz, current.index))
                 }
               >
-                <SkipForward className="size-4" /> Passer
+                <SkipForward className="size-4" /> {t("host.skip")}
               </Button>
               <Button
                 full
@@ -344,7 +346,7 @@ export function Host() {
                   act(() => closeQuestion(sessionId, quiz, current.index))
                 }
               >
-                Clore maintenant
+                {t("host.closeNow")}
               </Button>
             </div>
           </div>
@@ -353,7 +355,9 @@ export function Host() {
 
       {state === "LEADERBOARD" ? (
         <div className="flex flex-1 flex-col gap-6">
-          <h2 className="text-center font-display text-2xl">Classement</h2>
+          <h2 className="text-center font-display text-2xl">
+            {t("host.leaderboardTitle")}
+          </h2>
           {teamStandings.length ? (
             <TeamLeaderboard standings={teamStandings} />
           ) : null}
@@ -367,7 +371,7 @@ export function Host() {
           ) : null}
           {eliminationMode ? (
             <p className="text-center text-white/70">
-              💀 {survivors} joueur{survivors > 1 ? "s" : ""} encore en lice
+              {t("host.survivorsLine", { n: survivors })}
             </p>
           ) : null}
           <Leaderboard entries={leaderboard} />
@@ -382,7 +386,7 @@ export function Host() {
                   act(() => nextQuestion(sessionId, quiz, current.index + 1))
                 }
               >
-                Question suivante
+                {t("host.nextQuestion")}
               </Button>
             ) : null}
             <Button
@@ -391,7 +395,7 @@ export function Host() {
               disabled={busy}
               onClick={() => act(() => endGame(sessionId, quiz ?? undefined))}
             >
-              Terminer &amp; podium
+              {t("host.endPodium")}
             </Button>
           </div>
         </div>
@@ -399,7 +403,9 @@ export function Host() {
 
       {state === "PODIUM" ? (
         <div className="flex flex-1 flex-col justify-center gap-8">
-          <h2 className="text-center font-display text-3xl">Podium 🎉</h2>
+          <h2 className="text-center font-display text-3xl">
+            {t("host.podiumTitle")}
+          </h2>
           {teamStandings.length ? (
             <TeamLeaderboard standings={teamStandings} />
           ) : null}
@@ -410,10 +416,10 @@ export function Host() {
               disabled={busy || !quiz}
               onClick={() => quiz && act(() => restartSession(sessionId, quiz))}
             >
-              <RefreshCw className="size-4" /> Rejouer avec les mêmes
+              <RefreshCw className="size-4" /> {t("host.replayWithSame")}
             </Button>
             <Button full variant="ghost" onClick={() => void shareResult()}>
-              <Share2 className="size-4" /> Partager le résultat
+              <Share2 className="size-4" /> {t("host.shareResult")}
             </Button>
             <Button
               full
@@ -425,7 +431,7 @@ export function Host() {
                 nav("/");
               }}
             >
-              Nouvelle partie
+              {t("host.newGame")}
             </Button>
           </div>
         </div>

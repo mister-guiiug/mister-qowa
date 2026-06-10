@@ -1,5 +1,6 @@
 import { m } from "framer-motion";
 import type { LeaderboardEntry } from "@shared/contracts";
+import { useT } from "../i18n";
 
 export function Leaderboard({
   entries,
@@ -10,9 +11,10 @@ export function Leaderboard({
   highlightUid?: string | null;
   max?: number;
 }) {
+  const t = useT();
   if (entries.length === 0)
     return (
-      <p className="text-center text-white/60">Personne pour l’instant…</p>
+      <p className="text-center text-white/60">{t("leaderboard.empty")}</p>
     );
   return (
     <ol className="flex flex-col gap-2">

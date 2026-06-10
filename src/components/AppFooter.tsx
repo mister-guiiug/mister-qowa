@@ -1,6 +1,7 @@
 import { Coffee, RotateCw, Volume2, VolumeX } from "lucide-react";
 import { REPO_URL, SPONSOR_URL } from "../links";
 import { useAiSettings } from "../store/settingsStore";
+import { useT, useLang, LANGS } from "../i18n";
 
 // lucide 1.x a retiré les icônes de marque : SVG GitHub en ligne (règle parc).
 function GithubMark({ className }: { className?: string }) {
@@ -17,47 +18,71 @@ function GithubMark({ className }: { className?: string }) {
 }
 
 export function AppFooter() {
+  const t = useT();
   const soundOn = useAiSettings((s) => s.soundOn);
   const setSoundOn = useAiSettings((s) => s.setSoundOn);
+  const lang = useLang((s) => s.lang);
+  const setLang = useLang((s) => s.setLang);
   return (
-    <footer className="mt-auto flex flex-wrap items-center justify-center gap-5 pt-8 text-sm text-white/50">
-      <button
-        type="button"
-        onClick={() => setSoundOn(!soundOn)}
-        aria-pressed={soundOn}
-        aria-label={soundOn ? "Couper le son" : "Activer le son"}
-        className="inline-flex items-center gap-1.5 hover:text-white"
+    <footer className="mt-auto flex flex-col items-center gap-3 pt-8 text-sm text-white/50">
+      <div
+        className="flex items-center gap-1"
+        aria-label={t("footer.langAria")}
       >
-        {soundOn ? (
-          <Volume2 className="size-4" />
-        ) : (
-          <VolumeX className="size-4" />
-        )}
-        {soundOn ? "Son activé" : "Son coupé"}
-      </button>
-      <a
-        href={REPO_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 hover:text-white"
-      >
-        <GithubMark className="size-4" /> Code source
-      </a>
-      <a
-        href={SPONSOR_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 hover:text-white"
-      >
-        <Coffee className="size-4" /> Soutenir
-      </a>
-      <button
-        type="button"
-        onClick={() => window.location.reload()}
-        className="inline-flex items-center gap-1.5 hover:text-white"
-      >
-        <RotateCw className="size-4" /> Recharger
-      </button>
+        {LANGS.map((l) => (
+          <button
+            key={l.code}
+            type="button"
+            onClick={() => setLang(l.code)}
+            aria-pressed={lang === l.code}
+            aria-label={l.label}
+            className={`rounded-lg px-2 py-1 transition ${
+              lang === l.code ? "bg-white/10 text-white" : "hover:text-white"
+            }`}
+          >
+            {l.flag} {l.code.toUpperCase()}
+          </button>
+        ))}
+      </div>
+      <div className="flex flex-wrap items-center justify-center gap-5">
+        <button
+          type="button"
+          onClick={() => setSoundOn(!soundOn)}
+          aria-pressed={soundOn}
+          aria-label={soundOn ? t("footer.muteAria") : t("footer.unmuteAria")}
+          className="inline-flex items-center gap-1.5 hover:text-white"
+        >
+          {soundOn ? (
+            <Volume2 className="size-4" />
+          ) : (
+            <VolumeX className="size-4" />
+          )}
+          {soundOn ? t("footer.soundOn") : t("footer.soundOff")}
+        </button>
+        <a
+          href={REPO_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 hover:text-white"
+        >
+          <GithubMark className="size-4" /> {t("footer.source")}
+        </a>
+        <a
+          href={SPONSOR_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 hover:text-white"
+        >
+          <Coffee className="size-4" /> {t("footer.support")}
+        </a>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="inline-flex items-center gap-1.5 hover:text-white"
+        >
+          <RotateCw className="size-4" /> {t("footer.reload")}
+        </button>
+      </div>
     </footer>
   );
 }

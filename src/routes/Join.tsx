@@ -8,8 +8,10 @@ import { errMsg } from "../lib/err";
 import { PIN_LENGTH, MAX_PSEUDO_LEN } from "@shared/gameState";
 import { AVATARS } from "@shared/avatars";
 import type { Team } from "@shared/teams";
+import { useT } from "../i18n";
 
 export function Join() {
+  const t = useT();
   const nav = useNavigate();
   const setPlayer = useGameStore((s) => s.setPlayer);
   const [searchParams] = useSearchParams();
@@ -68,13 +70,14 @@ export function Join() {
         onClick={() => (teams ? setTeams(null) : nav("/"))}
         className="mb-4 inline-flex items-center gap-1 self-start text-sm text-white/60 hover:text-white"
       >
-        <ArrowLeft className="size-4" /> {teams ? "Retour" : "Accueil"}
+        <ArrowLeft className="size-4" />{" "}
+        {teams ? t("common.back") : t("common.home")}
       </button>
-      <h1 className="font-display text-3xl">Rejoindre une partie</h1>
+      <h1 className="font-display text-3xl">{t("join.title")}</h1>
 
       {teams ? (
         <div className="mt-6 flex flex-col gap-3">
-          <p className="text-white/60">Choisis ton équipe, {pseudo} :</p>
+          <p className="text-white/60">{t("join.pickTeam", { pseudo })}</p>
           {teams.map((t) => (
             <button
               key={t.id}
@@ -96,7 +99,7 @@ export function Join() {
       ) : (
         <form onSubmit={submit} className="mt-6 flex flex-col gap-4">
           <div className="flex flex-col gap-1">
-            <span className="text-sm text-white/60">Code PIN</span>
+            <span className="text-sm text-white/60">{t("join.pinLabel")}</span>
             {/* Un seul input réel (transparent, au-dessus) pilote 8 cases visuelles :
                 préserve collage, autofill et lecteurs d'écran. */}
             <div className="relative">
@@ -107,7 +110,10 @@ export function Join() {
                 onChange={(e) =>
                   setPin(e.target.value.replace(/\D/g, "").slice(0, PIN_LENGTH))
                 }
-                aria-label={`Code PIN, ${pin.length} sur ${PIN_LENGTH} chiffres`}
+                aria-label={t("join.pinAria", {
+                  n: pin.length,
+                  total: PIN_LENGTH,
+                })}
                 className="absolute inset-0 z-10 w-full cursor-pointer text-transparent caret-transparent opacity-0"
               />
               <div aria-hidden className="flex justify-between gap-1.5">
@@ -129,18 +135,22 @@ export function Join() {
             </div>
           </div>
           <label className="flex flex-col gap-1">
-            <span className="text-sm text-white/60">Ton pseudo</span>
+            <span className="text-sm text-white/60">
+              {t("join.pseudoLabel")}
+            </span>
             <input
               value={pseudo}
               maxLength={MAX_PSEUDO_LEN}
               onChange={(e) => setPseudo(e.target.value)}
-              placeholder="Alex"
+              placeholder={t("join.pseudoPlaceholder")}
               className="rounded-2xl bg-white/10 px-4 py-3 text-lg outline-none ring-1 ring-white/15 focus:ring-brand"
             />
           </label>
 
           <div className="flex flex-col gap-1">
-            <span className="text-sm text-white/60">Ton avatar</span>
+            <span className="text-sm text-white/60">
+              {t("join.avatarLabel")}
+            </span>
             <div className="flex flex-wrap gap-2">
               {AVATARS.map((a) => (
                 <button
@@ -148,7 +158,7 @@ export function Join() {
                   type="button"
                   onClick={() => setAvatar(a)}
                   aria-pressed={avatar === a}
-                  aria-label={`Avatar ${a}`}
+                  aria-label={t("join.avatarAria", { a })}
                   className={`flex size-10 items-center justify-center rounded-xl text-xl ring-1 transition ${
                     avatar === a
                       ? "bg-brand/30 ring-brand"
@@ -168,7 +178,7 @@ export function Join() {
           ) : null}
 
           <Button type="submit" full disabled={!ready || busy}>
-            {busy ? "Connexion…" : "Entrer dans la partie"}
+            {busy ? t("common.connecting") : t("join.submit")}
           </Button>
         </form>
       )}

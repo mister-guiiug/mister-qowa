@@ -27,6 +27,7 @@ import {
 import type { DraftQuestion, DraftQuiz } from "../lib/quizDraft";
 import { saveDraft } from "../lib/draft";
 import { errMsg } from "../lib/err";
+import { useT, type Key } from "../i18n";
 
 const field =
   "rounded-2xl bg-white/10 px-4 py-3 outline-none ring-1 ring-white/15 focus:ring-brand";
@@ -36,6 +37,11 @@ const PROVIDERS: { id: AiProvider; label: string }[] = [
   { id: "anthropic", label: "Anthropic Claude" },
 ];
 const DIFFICULTIES: Difficulty[] = ["facile", "moyen", "difficile"];
+const DIFF_KEY: Record<Difficulty, Key> = {
+  facile: "ai.diffFacile",
+  moyen: "ai.diffMoyen",
+  difficile: "ai.diffDifficile",
+};
 const LANGUAGES = ["français", "anglais", "espagnol", "allemand", "italien"];
 
 function correctLabel(q: DraftQuestion): string {
@@ -46,6 +52,7 @@ function correctLabel(q: DraftQuestion): string {
 }
 
 export function AiGenerate() {
+  const t = useT();
   const nav = useNavigate();
   const provider = useAiSettings((s) => s.provider);
   const keys = useAiSettings((s) => s.keys);
@@ -71,11 +78,11 @@ export function AiGenerate() {
   async function generate() {
     setError(null);
     if (!topic.trim() && !sourceText.trim()) {
-      setError("Indique un sujet ou colle un texte source.");
+      setError(t("ai.errNoTopic"));
       return;
     }
     if (!apiKey.trim()) {
-      setError("Renseigne ta clé API plus bas.");
+      setError(t("ai.errNoKey"));
       return;
     }
     setBusy(true);
@@ -128,13 +135,11 @@ export function AiGenerate() {
           onClick={() => setPreview(null)}
           className="mb-4 inline-flex items-center gap-1 self-start text-sm text-white/60 hover:text-white"
         >
-          <ArrowLeft className="size-4" /> Modifier les paramètres
+          <ArrowLeft className="size-4" /> {t("ai.editParams")}
         </button>
         <h1 className="font-display text-3xl">{preview.title}</h1>
         <p className="mt-1 text-sm text-white/60">
-          {preview.questions.length} question
-          {preview.questions.length > 1 ? "s" : ""} — relis puis ouvre dans
-          l’éditeur.
+          {t("ai.previewSub", { n: preview.questions.length })}
         </p>
 
         {error ? (
@@ -154,7 +159,7 @@ export function AiGenerate() {
                   variant="ghost"
                   onClick={() => void regenerate(i)}
                   disabled={regenIndex !== null}
-                  aria-label={`Régénérer la question ${i + 1}`}
+                  aria-label={t("ai.regenAria", { n: i + 1 })}
                   className="shrink-0 px-3 py-2"
                 >
                   <RefreshCw
@@ -171,7 +176,7 @@ export function AiGenerate() {
 
         <div className="mt-5 flex flex-col gap-2">
           <Button full onClick={openInEditor}>
-            <Pencil className="size-5" /> Ouvrir dans l’éditeur
+            <Pencil className="size-5" /> {t("ai.openEditor")}
           </Button>
         </div>
       </Screen>
@@ -186,40 +191,35 @@ export function AiGenerate() {
         onClick={() => nav("/create")}
         className="mb-4 inline-flex items-center gap-1 self-start text-sm text-white/60 hover:text-white"
       >
-        <ArrowLeft className="size-4" /> Retour
+        <ArrowLeft className="size-4" /> {t("common.back")}
       </button>
 
       <h1 className="flex items-center gap-2 font-display text-3xl">
-        <Sparkles className="size-7 text-brand" /> Générer par IA
+        <Sparkles className="size-7 text-brand" /> {t("ai.title")}
       </h1>
-      <p className="mt-2 text-sm text-white/60">
-        Décris un sujet (ou colle un texte). L’IA propose un quiz que tu pourras
-        relire et modifier avant de l’enregistrer.
-      </p>
+      <p className="mt-2 text-sm text-white/60">{t("ai.subtitle")}</p>
 
       <div className="mt-6 flex flex-col gap-3">
         <label className="flex flex-col gap-1">
-          <span className="text-sm text-white/60">Sujet</span>
+          <span className="text-sm text-white/60">{t("ai.topic")}</span>
           <input
             value={topic}
             maxLength={200}
             onChange={(e) => setTopic(e.target.value)}
-            placeholder="Ex : la mythologie grecque, les capitales d'Europe…"
-            aria-label="Sujet du quiz"
+            placeholder={t("ai.topicPlaceholder")}
+            aria-label={t("ai.topicAria")}
             className={field}
           />
         </label>
 
         <label className="flex flex-col gap-1">
-          <span className="text-sm text-white/60">
-            …ou à partir d’un texte (optionnel)
-          </span>
+          <span className="text-sm text-white/60">{t("ai.fromText")}</span>
           <textarea
             value={sourceText}
             maxLength={6000}
             onChange={(e) => setSourceText(e.target.value)}
-            placeholder="Colle ici un cours, un article, un résumé…"
-            aria-label="Texte source"
+            placeholder={t("ai.sourceTextPlaceholder")}
+            aria-label={t("ai.sourceTextAria")}
             rows={4}
             className={`${field} resize-y`}
           />
@@ -227,11 +227,11 @@ export function AiGenerate() {
 
         <div className="flex flex-wrap gap-3">
           <label className="flex flex-1 flex-col gap-1">
-            <span className="text-sm text-white/60">Questions</span>
+            <span className="text-sm text-white/60">{t("ai.questions")}</span>
             <select
               value={count}
               onChange={(e) => setCount(Number(e.target.value))}
-              aria-label="Nombre de questions"
+              aria-label={t("ai.questionsAria")}
               className={field}
             >
               {[3, 5, 8, 10].map((n) => (
@@ -242,26 +242,26 @@ export function AiGenerate() {
             </select>
           </label>
           <label className="flex flex-1 flex-col gap-1">
-            <span className="text-sm text-white/60">Difficulté</span>
+            <span className="text-sm text-white/60">{t("ai.difficulty")}</span>
             <select
               value={difficulty}
               onChange={(e) => setDifficulty(e.target.value as Difficulty)}
-              aria-label="Difficulté"
+              aria-label={t("ai.difficulty")}
               className={`${field} capitalize`}
             >
               {DIFFICULTIES.map((d) => (
                 <option key={d} value={d} className="bg-[#1a1230] capitalize">
-                  {d}
+                  {t(DIFF_KEY[d])}
                 </option>
               ))}
             </select>
           </label>
           <label className="flex flex-1 flex-col gap-1">
-            <span className="text-sm text-white/60">Langue</span>
+            <span className="text-sm text-white/60">{t("ai.language")}</span>
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
-              aria-label="Langue"
+              aria-label={t("ai.language")}
               className={`${field} capitalize`}
             >
               {LANGUAGES.map((l) => (
@@ -282,18 +282,18 @@ export function AiGenerate() {
 
       <div className="mt-5 flex flex-col gap-2">
         <Button full onClick={generate} disabled={busy}>
-          <Sparkles className="size-5" /> Générer le quiz
+          <Sparkles className="size-5" /> {t("ai.generate")}
         </Button>
         <Button full variant="ghost" onClick={tryDemo} disabled={busy}>
-          Essayer en mode démo (sans clé)
+          {t("ai.tryDemo")}
         </Button>
       </div>
 
-      {busy ? <Spinner label="Génération en cours…" /> : null}
+      {busy ? <Spinner label={t("ai.generating")} /> : null}
 
       <Card className="mt-8 flex flex-col gap-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-white/50">
-          <KeyRound className="size-4" /> Ta clé API
+          <KeyRound className="size-4" /> {t("ai.apiKey")}
         </h2>
 
         <div className="flex flex-wrap gap-2">
@@ -318,23 +318,28 @@ export function AiGenerate() {
           type="password"
           value={apiKey}
           onChange={(e) => setKey(provider, e.target.value)}
-          placeholder={`Clé ${provider === "gemini" ? "Gemini" : "Anthropic"}`}
-          aria-label="Clé API"
+          placeholder={t("ai.keyPlaceholder", {
+            provider: provider === "gemini" ? "Gemini" : "Anthropic",
+          })}
+          aria-label={t("ai.apiKeyAria")}
           autoComplete="off"
           className={field}
         />
         <input
           value={models[provider] ?? ""}
           onChange={(e) => setModel(provider, e.target.value)}
-          placeholder={`Modèle (défaut : ${DEFAULT_MODELS[provider]})`}
-          aria-label="Modèle (optionnel)"
+          placeholder={t("ai.modelPlaceholder", {
+            model: DEFAULT_MODELS[provider],
+          })}
+          aria-label={t("ai.modelAria")}
           className={`${field} text-sm`}
         />
 
         <p className="text-xs text-white/40">
-          Modèle utilisé : {effectiveModel(provider, models)}. La clé reste dans
-          ton navigateur (jamais envoyée à nos serveurs) et part directement
-          chez {provider === "gemini" ? "Google" : "Anthropic"}.
+          {t("ai.modelUsed", {
+            model: effectiveModel(provider, models),
+            provider: provider === "gemini" ? "Google" : "Anthropic",
+          })}
         </p>
         <a
           href={KEY_HELP[provider].url}
@@ -342,7 +347,7 @@ export function AiGenerate() {
           rel="noreferrer"
           className="inline-flex items-center gap-1 text-xs text-brand hover:underline"
         >
-          Obtenir une clé — {KEY_HELP[provider].label}
+          {t("ai.getKey", { label: KEY_HELP[provider].label })}
           <ExternalLink className="size-3" />
         </a>
       </Card>
