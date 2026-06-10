@@ -9,6 +9,7 @@ import {
   useTeamLeaderboard,
 } from "../hooks/useGameSubscription";
 import { useGameStore } from "../store/gameStore";
+import { useProfile } from "../store/profileStore";
 import { submitAnswer, sendReaction } from "../firebase/api";
 import { FloatingReactions, ReactionBar } from "../components/Reactions";
 import { TeamLeaderboard } from "../components/TeamLeaderboard";
@@ -18,7 +19,7 @@ import { TimerBar } from "../components/TimerBar";
 import { Leaderboard } from "../components/Leaderboard";
 import { Podium } from "../components/Podium";
 import { ConnectionBanner } from "../components/ConnectionBanner";
-import { useServerOffset } from "../hooks/useServerTime";
+import { useServerOffset, serverNow } from "../hooks/useServerTime";
 import { feedback } from "../lib/feedback";
 import { useErr, useT } from "../i18n";
 
@@ -31,6 +32,7 @@ export function Play() {
   const uid = useAuthUid();
   const pseudo = useGameStore((s) => s.pseudo);
   const reset = useGameStore((s) => s.reset);
+  const recordGame = useProfile((s) => s.recordGame);
   const {
     state,
     current,
@@ -76,6 +78,37 @@ export function Play() {
   useEffect(() => {
     if (state === "PODIUM") feedback.finish();
   }, [state]);
+
+  // Ambiance sonore pendant la question (coupée en pause, à la clôture, au kick).
+  useEffect(() => {
+    if (state !== "QUESTION_ACTIVE" || !current || paused || kicked) {
+      feedback.ambient.stop();
+      return;
+    }
+    const remaining =
+      current.activatedAt + current.timeLimitMs - serverNow(offset);
+    feedback.ambient.start(Math.max(0, remaining));
+    return () => feedback.ambient.stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    state,
+    paused,
+    kicked,
+    current?.questionId,
+    current?.activatedAt,
+    current?.timeLimitMs,
+    offset,
+  ]);
+
+  // Comptabilise la partie dans le profil local (idempotent par sessionId :
+  // recordGame ignore un 2e appel pour la même session).
+  useEffect(() => {
+    if (state !== "PODIUM" || !sessionId || !uid) return;
+    const rank = leaderboard.findIndex((e) => e.uid === uid);
+    if (rank >= 0) {
+      recordGame({ sessionId, rank: rank + 1, points: score?.total ?? 0 });
+    }
+  }, [state, sessionId, uid, leaderboard, score, recordGame]);
 
   const eliminated = score?.eliminated === true;
 

@@ -55,6 +55,16 @@ function vibrate(pattern: number | number[]): void {
   }
 }
 
+let ambientTimer: ReturnType<typeof setTimeout> | undefined;
+
+/** Coupe la boucle d'ambiance (les tones en cours s'éteignent d'eux-mêmes). */
+function stopAmbient(): void {
+  if (ambientTimer) {
+    clearTimeout(ambientTimer);
+    ambientTimer = undefined;
+  }
+}
+
 export const feedback = {
   /** Bonne réponse : arpège ascendant + courte vibration. */
   correct(): void {
@@ -82,5 +92,38 @@ export const feedback = {
       tone(f, 220, "triangle", 0.07, i * 0.12),
     );
     vibrate([60, 40, 60, 40, 120]);
+  },
+  /**
+   * Ambiance synthétisée pendant la phase de réflexion : arpège discret en
+   * boucle qui s'accélère dans les 3 dernières secondes. 100 % tones éphémères
+   * (aucun oscillateur long-vivant → pas de fuite) ; horloge audio monotone.
+   * Coupée par `stop()` (à la clôture / en pause / au démontage).
+   */
+  ambient: {
+    start(timeLimitMs: number): void {
+      stopAmbient();
+      if (!enabled()) return;
+      const ac = audio(); // resume défensif (peut être le 1er appel audio)
+      if (!ac) return;
+      const startT = ac.currentTime;
+      const pattern = [330, 392, 494, 392, 587, 494];
+      let step = 0;
+      const beat = () => {
+        const now = audio();
+        if (!enabled() || !now) {
+          stopAmbient();
+          return;
+        }
+        const remaining = timeLimitMs - (now.currentTime - startT) * 1000;
+        tone(pattern[step % pattern.length], 130, "sine", 0.03);
+        step += 1;
+        // Accélère sur la fin pour monter la tension (sans saturer le tick).
+        ambientTimer = setTimeout(beat, remaining < 3000 ? 200 : 380);
+      };
+      beat();
+    },
+    stop(): void {
+      stopAmbient();
+    },
   },
 };

@@ -142,6 +142,26 @@ export function Host() {
     if (state === "PODIUM") feedback.finish();
   }, [state]);
 
+  // Ambiance sonore pendant la question (coupée en pause, à la clôture, au démontage).
+  useEffect(() => {
+    if (state !== "QUESTION_ACTIVE" || !current || paused) {
+      feedback.ambient.stop();
+      return;
+    }
+    const remaining =
+      current.activatedAt + current.timeLimitMs - serverNow(offset);
+    feedback.ambient.start(Math.max(0, remaining));
+    return () => feedback.ambient.stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    state,
+    paused,
+    current?.questionId,
+    current?.activatedAt,
+    current?.timeLimitMs,
+    offset,
+  ]);
+
   if (!sessionId) return <Navigate to="/" replace />;
   if (!state)
     return (
