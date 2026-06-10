@@ -13,6 +13,7 @@ import {
   Search,
   ArrowDownAZ,
   Clock,
+  FileText,
 } from "lucide-react";
 import { Screen, Button, Card, Spinner } from "../lib/ui";
 import { ConfirmDialog } from "../components/ConfirmDialog";
@@ -119,6 +120,13 @@ export function Create() {
             aria-label={t("create.importAria")}
           >
             <Upload className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => nav("/create/text")}
+            aria-label={t("create.textImportAria")}
+          >
+            <FileText className="size-4" />
           </Button>
           <Button
             variant="ghost"

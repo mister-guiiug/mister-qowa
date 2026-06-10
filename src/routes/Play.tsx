@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Navigate } from "react-router-dom";
-import { Check, X } from "lucide-react";
+import { Check, X, Share2 } from "lucide-react";
 import { Screen, Button, Spinner } from "../lib/ui";
+import { shareOrCopy } from "../lib/share";
 import { useAuthUid } from "../hooks/useAuthUid";
 import {
   usePlayerView,
@@ -379,6 +380,24 @@ export function Play() {
             <p className="text-center font-display text-xl">
               {t("play.podiumRank", { rank: ord(myRank) })}
             </p>
+          ) : null}
+          {myRank >= 0 ? (
+            <Button
+              full
+              variant="ghost"
+              onClick={() =>
+                void shareOrCopy({
+                  title: "Mister Qowa",
+                  text: t("play.shareScoreText", {
+                    rank: ord(myRank),
+                    pts: score?.total ?? 0,
+                  }),
+                  url: `${window.location.origin}${import.meta.env.BASE_URL}`,
+                })
+              }
+            >
+              <Share2 className="size-4" /> {t("play.shareScore")}
+            </Button>
           ) : null}
           <Button
             full

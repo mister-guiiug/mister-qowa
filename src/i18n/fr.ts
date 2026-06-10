@@ -36,6 +36,22 @@ export const fr = {
   "profile.badge.win": "Victoire",
   "profile.badge.veteran": "Vétéran",
 
+  // import texte + partage de score
+  "create.textImportAria": "Importer depuis du texte",
+  "textImport.title": "Importer depuis du texte",
+  "textImport.help":
+    "Une question par ligne, champs séparés par « ; » :\n• Choix multiple : Énoncé ; *Bonne ; Mauvaise ; Mauvaise\n• Vrai/Faux : Énoncé ; V (ou F)\n• Réponse libre : Énoncé ; =réponse acceptée\n• Sondage : Énoncé ; Option A ; Option B",
+  "textImport.titlePlaceholder": "Titre du quiz",
+  "textImport.placeholder":
+    "Capitale de la France ; *Paris ; Lyon ; Marseille\nLa Terre est plate ; F\nPlus grand océan ; =Pacifique",
+  "textImport.action": "Importer",
+  "textImport.defaultTitle": "Quiz importé",
+  "play.shareScore": "Partager mon score",
+  "play.shareScoreText": (v) =>
+    `J'ai fini ${v.rank} avec ${v.pts} points sur Mister Qowa !`,
+  "solo.bestStreak": (v) => `Meilleure série : ${v.n} 🔥`,
+  "solo.shareText": (v) => `${v.score} points en solo sur Mister Qowa !`,
+
   // pied de page
   "footer.source": "Code source",
   "footer.support": "Soutenir",
