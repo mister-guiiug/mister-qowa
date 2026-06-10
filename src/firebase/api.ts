@@ -49,6 +49,7 @@ import {
 import { publicQuestionFields } from "@shared/game";
 import type { Quiz, Score } from "@shared/contracts";
 import { AppError } from "../lib/appError";
+import { reportError } from "../lib/report";
 
 type AnswerNode = { choice: string; serverTs: number };
 
@@ -74,7 +75,7 @@ async function hostWrite<T>(label: string, fn: () => Promise<T>): Promise<T> {
     try {
       return await fn();
     } catch (second) {
-      console.error(`[host:${label}] échec après re-tentative`, second);
+      reportError(second, { host: label, retried: true });
       throw second instanceof Error ? second : new Error(String(second));
     }
   }
@@ -495,12 +496,17 @@ export async function restartSession(
   await hostWrite("restartSession", () => update(ref(db), updates));
 }
 
-/** Réaction emoji éphémère (push RTDB). */
+/**
+ * Réaction emoji : UN nœud par joueur (`reactions/{uid}`), écrasé à chaque
+ * envoi. Les Rules imposent un cooldown de 800 ms par joueur (anti-flood
+ * côté serveur, en plus du throttle client).
+ */
 export async function sendReaction(
   sessionId: string,
   emoji: string,
 ): Promise<void> {
-  await push(ref(getDb(), reactionsPath(sessionId)), {
+  const user = await ensureAuth();
+  await set(ref(getDb(), `${reactionsPath(sessionId)}/${user.uid}`), {
     emoji,
     ts: serverTimestamp(),
   });

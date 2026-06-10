@@ -341,3 +341,94 @@ describe("suppression de session", () => {
     await assertSucceeds(set(ref(db(HOST), "sessions/s-delete"), null));
   });
 });
+
+describe("reactions (anti-flood)", () => {
+  it("un joueur n'écrit que SA réaction, pas celle d'un autre", async () => {
+    await seedSession("s-react");
+    await assertSucceeds(
+      set(ref(db(ALICE), `sessions/s-react/reactions/${ALICE}`), {
+        emoji: "👍",
+        ts: serverTimestamp(),
+      }),
+    );
+    await assertFails(
+      set(ref(db(ALICE), `sessions/s-react/reactions/${BOB}`), {
+        emoji: "🔥",
+        ts: serverTimestamp(),
+      }),
+    );
+  });
+
+  it("cooldown : une 2e réaction immédiate (< 800 ms) est rejetée", async () => {
+    await seedSession("s-react-cd");
+    await assertSucceeds(
+      set(ref(db(ALICE), `sessions/s-react-cd/reactions/${ALICE}`), {
+        emoji: "👍",
+        ts: serverTimestamp(),
+      }),
+    );
+    // Immédiat → now <= précédent + 800 → refusé.
+    await assertFails(
+      set(ref(db(ALICE), `sessions/s-react-cd/reactions/${ALICE}`), {
+        emoji: "❤️",
+        ts: serverTimestamp(),
+      }),
+    );
+  });
+});
+
+describe("boucle de jeu complète (host ↔ joueur sous Rules)", () => {
+  it("join → answer → host close (scores/reveal), joueur ne peut pas scorer", async () => {
+    await seedSession("s-loop");
+    // 1) Le joueur rejoint le lobby.
+    await assertSucceeds(
+      set(ref(db(ALICE), `sessions/s-loop/players/${ALICE}`), {
+        pseudo: "Alice",
+        joinedAt: Date.now(),
+        avatar: "🦊",
+      }),
+    );
+    // 2) Le host active la question.
+    await activateQuestion("s-loop");
+    // 3) Le joueur écrit SA réponse (fenêtre ouverte).
+    await assertSucceeds(
+      set(ref(db(ALICE), answerPath("s-loop", "q1", ALICE)), validAnswer()),
+    );
+    // 4) Un joueur NE PEUT PAS écrire les scores.
+    await assertFails(
+      set(ref(db(ALICE), `sessions/s-loop/scores/${ALICE}`), {
+        total: 1000,
+        streak: 1,
+      }),
+    );
+    // 5) Le host lit les réponses, écrit scores + reveal + bascule l'état.
+    await assertSucceeds(get(ref(db(HOST), "sessions/s-loop/answers/q1")));
+    await assertSucceeds(
+      update(ref(db(HOST)), {
+        [`sessions/s-loop/scores/${ALICE}`]: { total: 1000, streak: 1 },
+        [`sessions/s-loop/reveal/q1/correct`]: "a",
+        [`sessions/s-loop/reveal/q1/${ALICE}`]: {
+          correct: true,
+          awarded: 1000,
+          responseTimeMs: 1200,
+          total: 1000,
+        },
+        [`sessions/s-loop/leaderboard/top`]: [
+          { uid: ALICE, pseudo: "Alice", total: 1000 },
+        ],
+        [`sessions/s-loop/state`]: "LEADERBOARD",
+      }),
+    );
+    // 6) Le joueur voit la bonne réponse (publique) et SON reveal.
+    await assertSucceeds(
+      get(ref(db(ALICE), "sessions/s-loop/reveal/q1/correct")),
+    );
+    await assertSucceeds(
+      get(ref(db(ALICE), `sessions/s-loop/reveal/q1/${ALICE}`)),
+    );
+    // 7) Fenêtre fermée (LEADERBOARD) → plus de réponse possible.
+    await assertFails(
+      set(ref(db(BOB), answerPath("s-loop", "q1", BOB)), validAnswer()),
+    );
+  });
+});

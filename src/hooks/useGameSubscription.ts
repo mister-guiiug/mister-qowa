@@ -4,13 +4,7 @@
  * (`players` à 1000 entrées). L'arbre joueurs est réservé au host.
  */
 import { useEffect, useState } from "react";
-import {
-  onValue,
-  onChildAdded,
-  query,
-  limitToLast,
-  ref,
-} from "firebase/database";
+import { onValue, onChildAdded, onChildChanged, ref } from "firebase/database";
 import { getDb } from "../firebase/app";
 import {
   statePath,
@@ -239,24 +233,27 @@ export function useReactions(
     }
     let counter = 0;
     const timers: ReturnType<typeof setTimeout>[] = [];
-    const off = onChildAdded(
-      query(ref(getDb(), reactionsPath(sessionId)), limitToLast(6)),
-      (snap) => {
-        const v = snap.val() as { emoji?: string; ts?: number } | null;
-        if (!v?.emoji) return;
-        if (v.ts && Date.now() - v.ts > 6000) return; // ignore les anciennes au montage
-        const id = ++counter;
-        setItems((cur) => [...cur, { id, emoji: v.emoji as string }]);
-        timers.push(
-          setTimeout(
-            () => setItems((cur) => cur.filter((x) => x.id !== id)),
-            3500,
-          ),
-        );
-      },
-    );
+    // 1 nœud par joueur : un nouvel envoi est un onChildAdded (1re fois) OU un
+    // onChildChanged (ré-réaction, le nœud existe déjà) → on anime les deux.
+    const float = (snap: { val: () => unknown }) => {
+      const v = snap.val() as { emoji?: string; ts?: number } | null;
+      if (!v?.emoji) return;
+      if (v.ts && Date.now() - v.ts > 6000) return; // ignore les anciennes au montage
+      const id = ++counter;
+      setItems((cur) => [...cur, { id, emoji: v.emoji as string }]);
+      timers.push(
+        setTimeout(
+          () => setItems((cur) => cur.filter((x) => x.id !== id)),
+          3500,
+        ),
+      );
+    };
+    const node = ref(getDb(), reactionsPath(sessionId));
+    const offAdd = onChildAdded(node, float);
+    const offChange = onChildChanged(node, float);
     return () => {
-      off();
+      offAdd();
+      offChange();
       timers.forEach(clearTimeout);
     };
   }, [sessionId]);

@@ -1,5 +1,6 @@
-import { Component, type ReactNode } from "react";
+import { Component, type ErrorInfo, type ReactNode } from "react";
 import { tStatic } from "../i18n";
+import { reportError } from "../lib/report";
 
 interface State {
   error: Error | null;
@@ -11,6 +12,13 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
 
   static getDerivedStateFromError(error: Error): State {
     return { error };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo): void {
+    reportError(error, {
+      boundary: true,
+      componentStack: info.componentStack,
+    });
   }
 
   render() {
