@@ -61,6 +61,25 @@ export function scoreRound(
   return { scores, reveals, correctChoice: correctChoiceOf(q) };
 }
 
+/**
+ * Mode élimination : renvoie les joueurs qui TOMBENT à cette question
+ * (mauvaise réponse ou silence), parmi les joueurs encore en course.
+ * Les sondages n'éliminent personne.
+ */
+export function eliminateAfterRound(
+  q: Question,
+  answers: Record<string, RoundAnswer>,
+  playerIds: string[],
+  prevScores: Record<string, Score>,
+): string[] {
+  if (q.type === "poll") return [];
+  return playerIds.filter((pid) => {
+    if (prevScores[pid]?.eliminated) return false; // déjà hors course
+    const a = answers[pid];
+    return !a || !isCorrect(q, a.choice);
+  });
+}
+
 /** Compte réponses & bonnes réponses d'une question (pour les stats post-partie). */
 export function tallyAnswers(
   q: Question,

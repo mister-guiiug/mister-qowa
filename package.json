@@ -7,7 +7,7 @@
   "description": "Mister Qowa — PWA de quiz interactif en temps réel (type Kahoot) : créer, héberger et jouer des quiz multijoueurs, leaderboard live et gamification. Frontend GitHub Pages + Firebase serverless.",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node scripts/check-bundle.mjs",
     "build:analyze": "cross-env ANALYZE=1 npm run build",
     "preview": "vite preview --base /mister-qowa/",
     "lint": "eslint .",
@@ -16,6 +16,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:rules": "npx --yes firebase-tools@15 emulators:exec --only database --project demo-mister-qowa \"vitest run --config vitest.rules.config.ts\"",
     "test:e2e": "playwright test",
     "test:e2e:critical": "playwright test --grep @critical",
     "test:e2e:ui": "playwright test --ui",
@@ -36,6 +37,8 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
+    "@firebase/rules-unit-testing": "^5.0.0",
     "@mister-guiiug/dev-wpa-config": "^2.2.0",
     "@playwright/test": "^1.49.1",
     "@tailwindcss/vite": "^4.3.0",

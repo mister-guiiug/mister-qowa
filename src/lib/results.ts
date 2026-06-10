@@ -1,6 +1,4 @@
-/** Lecture de l'historique des parties (Firestore) + export CSV. */
-import { collection, getDocs, query, where } from "firebase/firestore";
-import { getFs, ensureAuth } from "../firebase/app";
+/** Lecture de l'historique des parties (Firestore lazy) + export CSV. */
 
 export interface RankRow {
   uid: string;
@@ -29,6 +27,49 @@ export interface GameResult {
   questionStats?: QuestionStat[];
 }
 
+/** Agrégat d'un quiz à travers toutes les parties archivées. */
+export interface QuizAggregate {
+  quizId: string;
+  quizTitle: string;
+  games: number;
+  /** Moyenne des scores de TOUS les joueurs, toutes parties confondues. */
+  avgScore: number;
+  bestScore: number;
+}
+
+export function aggregateByQuiz(results: GameResult[]): QuizAggregate[] {
+  const byQuiz = new Map<
+    string,
+    { title: string; games: number; sum: number; n: number; best: number }
+  >();
+  for (const r of results) {
+    const key = r.quizId ?? r.quizTitle;
+    const agg = byQuiz.get(key) ?? {
+      title: r.quizTitle,
+      games: 0,
+      sum: 0,
+      n: 0,
+      best: 0,
+    };
+    agg.games += 1;
+    for (const row of r.ranking) {
+      agg.sum += row.total;
+      agg.n += 1;
+      agg.best = Math.max(agg.best, row.total);
+    }
+    byQuiz.set(key, agg);
+  }
+  return [...byQuiz.entries()]
+    .map(([quizId, a]) => ({
+      quizId,
+      quizTitle: a.title,
+      games: a.games,
+      avgScore: a.n ? Math.round(a.sum / a.n) : 0,
+      bestScore: a.best,
+    }))
+    .sort((a, b) => b.games - a.games);
+}
+
 /** Question la plus ratée (plus faible taux de réussite, au moins 1 réponse). */
 export function hardestQuestion(r: GameResult): QuestionStat | null {
   const stats = (r.questionStats ?? []).filter((q) => q.answered > 0);
@@ -39,14 +80,9 @@ export function hardestQuestion(r: GameResult): QuestionStat | null {
 }
 
 export async function fetchMyResults(): Promise<GameResult[]> {
-  const user = await ensureAuth();
-  const snap = await getDocs(
-    query(collection(getFs(), "results"), where("hostUid", "==", user.uid)),
-  );
-  const rows: GameResult[] = [];
-  snap.forEach((d) =>
-    rows.push({ id: d.id, ...(d.data() as Omit<GameResult, "id">) }),
-  );
+  // Firestore importé à la demande : ne pèse pas sur le démarrage de l'app.
+  const { fetchResults } = await import("../firebase/fs");
+  const rows = await fetchResults<Omit<GameResult, "id">>();
   return rows.sort((a, b) => b.finishedAt - a.finishedAt);
 }
 

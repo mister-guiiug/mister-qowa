@@ -14,10 +14,10 @@ import {
   serverTimestamp,
   onDisconnect,
 } from "firebase/database";
-import { doc, setDoc } from "firebase/firestore";
-import { getDb, getFs, ensureAuth } from "./app";
+import { getDb, ensureAuth } from "./app";
 import {
   pinIndexPath,
+  sessionPath,
   metaPath,
   statePath,
   currentPath,
@@ -40,7 +40,12 @@ import {
   STREAK_BONUS_PCT,
   LEADERBOARD_TOP,
 } from "@shared/gameState";
-import { scoreRound, tallyAnswers, type RoundAnswer } from "@shared/round";
+import {
+  scoreRound,
+  tallyAnswers,
+  eliminateAfterRound,
+  type RoundAnswer,
+} from "@shared/round";
 import { publicQuestionFields } from "@shared/game";
 import type { Quiz, Score } from "@shared/contracts";
 
@@ -121,6 +126,7 @@ function buildRanking(
 export async function createSession(
   quiz: Quiz,
   teams?: Team[],
+  opts?: { elimination?: boolean },
 ): Promise<{ sessionId: string; pin: string }> {
   const user = await ensureAuth();
   const db = getDb();
@@ -147,6 +153,7 @@ export async function createSession(
     createdAt: Date.now(),
     totalQuestions: quiz.questions.length,
     ...(teams && teams.length ? { teams } : {}),
+    ...(opts?.elimination ? { eliminationMode: true } : {}),
   });
   await set(ref(db, statePath(sessionId)), "LOBBY");
   return { sessionId, pin };
@@ -202,26 +209,47 @@ export async function closeQuestion(
       if (!flat.has(pid)) flat.set(pid, ans);
     }
   }
+  const meta = metaSnap.val() as {
+    teams?: Team[];
+    eliminationMode?: boolean;
+  } | null;
+  const elimination = meta?.eliminationMode === true;
+  // Mode élimination : les joueurs hors course ne marquent plus de points.
+  const answers = Object.fromEntries(
+    [...flat].filter(([pid]) => !(elimination && scores[pid]?.eliminated)),
+  );
 
   // Cœur métier PUR (testé dans shared/round.test.ts).
-  const round = scoreRound(
-    q,
-    Object.fromEntries(flat),
-    scores,
-    activatedAt,
-    STREAK_BONUS_PCT,
-  );
+  const round = scoreRound(q, answers, scores, activatedAt, STREAK_BONUS_PCT);
   const updates: Record<string, unknown> = {};
   for (const [pid, sc] of Object.entries(round.scores)) {
     scores[pid] = sc;
     updates[scorePath(sessionId, pid)] = sc;
     updates[playerRevealPath(sessionId, q.id, pid)] = round.reveals[pid];
   }
+  if (elimination) {
+    const fallen = eliminateAfterRound(
+      q,
+      answers,
+      Object.keys(players),
+      scores,
+    );
+    for (const pid of fallen) {
+      const prev = scores[pid] ?? { total: 0, streak: 0 };
+      const sc: Score = { total: prev.total, streak: 0, eliminated: true };
+      scores[pid] = sc;
+      updates[scorePath(sessionId, pid)] = sc;
+    }
+  }
   if (round.correctChoice !== null) {
     updates[`${revealPath(sessionId, q.id)}/correct`] = round.correctChoice;
+    if (q.type !== "poll" && q.explanation?.trim()) {
+      updates[`${revealPath(sessionId, q.id)}/explanation`] =
+        q.explanation.trim();
+    }
   }
   updates[leaderboardPath(sessionId)] = buildRanking(scores, players);
-  const teams = (metaSnap.val() as { teams?: Team[] } | null)?.teams;
+  const teams = meta?.teams;
   if (teams?.length) {
     updates[teamLeaderboardPath(sessionId)] = teamStandings(
       teams,
@@ -262,9 +290,10 @@ export async function endGame(sessionId: string, quiz?: Quiz): Promise<void> {
   }
   await hostWrite("endGame", () => update(ref(db), finalUpdate));
 
-  // Archive durable (best-effort) — alimente l'historique des parties.
+  // Archive durable (best-effort) — Firestore chargé à la demande (chunk séparé).
   try {
-    await setDoc(doc(getFs(), "results", sessionId), {
+    const { saveResult } = await import("./fs");
+    await saveResult(sessionId, {
       sessionId,
       hostUid: user.uid,
       quizId: quiz?.id ?? null,
@@ -348,6 +377,78 @@ export async function joinSession(
   // Présence : retire le joueur du lobby s'il se déconnecte.
   void onDisconnect(playerRef).remove();
   return { sessionId: sid };
+}
+
+/**
+ * Pause / reprise de la question courante. La pause bloque les réponses CÔTÉ
+ * SERVEUR (rule `meta/paused !== true`) ; à la reprise, la fenêtre de réponse
+ * est étendue de la durée de la pause (timeLimitMs += pauseMs).
+ */
+export async function pauseQuestion(
+  sessionId: string,
+  paused: boolean,
+): Promise<void> {
+  const db = getDb();
+  if (paused) {
+    await update(ref(db, metaPath(sessionId)), {
+      paused: true,
+      pausedAt: serverTimestamp(),
+    });
+    return;
+  }
+  const [metaSnap, curSnap] = await Promise.all([
+    get(ref(db, metaPath(sessionId))),
+    get(ref(db, currentPath(sessionId))),
+  ]);
+  const pausedAt = (metaSnap.val() as { pausedAt?: number } | null)?.pausedAt;
+  const timeLimitMs = (curSnap.val() as { timeLimitMs?: number } | null)
+    ?.timeLimitMs;
+  // Horloge locale ≈ horloge serveur (skew < 1 s) : approximation suffisante.
+  const pauseMs = pausedAt ? Math.max(0, Date.now() - pausedAt) : 0;
+  const updates: Record<string, unknown> = {
+    [`${metaPath(sessionId)}/paused`]: null,
+    [`${metaPath(sessionId)}/pausedAt`]: null,
+  };
+  if (timeLimitMs && pauseMs > 0) {
+    updates[`${currentPath(sessionId)}/timeLimitMs`] = timeLimitMs + pauseMs;
+  }
+  await update(ref(db), updates);
+}
+
+/** Re-pose la question courante : purge réponses + reveal, chrono repart à zéro. */
+export async function replayQuestion(
+  sessionId: string,
+  quiz: Quiz,
+  index: number,
+): Promise<void> {
+  const db = getDb();
+  const q = quiz.questions[index];
+  await hostWrite("replayQuestion", () =>
+    update(ref(db), {
+      [answersQuestionPath(sessionId, q.id)]: null,
+      [revealPath(sessionId, q.id)]: null,
+      [`${metaPath(sessionId)}/paused`]: null,
+      [`${metaPath(sessionId)}/pausedAt`]: null,
+      [currentPath(sessionId)]: {
+        ...publicQuestionFields(q, index, quiz.questions.length),
+        activatedAt: serverTimestamp(),
+      },
+      [statePath(sessionId)]: "QUESTION_ACTIVE",
+    }),
+  );
+}
+
+/**
+ * Ferme définitivement la salle : supprime la session entière (rule host-delete
+ * au niveau $sid) et libère le PIN. À appeler quand le host quitte le podium.
+ */
+export async function closeSession(
+  sessionId: string,
+  pin: string | null,
+): Promise<void> {
+  const updates: Record<string, unknown> = { [sessionPath(sessionId)]: null };
+  if (pin) updates[pinIndexPath(pin)] = null;
+  await update(ref(getDb()), updates);
 }
 
 /** Exclut un joueur (host) : retire son nœud et le bannit (anti re-join). */

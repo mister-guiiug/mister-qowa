@@ -38,6 +38,7 @@ export function Create() {
   const [error, setError] = useState<string | null>(null);
   const [teamMode, setTeamMode] = useState(false);
   const [teamCount, setTeamCount] = useState(2);
+  const [elimination, setElimination] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<Quiz | null>(null);
 
   async function host(quiz: Quiz) {
@@ -47,6 +48,7 @@ export function Create() {
       const { sessionId, pin } = await createSession(
         quiz,
         teamMode ? makeTeams(teamCount) : undefined,
+        { elimination },
       );
       setHost({ sessionId, pin, quiz });
       nav(`/host/${sessionId}`);
@@ -139,6 +141,15 @@ export function Create() {
             ))}
           </select>
         ) : null}
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={elimination}
+            onChange={(e) => setElimination(e.target.checked)}
+            className="size-4 accent-brand"
+          />
+          Mode élimination
+        </label>
       </div>
 
       {error ? (

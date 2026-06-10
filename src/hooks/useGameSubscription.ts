@@ -16,6 +16,7 @@ import {
   statePath,
   currentPath,
   scorePath,
+  scoresPath,
   leaderboardPath,
   playersPath,
   playerRevealPath,
@@ -70,8 +71,12 @@ export interface PlayerView {
   reveal: PlayerReveal | undefined;
   /** Bonne réponse publiée (choix gagnant) — lisible après clôture. */
   correctChoice: string | undefined;
+  /** Explication de la bonne réponse (publiée à la clôture si présente). */
+  explanation: string | undefined;
   /** Le joueur a-t-il été exclu par le host ? */
   kicked: boolean;
+  /** Question en pause (réponses bloquées côté serveur). */
+  paused: boolean;
   leaderboard: LeaderboardEntry[];
 }
 
@@ -101,8 +106,16 @@ export function usePlayerView(
       ? `${revealPath(sessionId, current.questionId)}/correct`
       : null,
   );
+  const explanation = useRtdbValue<string>(
+    sessionId && current
+      ? `${revealPath(sessionId, current.questionId)}/explanation`
+      : null,
+  );
   const kicked = useRtdbValue<boolean>(
     sessionId && uid ? `${metaPath(sessionId)}/banned/${uid}` : null,
+  );
+  const paused = useRtdbValue<boolean>(
+    sessionId ? `${metaPath(sessionId)}/paused` : null,
   );
   return {
     state,
@@ -110,7 +123,9 @@ export function usePlayerView(
     score,
     reveal,
     correctChoice,
+    explanation,
     kicked: kicked === true,
+    paused: paused === true,
     leaderboard: asArray<LeaderboardEntry>(leaderboardRaw),
   };
 }
@@ -120,6 +135,12 @@ export interface HostView {
   current: PublicQuestion | undefined;
   players: Record<string, Player>;
   playerCount: number;
+  /** Scores live (host) — sert au mode élimination (survivants). */
+  scores: Record<string, Score>;
+  /** Question en pause. */
+  paused: boolean;
+  /** Partie en mode élimination. */
+  eliminationMode: boolean;
   leaderboard: LeaderboardEntry[];
 }
 
@@ -133,6 +154,15 @@ export function useHostView(sessionId: string | null): HostView {
   const players = useRtdbValue<Record<string, Player>>(
     sessionId ? playersPath(sessionId) : null,
   );
+  const scores = useRtdbValue<Record<string, Score>>(
+    sessionId ? scoresPath(sessionId) : null,
+  );
+  const paused = useRtdbValue<boolean>(
+    sessionId ? `${metaPath(sessionId)}/paused` : null,
+  );
+  const eliminationMode = useRtdbValue<boolean>(
+    sessionId ? `${metaPath(sessionId)}/eliminationMode` : null,
+  );
   const leaderboardRaw = useRtdbValue<unknown>(
     sessionId ? leaderboardPath(sessionId) : null,
   );
@@ -141,6 +171,9 @@ export function useHostView(sessionId: string | null): HostView {
     current,
     players: players ?? {},
     playerCount: players ? Object.keys(players).length : 0,
+    scores: scores ?? {},
+    paused: paused === true,
+    eliminationMode: eliminationMode === true,
     leaderboard: asArray<LeaderboardEntry>(leaderboardRaw),
   };
 }

@@ -26,8 +26,17 @@ export function Play() {
   const uid = useAuthUid();
   const pseudo = useGameStore((s) => s.pseudo);
   const reset = useGameStore((s) => s.reset);
-  const { state, current, reveal, correctChoice, kicked, leaderboard, score } =
-    usePlayerView(sessionId ?? null, uid);
+  const {
+    state,
+    current,
+    reveal,
+    correctChoice,
+    explanation,
+    kicked,
+    paused,
+    leaderboard,
+    score,
+  } = usePlayerView(sessionId ?? null, uid);
   const reactions = useReactions(sessionId ?? null);
   const teamStandings = useTeamLeaderboard(sessionId ?? null);
   const [picked, setPicked] = useState<string | null>(null);
@@ -35,10 +44,11 @@ export function Play() {
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
 
+  // Reset à chaque nouvelle question OU re-pose de la même (activatedAt change).
   useEffect(() => {
     setPicked(null);
     setText("");
-  }, [current?.questionId]);
+  }, [current?.questionId, current?.activatedAt]);
 
   // Session injoignable après un délai : sortie de secours plutôt qu'un spinner figé.
   useEffect(() => {
@@ -62,8 +72,10 @@ export function Play() {
     if (state === "PODIUM") feedback.finish();
   }, [state]);
 
+  const eliminated = score?.eliminated === true;
+
   async function pick(choice: string) {
-    if (!sessionId || !current || picked) return;
+    if (!sessionId || !current || picked || paused || eliminated) return;
     setPicked(choice);
     setError(null);
     try {
@@ -138,7 +150,13 @@ export function Play() {
             <span>
               Question {current.index + 1}/{current.total}
             </span>
-            <Countdown endsAt={current.activatedAt + current.timeLimitMs} />
+            {paused ? (
+              <span className="rounded-xl bg-amber-500/20 px-3 py-1 font-display text-amber-200">
+                ⏸ Pause
+              </span>
+            ) : (
+              <Countdown endsAt={current.activatedAt + current.timeLimitMs} />
+            )}
           </div>
           <h2 className="font-display text-xl">{current.prompt}</h2>
           {current.mediaUrl ? (
@@ -151,11 +169,22 @@ export function Play() {
               />
             </div>
           ) : null}
+          {eliminated ? (
+            <div
+              role="status"
+              className="rounded-3xl bg-white/10 p-6 text-center"
+            >
+              <p className="font-display text-2xl">💀 Éliminé</p>
+              <p className="text-white/60">
+                Tu continues en spectateur — bonne chance aux survivants !
+              </p>
+            </div>
+          ) : null}
           {current.options ? (
             <AnswerGrid
               options={current.options}
               onPick={pick}
-              disabled={picked !== null}
+              disabled={picked !== null || paused || eliminated}
               picked={picked}
             />
           ) : (
@@ -169,7 +198,7 @@ export function Play() {
               <input
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                disabled={picked !== null}
+                disabled={picked !== null || paused || eliminated}
                 maxLength={200}
                 placeholder="Ta réponse…"
                 className="rounded-2xl bg-white/10 px-4 py-3 text-lg outline-none ring-1 ring-white/15 focus:ring-brand"
@@ -177,7 +206,9 @@ export function Play() {
               <Button
                 type="submit"
                 full
-                disabled={picked !== null || !text.trim()}
+                disabled={
+                  picked !== null || paused || eliminated || !text.trim()
+                }
               >
                 Envoyer
               </Button>
@@ -232,6 +263,11 @@ export function Play() {
           ) : (
             <p className="text-center text-white/60">Résultats…</p>
           )}
+          {current?.type === "free_text" && correctChoice ? (
+            <p className="text-center text-white/80">
+              Réponse attendue : «&nbsp;{correctChoice}&nbsp;»
+            </p>
+          ) : null}
           {current?.options && correctChoice ? (
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {current.options.map((o) => {
@@ -258,6 +294,11 @@ export function Play() {
                 );
               })}
             </div>
+          ) : null}
+          {explanation ? (
+            <p className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-white/80">
+              💡 {explanation}
+            </p>
           ) : null}
           {teamStandings.length ? (
             <TeamLeaderboard standings={teamStandings} />

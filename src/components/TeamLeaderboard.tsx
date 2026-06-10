@@ -1,11 +1,11 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import type { TeamStanding } from "@shared/teams";
 
 export function TeamLeaderboard({ standings }: { standings: TeamStanding[] }) {
   return (
     <ol className="flex flex-col gap-2">
       {standings.map((t, i) => (
-        <motion.li
+        <m.li
           key={t.teamId}
           layout
           initial={{ opacity: 0, y: 8 }}
@@ -24,7 +24,7 @@ export function TeamLeaderboard({ standings }: { standings: TeamStanding[] }) {
             <span className="font-semibold">{t.name}</span>
           </span>
           <span className="font-display tabular-nums">{t.total}</span>
-        </motion.li>
+        </m.li>
       ))}
     </ol>
   );

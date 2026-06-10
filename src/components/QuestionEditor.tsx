@@ -302,6 +302,18 @@ export function QuestionEditor({
           </div>
         ) : null}
 
+        {/* Explication montrée aux joueurs après la clôture (optionnelle) */}
+        {q.type !== "poll" ? (
+          <input
+            value={q.explanation ?? ""}
+            maxLength={300}
+            onChange={(e) => set({ explanation: e.target.value })}
+            placeholder="Explication de la réponse (optionnelle)"
+            aria-label={`Explication de la question ${index + 1}`}
+            className={field}
+          />
+        ) : null}
+
         {/* Réglages : temps + points */}
         <div className="flex gap-2">
           <label className="flex flex-1 flex-col gap-1 text-xs text-white/50">
