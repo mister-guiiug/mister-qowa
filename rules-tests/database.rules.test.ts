@@ -101,8 +101,26 @@ describe("pins", () => {
   });
 
   it("création OK mais écrasement refusé", async () => {
+    // L'alias ne peut être créé que pour une session dont on est le host.
+    await seedSession("sess-a");
     await assertSucceeds(set(ref(db(HOST), "pins/00000002"), "sess-a"));
     await assertFails(set(ref(db(ALICE), "pins/00000002"), "sess-b"));
+  });
+
+  it("PIN non conforme (pas 8 chiffres) refusé", async () => {
+    await seedSession("sess-pin-fmt");
+    await assertFails(set(ref(db(HOST), "pins/123"), "sess-pin-fmt"));
+    await assertFails(set(ref(db(HOST), "pins/abcdefgh"), "sess-pin-fmt"));
+  });
+
+  it("alias vers une session que l'on ne possède pas refusé", async () => {
+    await seedSession("sess-owned-by-host"); // meta/hostUid = HOST
+    await assertFails(
+      set(ref(db(ALICE), "pins/00000007"), "sess-owned-by-host"),
+    );
+    await assertSucceeds(
+      set(ref(db(HOST), "pins/00000007"), "sess-owned-by-host"),
+    );
   });
 
   it("libération par le host de la session, pas par un joueur", async () => {
@@ -373,6 +391,88 @@ describe("reactions (anti-flood)", () => {
         emoji: "❤️",
         ts: serverTimestamp(),
       }),
+    );
+  });
+});
+
+describe("current (validation de la fenêtre)", () => {
+  const baseCurrent = {
+    questionId: "q1",
+    index: 0,
+    total: 5,
+    type: "multiple_choice",
+    prompt: "?",
+    scored: true,
+    activatedAt: Date.now(),
+  };
+
+  it("timeLimitMs hors borne (≤ 1 h, > 0) rejeté", async () => {
+    await seedSession("s-current");
+    await assertSucceeds(
+      set(ref(db(HOST), "sessions/s-current/current"), {
+        ...baseCurrent,
+        timeLimitMs: 20_000,
+      }),
+    );
+    // Réouverture abusive de la fenêtre (des heures) → rejetée.
+    await assertFails(
+      set(ref(db(HOST), "sessions/s-current/current"), {
+        ...baseCurrent,
+        timeLimitMs: 999_999_999,
+      }),
+    );
+    await assertFails(
+      set(ref(db(HOST), "sessions/s-current/current"), {
+        ...baseCurrent,
+        timeLimitMs: 0,
+      }),
+    );
+  });
+});
+
+describe("lecture du roster (cloisonnement RGPD)", () => {
+  it("players/scores/leaderboard : non-participant refusé, participant et host OK", async () => {
+    await seedSession("s-roster");
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      const d = ctx.database();
+      await set(ref(d, `sessions/s-roster/players/${ALICE}`), {
+        pseudo: "Alice",
+        joinedAt: Date.now(),
+      });
+      await set(ref(d, "sessions/s-roster/leaderboard/top"), [
+        { uid: ALICE, pseudo: "Alice", total: 100 },
+      ]);
+      await set(ref(d, `sessions/s-roster/scores/${ALICE}`), {
+        total: 100,
+        streak: 1,
+      });
+    });
+    // BOB n'a jamais participé → lecture du roster refusée.
+    await assertFails(get(ref(db(BOB), "sessions/s-roster/players")));
+    await assertFails(get(ref(db(BOB), "sessions/s-roster/leaderboard/top")));
+    await assertFails(get(ref(db(BOB), "sessions/s-roster/scores")));
+    // ALICE (présente) et le host peuvent lire.
+    await assertSucceeds(
+      get(ref(db(ALICE), "sessions/s-roster/leaderboard/top")),
+    );
+    await assertSucceeds(get(ref(db(HOST), "sessions/s-roster/players")));
+  });
+
+  it("joueur reconnecté (players purgé mais score présent) lit toujours le classement", async () => {
+    await seedSession("s-roster-rejoin");
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      const d = ctx.database();
+      // players/$uid retiré par onDisconnect, mais le score subsiste.
+      await set(ref(d, `sessions/s-roster-rejoin/scores/${ALICE}`), {
+        total: 50,
+        streak: 0,
+      });
+      await set(ref(d, "sessions/s-roster-rejoin/leaderboard/top"), [
+        { uid: ALICE, pseudo: "Alice", total: 50 },
+      ]);
+    });
+    await assertSucceeds(
+      get(ref(db(ALICE), "sessions/s-roster-rejoin/leaderboard/top")),
     );
   });
 });

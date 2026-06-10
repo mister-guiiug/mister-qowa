@@ -186,6 +186,10 @@ export const es = {
 
   // anfitrión (Host)
   "host.connecting": "Conectando a la partida…",
+  "host.quizLostTitle": "Cuestionario no disponible en este dispositivo",
+  "host.quizLostBody":
+    "El cuestionario alojado no está en la biblioteca de este dispositivo (memoria borrada u otro navegador). Cierra la sala para liberar el PIN.",
+  "host.closeRoom": "Cerrar la sala",
   "host.linkCopied": "¡Enlace copiado!",
   "host.shareUnavailable": "Compartir no disponible",
   "host.inviteText": "¡Únete a mi partida de cuestionario!",
@@ -259,6 +263,9 @@ export const es = {
   "err.crashTitle": "Vaya…",
   "err.crashBody":
     "Se ha producido un error. Recarga la aplicación para continuar.",
+  "err.configTitle": "Servicio no disponible",
+  "err.appCheckMissing":
+    "La protección antibots (App Check) no está configurada para este despliegue. Contacta con el organizador.",
   "err.pinAllocFailed": "No se pudo asignar un PIN.",
   "err.noMoreQuestions": "No hay más preguntas.",
   "err.pinInvalid": "PIN no válido.",

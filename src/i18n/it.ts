@@ -186,6 +186,10 @@ export const it = {
 
   // host
   "host.connecting": "Connessione alla partita…",
+  "host.quizLostTitle": "Quiz non disponibile su questo dispositivo",
+  "host.quizLostBody":
+    "Il quiz ospitato non è nella libreria di questo dispositivo (memoria cancellata o browser diverso). Chiudi la stanza per liberare il PIN.",
+  "host.closeRoom": "Chiudi la stanza",
   "host.linkCopied": "Link copiato!",
   "host.shareUnavailable": "Condivisione non disponibile",
   "host.inviteText": "Unisciti alla mia partita di quiz!",
@@ -259,6 +263,9 @@ export const it = {
   "err.generic": "Si è verificato un errore.",
   "err.crashTitle": "Ops…",
   "err.crashBody": "Si è verificato un errore. Ricarica l'app per continuare.",
+  "err.configTitle": "Servizio non disponibile",
+  "err.appCheckMissing":
+    "La protezione anti-bot (App Check) non è configurata per questa pubblicazione. Contatta l'organizzatore.",
   "err.pinAllocFailed": "Impossibile assegnare un PIN.",
   "err.noMoreQuestions": "Nessun'altra domanda.",
   "err.pinInvalid": "PIN non valido.",

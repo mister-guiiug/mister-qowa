@@ -188,6 +188,10 @@ export const en = {
 
   // host (Host)
   "host.connecting": "Connecting to the game…",
+  "host.quizLostTitle": "Quiz unavailable on this device",
+  "host.quizLostBody":
+    "The hosted quiz isn’t in this device’s library (storage cleared, or a different browser). Close the room to release the PIN.",
+  "host.closeRoom": "Close the room",
   "host.linkCopied": "Link copied!",
   "host.shareUnavailable": "Sharing unavailable",
   "host.inviteText": "Join my quiz game!",
@@ -258,6 +262,9 @@ export const en = {
   "err.generic": "Something went wrong.",
   "err.crashTitle": "Oops…",
   "err.crashBody": "Something went wrong. Reload the app to recover.",
+  "err.configTitle": "Service unavailable",
+  "err.appCheckMissing":
+    "Bot protection (App Check) isn’t configured for this deployment. Contact the organizer.",
   "err.pinAllocFailed": "Could not allocate a PIN.",
   "err.noMoreQuestions": "No more questions.",
   "err.pinInvalid": "Invalid PIN.",
