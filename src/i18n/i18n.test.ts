@@ -1,19 +1,29 @@
 import { describe, it, expect } from "vitest";
 import { fr } from "./fr";
 import { en } from "./en";
+import { es } from "./es";
+import { de } from "./de";
+import { it as itDict } from "./it";
 import type { Msg, Vars } from "./types";
 
 const render = (m: Msg, v: Vars) => (typeof m === "function" ? m(v) : m);
+const OTHERS = { en, es, de, it: itDict };
 
 describe("i18n", () => {
-  it("EN a exactement les mêmes clés que FR (parité)", () => {
-    expect(Object.keys(en).sort()).toEqual(Object.keys(fr).sort());
+  it("chaque langue a exactement les mêmes clés que FR (parité)", () => {
+    const frKeys = Object.keys(fr).sort();
+    for (const [lang, dict] of Object.entries(OTHERS)) {
+      expect(Object.keys(dict).sort(), `clés ${lang}`).toEqual(frKeys);
+    }
   });
 
-  it("aucune valeur vide", () => {
-    for (const [key, msg] of Object.entries(fr)) {
-      const out = render(msg as Msg, { n: 1, total: 5, pseudo: "x" });
-      expect(out, `fr[${key}]`).toBeTruthy();
+  it("aucune valeur vide, toutes langues", () => {
+    const sample = { n: 2, total: 5, pseudo: "x", provider: "P", status: 500 };
+    for (const [lang, dict] of Object.entries({ fr, ...OTHERS })) {
+      for (const [key, msg] of Object.entries(dict)) {
+        const out = render(msg as Msg, sample);
+        expect(out, `${lang}[${key}]`).toBeTruthy();
+      }
     }
   });
 

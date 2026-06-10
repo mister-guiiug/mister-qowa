@@ -6,6 +6,7 @@
 import type { Question, Quiz, QuizOption } from "@shared/contracts";
 import type { QuestionType } from "@shared/gameState";
 import { DEFAULT_TIME_LIMIT_MS, DEFAULT_BASE_POINTS } from "@shared/gameState";
+import type { Key, Vars } from "../i18n";
 
 export interface DraftQuestion {
   id: string;
@@ -185,42 +186,50 @@ export function toQuiz(d: DraftQuiz): Quiz {
   };
 }
 
-/** Erreurs de validation lisibles (vide = valide). */
-export function validateDraft(d: DraftQuiz): string[] {
-  const errs: string[] = [];
-  if (!d.title.trim()) errs.push("Donne un titre au quiz.");
-  if (d.questions.length === 0) errs.push("Ajoute au moins une question.");
+/** Erreur de validation : clé i18n + variables (traduite à l'affichage). */
+export interface DraftError {
+  key: Key;
+  vars?: Vars;
+}
+
+/** Erreurs de validation d'un brouillon (tableau vide = valide). */
+export function validateDraft(d: DraftQuiz): DraftError[] {
+  const errs: DraftError[] = [];
+  if (!d.title.trim()) errs.push({ key: "err.vTitle" });
+  if (d.questions.length === 0) errs.push({ key: "err.vAtLeastOneQuestion" });
   d.questions.forEach((q, i) => {
     const n = i + 1;
-    if (!q.prompt.trim()) errs.push(`Q${n} : l’énoncé est vide.`);
+    if (!q.prompt.trim()) errs.push({ key: "err.vEmptyPrompt", vars: { n } });
     if (q.type === "multiple_choice" || q.type === "poll") {
       const opts = q.options.filter((o) => o.label.trim());
       if (opts.length < 2) {
-        errs.push(
-          q.options.length >= 2
-            ? `Q${n} : remplis au moins 2 réponses (certaines sont vides).`
-            : `Q${n} : il faut au moins 2 réponses.`,
-        );
+        errs.push({
+          key:
+            q.options.length >= 2
+              ? "err.vFillTwoOptions"
+              : "err.vAtLeastTwoOptions",
+          vars: { n },
+        });
       }
       const labels = opts.map((o) => o.label.trim().toLowerCase());
       if (new Set(labels).size !== labels.length) {
-        errs.push(`Q${n} : deux réponses sont identiques.`);
+        errs.push({ key: "err.vDuplicateOptions", vars: { n } });
       }
       if (new Set(opts.map((o) => o.id)).size !== opts.length) {
-        errs.push(`Q${n} : identifiants de réponse en double.`);
+        errs.push({ key: "err.vDuplicateOptionIds", vars: { n } });
       }
       if (
         q.type === "multiple_choice" &&
         !opts.some((o) => o.id === q.correctOptionId)
       ) {
-        errs.push(`Q${n} : sélectionne la bonne réponse.`);
+        errs.push({ key: "err.vSelectCorrect", vars: { n } });
       }
     }
     if (
       q.type === "free_text" &&
       q.acceptedAnswers.filter((a) => a.trim()).length === 0
     ) {
-      errs.push(`Q${n} : ajoute au moins une réponse acceptée.`);
+      errs.push({ key: "err.vAtLeastOneAccepted", vars: { n } });
     }
   });
   return errs;

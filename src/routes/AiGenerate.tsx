@@ -26,8 +26,7 @@ import {
 } from "../lib/ai";
 import type { DraftQuestion, DraftQuiz } from "../lib/quizDraft";
 import { saveDraft } from "../lib/draft";
-import { errMsg } from "../lib/err";
-import { useT, type Key } from "../i18n";
+import { useErr, useT, type Key } from "../i18n";
 
 const field =
   "rounded-2xl bg-white/10 px-4 py-3 outline-none ring-1 ring-white/15 focus:ring-brand";
@@ -53,6 +52,7 @@ function correctLabel(q: DraftQuestion): string {
 
 export function AiGenerate() {
   const t = useT();
+  const err = useErr();
   const nav = useNavigate();
   const provider = useAiSettings((s) => s.provider);
   const keys = useAiSettings((s) => s.keys);
@@ -89,7 +89,7 @@ export function AiGenerate() {
     try {
       setPreview(await generateQuiz(params, cfg));
     } catch (e) {
-      setError(errMsg(e));
+      setError(err(e));
     } finally {
       setBusy(false);
     }
@@ -114,7 +114,7 @@ export function AiGenerate() {
         questions: preview.questions.map((q, i) => (i === index ? fresh : q)),
       });
     } catch (e) {
-      setError(errMsg(e));
+      setError(err(e));
     } finally {
       setRegenIndex(null);
     }

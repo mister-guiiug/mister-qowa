@@ -25,11 +25,11 @@ import {
   findDuplicate,
 } from "../lib/quizIo";
 import { makeTeams } from "@shared/teams";
-import { errMsg } from "../lib/err";
-import { useT } from "../i18n";
+import { useErr, useT } from "../i18n";
 
 export function Create() {
   const t = useT();
+  const err = useErr();
   const nav = useNavigate();
   const setHost = useGameStore((s) => s.setHost);
   const myQuizzes = useQuizLibrary((s) => s.quizzes);
@@ -55,7 +55,7 @@ export function Create() {
       setHost({ sessionId, pin, quiz });
       nav(`/host/${sessionId}`);
     } catch (e) {
-      setError(errMsg(e));
+      setError(err(e));
       setBusy(null);
     }
   }
@@ -72,7 +72,7 @@ export function Create() {
       }
       upsert(imported);
     } catch (e) {
-      setError(errMsg(e));
+      setError(err(e));
     }
   }
 

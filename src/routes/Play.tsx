@@ -18,11 +18,11 @@ import { Leaderboard } from "../components/Leaderboard";
 import { Podium } from "../components/Podium";
 import { ConnectionBanner } from "../components/ConnectionBanner";
 import { feedback } from "../lib/feedback";
-import { errMsg } from "../lib/err";
-import { useT } from "../i18n";
+import { useErr, useT } from "../i18n";
 
 export function Play() {
   const t = useT();
+  const err = useErr();
   const { sessionId } = useParams();
   const nav = useNavigate();
   const uid = useAuthUid();
@@ -83,7 +83,7 @@ export function Play() {
     try {
       await submitAnswer(sessionId, current.questionId, choice);
     } catch (e) {
-      setError(errMsg(e));
+      setError(err(e));
       setPicked(null);
     }
   }

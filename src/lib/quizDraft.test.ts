@@ -52,7 +52,7 @@ describe("quizDraft", () => {
   it("MC sans bonne réponse → erreur", () => {
     const d = validMcDraft();
     d.questions[0].correctOptionId = "";
-    expect(validateDraft(d).some((e) => e.includes("bonne réponse"))).toBe(
+    expect(validateDraft(d).some((e) => e.key === "err.vSelectCorrect")).toBe(
       true,
     );
   });
@@ -74,13 +74,17 @@ describe("quizDraft", () => {
   it("détecte deux réponses identiques", () => {
     const d = validMcDraft();
     d.questions[0].options[1] = { id: "c", label: "3" };
-    expect(validateDraft(d).some((e) => e.includes("identiques"))).toBe(true);
+    expect(
+      validateDraft(d).some((e) => e.key === "err.vDuplicateOptions"),
+    ).toBe(true);
   });
 
   it("détecte des identifiants d'option en double", () => {
     const d = validMcDraft();
     d.questions[0].options[1] = { id: "a", label: "5" };
     d.questions[0].correctOptionId = "a";
-    expect(validateDraft(d).some((e) => e.includes("double"))).toBe(true);
+    expect(
+      validateDraft(d).some((e) => e.key === "err.vDuplicateOptionIds"),
+    ).toBe(true);
   });
 });
