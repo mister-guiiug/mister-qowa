@@ -50,9 +50,7 @@ export function Create() {
 
   // Filtre par titre + tri (récent par createdAt / alphabétique).
   const shownQuizzes = myQuizzes
-    .filter((q) =>
-      q.title.toLowerCase().includes(search.trim().toLowerCase()),
-    )
+    .filter((q) => q.title.toLowerCase().includes(search.trim().toLowerCase()))
     .sort((a, b) =>
       sortAz
         ? a.title.localeCompare(b.title)
