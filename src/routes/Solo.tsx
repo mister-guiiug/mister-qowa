@@ -42,6 +42,17 @@ export function Solo() {
     return () => clearInterval(id);
   }, [phase, index, q]);
 
+  // Ambiance sonore pendant la question (solo) — sur phase/index, pas questionId.
+  useEffect(() => {
+    if (phase !== "question" || !q) {
+      feedback.ambient.stop();
+      return;
+    }
+    feedback.ambient.start(q.timeLimitMs);
+    return () => feedback.ambient.stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, index]);
+
   function answer(choice: string | null) {
     if (!quiz || !q || phase !== "question") return;
     const correct = choice !== null && isCorrect(q, choice);

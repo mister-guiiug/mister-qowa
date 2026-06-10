@@ -3,6 +3,8 @@ import { Zap, Users, Gamepad2, History, Play } from "lucide-react";
 import { Screen, Button } from "../lib/ui";
 import { AppFooter } from "../components/AppFooter";
 import { useGameStore } from "../store/gameStore";
+import { useProfile } from "../store/profileStore";
+import { BADGE_EMOJI } from "../lib/profile";
 import { useT } from "../i18n";
 
 export function Home() {
@@ -11,6 +13,7 @@ export function Home() {
   const role = useGameStore((s) => s.role);
   const sessionId = useGameStore((s) => s.sessionId);
   const reset = useGameStore((s) => s.reset);
+  const profile = useProfile((s) => s.profile);
   const resumePath =
     role && sessionId
       ? role === "host"
@@ -22,6 +25,33 @@ export function Home() {
     <Screen className="justify-center text-center">
       <h1 className="font-display text-5xl text-brand-soft">Mister Qowa</h1>
       <p className="mt-3 text-balance text-white/70">{t("home.subtitle")}</p>
+
+      {profile.gamesPlayed > 0 ? (
+        <div className="mt-6 flex flex-col items-center gap-2 rounded-2xl bg-white/5 px-4 py-3 ring-1 ring-white/10">
+          <p className="text-sm text-white/80">
+            {profile.avatar ? <span aria-hidden>{profile.avatar} </span> : null}
+            <span className="font-semibold">{profile.pseudo}</span>
+            {" · "}
+            {t("profile.summary", {
+              games: profile.gamesPlayed,
+              points: profile.totalPoints,
+            })}
+          </p>
+          {profile.badges.length ? (
+            <div className="flex flex-wrap justify-center gap-1.5">
+              {profile.badges.map((b) => (
+                <span
+                  key={b}
+                  className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-xs"
+                >
+                  <span aria-hidden>{BADGE_EMOJI[b] ?? "⭐"}</span>
+                  {t(`profile.badge.${b}` as "profile.badge.firstGame")}
+                </span>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       {resumePath ? (
         <div className="mt-8 flex flex-col items-center gap-1">

@@ -32,6 +32,14 @@ export const es = {
   "home.solo": "Jugar en solitario",
   "home.myGames": "Mis partidas",
 
+  // perfil del jugador (local)
+  "profile.summary": (v) =>
+    `${v.games} partida${s(Number(v.games))} · ${v.points} pts`,
+  "profile.badge.firstGame": "Primera partida",
+  "profile.badge.podium": "Podio",
+  "profile.badge.win": "Victoria",
+  "profile.badge.veteran": "Veterano",
+
   // pie
   "footer.source": "Código fuente",
   "footer.support": "Apoyar",

@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { Screen, Button } from "../lib/ui";
 import { lookupSession, joinSession } from "../firebase/api";
 import { useGameStore } from "../store/gameStore";
+import { useProfile } from "../store/profileStore";
 import { PIN_LENGTH, MAX_PSEUDO_LEN } from "@shared/gameState";
 import { AVATARS } from "@shared/avatars";
 import type { Team } from "@shared/teams";
@@ -14,12 +15,15 @@ export function Join() {
   const err = useErr();
   const nav = useNavigate();
   const setPlayer = useGameStore((s) => s.setPlayer);
+  const profile = useProfile((s) => s.profile);
+  const setIdentity = useProfile((s) => s.setIdentity);
   const [searchParams] = useSearchParams();
   const [pin, setPin] = useState(() =>
     (searchParams.get("pin") ?? "").replace(/\D/g, "").slice(0, PIN_LENGTH),
   );
-  const [pseudo, setPseudo] = useState("");
-  const [avatar, setAvatar] = useState<string>(AVATARS[0]);
+  // Pré-remplissage depuis le profil local (rejoindre en 1 tap au retour).
+  const [pseudo, setPseudo] = useState(profile.pseudo);
+  const [avatar, setAvatar] = useState<string>(profile.avatar || AVATARS[0]);
   const [teams, setTeams] = useState<Team[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +41,7 @@ export function Join() {
         avatar,
       );
       setPlayer({ sessionId, pin, pseudo: pseudo.trim() });
+      setIdentity(pseudo.trim(), avatar); // mémorise pour la prochaine fois
       nav(`/play/${sessionId}`);
     } catch (e) {
       setError(err(e));

@@ -28,6 +28,14 @@ export const fr = {
   "home.solo": "Jouer en solo",
   "home.myGames": "Mes parties",
 
+  // profil joueur (local)
+  "profile.summary": (v) =>
+    `${v.games} partie${frPlural(Number(v.games))} · ${v.points} pts`,
+  "profile.badge.firstGame": "Première partie",
+  "profile.badge.podium": "Podium",
+  "profile.badge.win": "Victoire",
+  "profile.badge.veteran": "Vétéran",
+
   // pied de page
   "footer.source": "Code source",
   "footer.support": "Soutenir",
