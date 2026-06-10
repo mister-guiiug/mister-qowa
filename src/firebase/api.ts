@@ -134,6 +134,18 @@ export async function createSession(
   const db = getDb();
   const sessionId = push(ref(db, "sessions")).key as string;
 
+  // meta EN PREMIER, SANS pin : la Rule d'allocation d'un PIN vérifie désormais
+  // que l'alias pointe vers une session dont meta/hostUid est bien l'auteur
+  // (empêche de réserver un alias pour une session étrangère).
+  await set(ref(db, metaPath(sessionId)), {
+    hostUid: user.uid,
+    quizId: quiz.id,
+    createdAt: Date.now(),
+    totalQuestions: quiz.questions.length,
+    ...(teams && teams.length ? { teams } : {}),
+    ...(opts?.elimination ? { eliminationMode: true } : {}),
+  });
+
   let pin = "";
   for (let i = 0; i < 12; i += 1) {
     const cand = randomPin();
@@ -145,18 +157,13 @@ export async function createSession(
       break;
     }
   }
-  if (!pin) throw new AppError("err.pinAllocFailed");
+  if (!pin) {
+    // Aucun PIN libre en 12 essais : on retire la meta orpheline avant d'échouer.
+    await set(ref(db, sessionPath(sessionId)), null).catch(() => undefined);
+    throw new AppError("err.pinAllocFailed");
+  }
 
-  // meta EN PREMIER (les Rules host se basent sur meta/hostUid).
-  await set(ref(db, metaPath(sessionId)), {
-    hostUid: user.uid,
-    quizId: quiz.id,
-    pin,
-    createdAt: Date.now(),
-    totalQuestions: quiz.questions.length,
-    ...(teams && teams.length ? { teams } : {}),
-    ...(opts?.elimination ? { eliminationMode: true } : {}),
-  });
+  await update(ref(db, metaPath(sessionId)), { pin });
   await set(ref(db, statePath(sessionId)), "LOBBY");
   return { sessionId, pin };
 }
@@ -412,7 +419,12 @@ export async function pauseQuestion(
     [`${metaPath(sessionId)}/pausedAt`]: null,
   };
   if (timeLimitMs && pauseMs > 0) {
-    updates[`${currentPath(sessionId)}/timeLimitMs`] = timeLimitMs + pauseMs;
+    // Borne alignée sur la Rule current/timeLimitMs (≤ 1 h) : une pause très
+    // longue ne doit pas faire rejeter la reprise par la validation.
+    updates[`${currentPath(sessionId)}/timeLimitMs`] = Math.min(
+      timeLimitMs + pauseMs,
+      3_600_000,
+    );
   }
   await update(ref(db), updates);
 }

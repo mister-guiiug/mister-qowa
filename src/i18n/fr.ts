@@ -183,6 +183,10 @@ export const fr = {
 
   // hôte (Host)
   "host.connecting": "Connexion à la partie…",
+  "host.quizLostTitle": "Quiz indisponible sur cet appareil",
+  "host.quizLostBody":
+    "Le quiz hébergé n’est pas dans la bibliothèque de cet appareil (mémoire effacée ou autre navigateur). Clôture la salle pour libérer le PIN.",
+  "host.closeRoom": "Clôturer la salle",
   "host.linkCopied": "Lien copié !",
   "host.shareUnavailable": "Partage indisponible",
   "host.inviteText": "Rejoins ma partie de quiz !",
@@ -257,6 +261,9 @@ export const fr = {
   "err.crashTitle": "Oups…",
   "err.crashBody":
     "Une erreur est survenue. Recharge l’application pour repartir.",
+  "err.configTitle": "Service indisponible",
+  "err.appCheckMissing":
+    "La protection anti-robot (App Check) n’est pas configurée pour cette mise en ligne. Contacte l’organisateur.",
   // session / partie (api)
   "err.pinAllocFailed": "Impossible d’allouer un PIN.",
   "err.noMoreQuestions": "Plus de questions.",

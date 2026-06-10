@@ -3,8 +3,8 @@
     "pins": {
       "$pin": {
         ".read": "auth != null",
-        ".write": "auth != null && ((!data.exists() && newData.isString()) || (data.exists() && !newData.exists() && root.child('sessions').child(data.val()).child('meta').child('hostUid').val() === auth.uid))",
-        ".validate": "newData.isString()"
+        ".write": "auth != null && ((!data.exists() && root.child('sessions').child(newData.val()).child('meta').child('hostUid').val() === auth.uid) || (data.exists() && !newData.exists() && root.child('sessions').child(data.val()).child('meta').child('hostUid').val() === auth.uid))",
+        ".validate": "newData.isString() && $pin.matches(/^[0-9]{8}$/)"
       }
     },
     "sessions": {
@@ -23,10 +23,15 @@
         },
         "current": {
           ".read": true,
-          ".write": "auth != null && root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid"
+          ".write": "auth != null && root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid",
+          ".validate": "newData.hasChildren(['questionId', 'timeLimitMs', 'activatedAt'])",
+          "timeLimitMs": {
+            ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= 3600000"
+          },
+          "activatedAt": { ".validate": "newData.isNumber()" }
         },
         "scores": {
-          ".read": true,
+          ".read": "auth != null && (root.child('sessions').child($sid).child('players').child(auth.uid).exists() || root.child('sessions').child($sid).child('scores').child(auth.uid).exists() || root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid)",
           ".write": "auth != null && root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid",
           "$uid": {
             ".validate": "newData.hasChildren(['total', 'streak'])",
@@ -51,17 +56,17 @@
           }
         },
         "leaderboard": {
-          ".read": true,
+          ".read": "auth != null && (root.child('sessions').child($sid).child('players').child(auth.uid).exists() || root.child('sessions').child($sid).child('scores').child(auth.uid).exists() || root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid)",
           ".write": "auth != null && root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid"
         },
 
         "teamLeaderboard": {
-          ".read": true,
+          ".read": "auth != null && (root.child('sessions').child($sid).child('players').child(auth.uid).exists() || root.child('sessions').child($sid).child('scores').child(auth.uid).exists() || root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid)",
           ".write": "auth != null && root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid"
         },
 
         "reactions": {
-          ".read": true,
+          ".read": "auth != null && (root.child('sessions').child($sid).child('players').child(auth.uid).exists() || root.child('sessions').child($sid).child('scores').child(auth.uid).exists() || root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid)",
           "$uid": {
             ".write": "auth != null && auth.uid === $uid && newData.child('ts').val() === now && (!data.exists() || now > data.child('ts').val() + 800)",
             ".validate": "newData.hasChildren(['emoji','ts'])",
@@ -74,7 +79,7 @@
         },
 
         "players": {
-          ".read": true,
+          ".read": "auth != null && (root.child('sessions').child($sid).child('players').child(auth.uid).exists() || root.child('sessions').child($sid).child('scores').child(auth.uid).exists() || root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid)",
           "$uid": {
             ".write": "auth != null && ($uid === auth.uid || root.child('sessions').child($sid).child('meta').child('hostUid').val() === auth.uid) && !root.child('sessions').child($sid).child('meta').child('banned').child($uid).exists()",
             ".validate": "newData.hasChildren(['pseudo','joinedAt'])",

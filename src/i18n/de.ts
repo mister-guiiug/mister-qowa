@@ -187,6 +187,10 @@ export const de = {
 
   // Host
   "host.connecting": "Verbinde mit dem Spiel…",
+  "host.quizLostTitle": "Quiz auf diesem Gerät nicht verfügbar",
+  "host.quizLostBody":
+    "Das gehostete Quiz ist nicht in der Bibliothek dieses Geräts (Speicher geleert oder anderer Browser). Schließe den Raum, um die PIN freizugeben.",
+  "host.closeRoom": "Raum schließen",
   "host.linkCopied": "Link kopiert!",
   "host.shareUnavailable": "Teilen nicht verfügbar",
   "host.inviteText": "Tritt meinem Quiz-Spiel bei!",
@@ -257,6 +261,9 @@ export const de = {
   "err.crashTitle": "Hoppla…",
   "err.crashBody":
     "Ein Fehler ist aufgetreten. Lade die App neu, um fortzufahren.",
+  "err.configTitle": "Dienst nicht verfügbar",
+  "err.appCheckMissing":
+    "Der Bot-Schutz (App Check) ist für diese Bereitstellung nicht konfiguriert. Wende dich an den Organisator.",
   "err.pinAllocFailed": "PIN konnte nicht vergeben werden.",
   "err.noMoreQuestions": "Keine weiteren Fragen.",
   "err.pinInvalid": "Ungültiger PIN.",

@@ -15,6 +15,7 @@ import {
   useAnswerStats,
   useReactions,
   useTeamLeaderboard,
+  useSessionMeta,
 } from "../hooks/useGameSubscription";
 import { useServerOffset, serverNow } from "../hooks/useServerTime";
 import { useAsyncAction } from "../hooks/useAsyncAction";
@@ -23,6 +24,7 @@ import { feedback } from "../lib/feedback";
 import { AnswerDistribution } from "../components/AnswerDistribution";
 import { QRCodeSVG } from "qrcode.react";
 import { useGameStore } from "../store/gameStore";
+import { useQuizLibrary } from "../store/quizStore";
 import {
   nextQuestion,
   closeQuestion,
@@ -53,6 +55,7 @@ export function Host() {
   const pin = useGameStore((s) => s.pin);
   const quiz = useGameStore((s) => s.hostQuiz);
   const reset = useGameStore((s) => s.reset);
+  const setHost = useGameStore((s) => s.setHost);
   const {
     state,
     current,
@@ -69,7 +72,11 @@ export function Host() {
   const survivors = Math.max(0, playerCount - eliminatedCount);
   const { busy, error, setError, run: act } = useAsyncAction();
   const [notFound, setNotFound] = useState(false);
+  const [quizLost, setQuizLost] = useState(false);
   const [info, setInfo] = useState<string | null>(null);
+  const { quizId: metaQuizId, pin: metaPin } = useSessionMeta(
+    sessionId ?? null,
+  );
   const offset = useServerOffset();
   const stats = useAnswerStats(sessionId ?? null, current?.questionId ?? null);
   const reactions = useReactions(sessionId ?? null);
@@ -115,6 +122,21 @@ export function Host() {
     return () => clearTimeout(id);
   }, [state]);
 
+  // Reprise host : l'état existe (RTDB) mais le quiz local est perdu (store vidé
+  // ou autre onglet). On le reconstruit depuis la bibliothèque locale via
+  // meta.quizId (jamais depuis RTDB — aucune réponse exposée) ; à défaut, on
+  // signale une salle non récupérable sur cet appareil plutôt qu'un gel muet.
+  useEffect(() => {
+    if (quiz || !state || !sessionId || !metaQuizId || !metaPin) return;
+    const found = useQuizLibrary.getState().get(metaQuizId);
+    if (found) {
+      setHost({ sessionId, pin: metaPin, quiz: found });
+      setQuizLost(false);
+    } else {
+      setQuizLost(true);
+    }
+  }, [quiz, state, sessionId, metaQuizId, metaPin, setHost]);
+
   // Fanfare au podium (host).
   useEffect(() => {
     if (state === "PODIUM") feedback.finish();
@@ -136,6 +158,33 @@ export function Host() {
               }}
             >
               {t("common.toHome")}
+            </Button>
+          </div>
+        ) : (
+          <Spinner label={t("host.connecting")} />
+        )}
+      </Screen>
+    );
+
+  // L'état existe mais le quiz local est perdu : reprise en cours (spinner) ou,
+  // si le quiz n'est pas dans la bibliothèque de cet appareil, écran dédié pour
+  // clôturer la salle — au lieu d'une partie gelée pour tous les joueurs.
+  if (!quiz)
+    return (
+      <Screen className="justify-center">
+        {quizLost ? (
+          <div className="flex flex-col items-center gap-4 text-center">
+            <p className="font-display text-2xl">{t("host.quizLostTitle")}</p>
+            <p className="max-w-sm text-white/60">{t("host.quizLostBody")}</p>
+            <Button
+              variant="danger"
+              onClick={() => {
+                closeSession(sessionId, metaPin ?? pin).catch(() => undefined);
+                reset();
+                nav("/");
+              }}
+            >
+              {t("host.closeRoom")}
             </Button>
           </div>
         ) : (

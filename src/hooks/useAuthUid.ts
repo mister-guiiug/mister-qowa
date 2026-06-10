@@ -10,8 +10,10 @@ export function useAuthUid(): string | null {
       .then((u) => {
         if (alive) setUid(u.uid);
       })
-      .catch(() => {
-        /* hors-ligne / config manquante : l'UI affichera l'état d'attente */
+      .catch((e) => {
+        // Hors-ligne / config manquante : l'UI affiche l'état d'attente, mais on
+        // ne l'avale plus silencieusement (diagnostic d'une auth qui ne part pas).
+        console.error("[auth] session invité indisponible", e);
       });
     return () => {
       alive = false;

@@ -172,6 +172,24 @@ export function useHostView(sessionId: string | null): HostView {
   };
 }
 
+/**
+ * Champs `meta` nécessaires à la REPRISE host quand le quiz local est perdu
+ * (store vidé / autre onglet) : on reconstruit `hostQuiz` depuis la bibliothèque
+ * locale via `quizId`, et on restaure le `pin`. Lecture de feuilles publiques.
+ */
+export function useSessionMeta(sessionId: string | null): {
+  quizId: string | undefined;
+  pin: string | undefined;
+} {
+  const quizId = useRtdbValue<string>(
+    sessionId ? `${metaPath(sessionId)}/quizId` : null,
+  );
+  const pin = useRtdbValue<string>(
+    sessionId ? `${metaPath(sessionId)}/pin` : null,
+  );
+  return { quizId, pin };
+}
+
 export interface AnswerStats {
   count: number;
   byChoice: Record<string, number>;
