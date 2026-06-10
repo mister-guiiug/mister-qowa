@@ -26,8 +26,10 @@ import {
 } from "../lib/quizIo";
 import { makeTeams } from "@shared/teams";
 import { errMsg } from "../lib/err";
+import { useT } from "../i18n";
 
 export function Create() {
+  const t = useT();
   const nav = useNavigate();
   const setHost = useGameStore((s) => s.setHost);
   const myQuizzes = useQuizLibrary((s) => s.quizzes);
@@ -65,7 +67,7 @@ export function Create() {
       const imported = await importQuizFile(file);
       const dup = findDuplicate(imported, myQuizzes);
       if (dup) {
-        setError(`« ${dup.title} » est déjà dans ta bibliothèque.`);
+        setError(t("create.duplicateExists", { title: dup.title }));
         return;
       }
       upsert(imported);
@@ -81,11 +83,11 @@ export function Create() {
         onClick={() => nav("/")}
         className="mb-4 inline-flex items-center gap-1 self-start text-sm text-white/60 hover:text-white"
       >
-        <ArrowLeft className="size-4" /> Accueil
+        <ArrowLeft className="size-4" /> {t("common.home")}
       </button>
 
       <div className="flex items-center justify-between gap-3">
-        <h1 className="font-display text-3xl">Quiz</h1>
+        <h1 className="font-display text-3xl">{t("create.title")}</h1>
         <div className="flex items-center gap-2">
           <input
             ref={fileRef}
@@ -100,19 +102,19 @@ export function Create() {
           <Button
             variant="ghost"
             onClick={() => fileRef.current?.click()}
-            aria-label="Importer un quiz"
+            aria-label={t("create.importAria")}
           >
             <Upload className="size-4" />
           </Button>
           <Button
             variant="ghost"
             onClick={() => nav("/create/ai")}
-            aria-label="Générer un quiz par IA"
+            aria-label={t("create.aiAria")}
           >
             <Sparkles className="size-4" />
           </Button>
           <Button onClick={() => nav("/create/new")}>
-            <Plus className="size-4" /> Nouveau
+            <Plus className="size-4" /> {t("create.new")}
           </Button>
         </div>
       </div>
@@ -125,18 +127,18 @@ export function Create() {
             onChange={(e) => setTeamMode(e.target.checked)}
             className="size-4 accent-brand"
           />
-          Mode équipe
+          {t("create.teamMode")}
         </label>
         {teamMode ? (
           <select
             value={teamCount}
             onChange={(e) => setTeamCount(Number(e.target.value))}
-            aria-label="Nombre d’équipes"
+            aria-label={t("create.teamsCountAria")}
             className="rounded-xl bg-white/10 px-3 py-1.5 outline-none ring-1 ring-white/15"
           >
             {[2, 3, 4].map((n) => (
               <option key={n} value={n} className="bg-[#1a1230]">
-                {n} équipes
+                {t("create.teamsOption", { n })}
               </option>
             ))}
           </select>
@@ -148,7 +150,7 @@ export function Create() {
             onChange={(e) => setElimination(e.target.checked)}
             className="size-4 accent-brand"
           />
-          Mode élimination
+          {t("create.eliminationMode")}
         </label>
       </div>
 
@@ -161,7 +163,7 @@ export function Create() {
       {myQuizzes.length > 0 ? (
         <section className="mt-6">
           <h2 className="mb-2 text-sm uppercase tracking-widest text-white/40">
-            Mes quiz
+            {t("create.myQuizzes")}
           </h2>
           <div className="flex flex-col gap-3">
             {myQuizzes.map((q) => (
@@ -169,8 +171,7 @@ export function Create() {
                 <div>
                   <p className="font-semibold">{q.title}</p>
                   <p className="text-sm text-white/60">
-                    {q.questions.length} question
-                    {q.questions.length > 1 ? "s" : ""}
+                    {t("create.questionsCount", { n: q.questions.length })}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -179,33 +180,33 @@ export function Create() {
                     disabled={busy !== null}
                     className="flex-1"
                   >
-                    <Play className="size-4" /> Lancer
+                    <Play className="size-4" /> {t("create.launch")}
                   </Button>
                   <Button
                     variant="ghost"
                     onClick={() => nav(`/create/${q.id}`)}
-                    aria-label="Modifier"
+                    aria-label={t("create.editAria")}
                   >
                     <Pencil className="size-4" />
                   </Button>
                   <Button
                     variant="ghost"
                     onClick={() => upsert(duplicateQuiz(q))}
-                    aria-label="Dupliquer"
+                    aria-label={t("create.duplicateAria")}
                   >
                     <Copy className="size-4" />
                   </Button>
                   <Button
                     variant="ghost"
                     onClick={() => exportQuiz(q)}
-                    aria-label="Exporter"
+                    aria-label={t("create.exportAria")}
                   >
                     <Download className="size-4" />
                   </Button>
                   <Button
                     variant="ghost"
                     onClick={() => setPendingDelete(q)}
-                    aria-label="Supprimer"
+                    aria-label={t("create.deleteAria")}
                   >
                     <Trash2 className="size-4" />
                   </Button>
@@ -218,7 +219,7 @@ export function Create() {
 
       <section className="mt-6">
         <h2 className="mb-2 text-sm uppercase tracking-widest text-white/40">
-          Quiz de démo
+          {t("create.demoQuizzes")}
         </h2>
         <div className="flex flex-col gap-3">
           {DEMO_QUIZZES.map((q) => (
@@ -229,7 +230,7 @@ export function Create() {
               <div>
                 <p className="font-semibold">{q.title}</p>
                 <p className="text-sm text-white/60">
-                  {q.questions.length} questions
+                  {t("create.questionsCount", { n: q.questions.length })}
                   {q.description ? ` · ${q.description}` : ""}
                 </p>
               </div>
@@ -237,12 +238,12 @@ export function Create() {
                 <Button
                   variant="ghost"
                   onClick={() => upsert(duplicateQuiz(q))}
-                  aria-label="Copier dans mes quiz pour l’éditer"
+                  aria-label={t("create.copyToMineAria")}
                 >
                   <Copy className="size-4" />
                 </Button>
                 <Button onClick={() => host(q)} disabled={busy !== null}>
-                  <Play className="size-4" /> Lancer
+                  <Play className="size-4" /> {t("create.launch")}
                 </Button>
               </div>
             </Card>
@@ -250,13 +251,13 @@ export function Create() {
         </div>
       </section>
 
-      {busy ? <Spinner label="Création de la partie…" /> : null}
+      {busy ? <Spinner label={t("create.creating")} /> : null}
 
       {pendingDelete ? (
         <ConfirmDialog
-          title={`Supprimer « ${pendingDelete.title} » ?`}
-          message="Cette action est définitive."
-          confirmLabel="Supprimer"
+          title={t("create.deleteTitle", { title: pendingDelete.title })}
+          message={t("create.deleteMsg")}
+          confirmLabel={t("create.deleteAria")}
           danger
           onConfirm={() => {
             remove(pendingDelete.id);

@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Button } from "../lib/ui";
+import { useT } from "../i18n";
 
 /**
  * Confirmation in-app (charte sombre, testable, accessible) en remplacement de
@@ -8,8 +9,8 @@ import { Button } from "../lib/ui";
 export function ConfirmDialog({
   title,
   message,
-  confirmLabel = "Confirmer",
-  cancelLabel = "Annuler",
+  confirmLabel,
+  cancelLabel,
   danger = false,
   onConfirm,
   onCancel,
@@ -22,6 +23,7 @@ export function ConfirmDialog({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  const t = useT();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onCancel();
@@ -48,14 +50,14 @@ export function ConfirmDialog({
         ) : null}
         <div className="mt-5 flex gap-2">
           <Button variant="ghost" full autoFocus onClick={onCancel}>
-            {cancelLabel}
+            {cancelLabel ?? t("common.cancel")}
           </Button>
           <Button
             variant={danger ? "danger" : "primary"}
             full
             onClick={onConfirm}
           >
-            {confirmLabel}
+            {confirmLabel ?? t("common.confirm")}
           </Button>
         </div>
       </div>

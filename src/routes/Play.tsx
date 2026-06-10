@@ -19,8 +19,10 @@ import { Podium } from "../components/Podium";
 import { ConnectionBanner } from "../components/ConnectionBanner";
 import { feedback } from "../lib/feedback";
 import { errMsg } from "../lib/err";
+import { useT } from "../i18n";
 
 export function Play() {
+  const t = useT();
   const { sessionId } = useParams();
   const nav = useNavigate();
   const uid = useAuthUid();
@@ -91,8 +93,8 @@ export function Play() {
     return (
       <Screen className="justify-center">
         <div className="flex flex-col items-center gap-4 text-center">
-          <p className="font-display text-2xl">Tu as été retiré</p>
-          <p className="text-white/60">L’hôte t’a exclu de cette partie.</p>
+          <p className="font-display text-2xl">{t("play.kicked")}</p>
+          <p className="text-white/60">{t("play.kickedMsg")}</p>
           <Button
             variant="ghost"
             onClick={() => {
@@ -100,7 +102,7 @@ export function Play() {
               nav("/");
             }}
           >
-            Retour à l’accueil
+            {t("common.toHome")}
           </Button>
         </div>
       </Screen>
@@ -110,10 +112,8 @@ export function Play() {
       <Screen className="justify-center">
         {notFound ? (
           <div className="flex flex-col items-center gap-4 text-center">
-            <p className="font-display text-2xl">Partie introuvable</p>
-            <p className="text-white/60">
-              Cette partie n’existe plus ou a été fermée.
-            </p>
+            <p className="font-display text-2xl">{t("common.notFound")}</p>
+            <p className="text-white/60">{t("common.sessionGone")}</p>
             <Button
               variant="ghost"
               onClick={() => {
@@ -121,17 +121,17 @@ export function Play() {
                 nav("/");
               }}
             >
-              Retour à l’accueil
+              {t("common.toHome")}
             </Button>
           </div>
         ) : (
-          <Spinner label="Connexion…" />
+          <Spinner label={t("common.connecting")} />
         )}
       </Screen>
     );
 
   const myRank = leaderboard.findIndex((e) => e.uid === uid);
-  const ord = (r: number) => `${r + 1}${r === 0 ? "er" : "e"}`;
+  const ord = (r: number) => t("common.ordinal", { n: r + 1 });
 
   return (
     <Screen>
@@ -139,8 +139,10 @@ export function Play() {
       <ConnectionBanner />
       {state === "LOBBY" ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
-          <p className="font-display text-2xl">Bienvenue {pseudo} !</p>
-          <p className="text-white/60">En attente du lancement par l’hôte…</p>
+          <p className="font-display text-2xl">
+            {t("play.welcome", { pseudo: pseudo ?? "" })}
+          </p>
+          <p className="text-white/60">{t("play.waiting")}</p>
         </div>
       ) : null}
 
@@ -148,11 +150,14 @@ export function Play() {
         <div className="flex flex-1 flex-col gap-6">
           <div className="flex items-center justify-between text-white/60">
             <span>
-              Question {current.index + 1}/{current.total}
+              {t("common.questionN", {
+                n: current.index + 1,
+                total: current.total,
+              })}
             </span>
             {paused ? (
               <span className="rounded-xl bg-amber-500/20 px-3 py-1 font-display text-amber-200">
-                ⏸ Pause
+                {t("play.pauseBadge")}
               </span>
             ) : (
               <Countdown endsAt={current.activatedAt + current.timeLimitMs} />
@@ -174,10 +179,8 @@ export function Play() {
               role="status"
               className="rounded-3xl bg-white/10 p-6 text-center"
             >
-              <p className="font-display text-2xl">💀 Éliminé</p>
-              <p className="text-white/60">
-                Tu continues en spectateur — bonne chance aux survivants !
-              </p>
+              <p className="font-display text-2xl">{t("play.eliminated")}</p>
+              <p className="text-white/60">{t("play.eliminatedMsg")}</p>
             </div>
           ) : null}
           {current.options ? (
@@ -200,7 +203,7 @@ export function Play() {
                 onChange={(e) => setText(e.target.value)}
                 disabled={picked !== null || paused || eliminated}
                 maxLength={200}
-                placeholder="Ta réponse…"
+                placeholder={t("play.answerPlaceholder")}
                 className="rounded-2xl bg-white/10 px-4 py-3 text-lg outline-none ring-1 ring-white/15 focus:ring-brand"
               />
               <Button
@@ -210,14 +213,12 @@ export function Play() {
                   picked !== null || paused || eliminated || !text.trim()
                 }
               >
-                Envoyer
+                {t("play.send")}
               </Button>
             </form>
           )}
           {picked ? (
-            <p className="text-center text-white/60">
-              Réponse envoyée ✓ — attends le résultat…
-            </p>
+            <p className="text-center text-white/60">{t("play.sent")}</p>
           ) : null}
           {error ? (
             <p className="text-center text-sm text-rose-300">{error}</p>
@@ -232,7 +233,7 @@ export function Play() {
               role="status"
               className="rounded-3xl bg-white/10 p-6 text-center"
             >
-              <p className="font-display text-2xl">Merci pour ton vote 🗳️</p>
+              <p className="font-display text-2xl">{t("play.voteThanks")}</p>
             </div>
           ) : reveal ? (
             <div
@@ -248,24 +249,26 @@ export function Play() {
                 <X className="mx-auto size-10" />
               )}
               <p className="mt-2 font-display text-2xl">
-                {reveal.correct ? "Bonne réponse !" : "Raté !"}
+                {reveal.correct ? t("play.correct") : t("play.wrong")}
               </p>
-              <p className="text-white/80">+{reveal.awarded} pts</p>
+              <p className="text-white/80">
+                {t("play.awarded", { n: reveal.awarded })}
+              </p>
             </div>
           ) : picked === null ? (
             <div
               role="status"
               className="rounded-3xl bg-answer-red/20 p-6 text-center"
             >
-              <p className="font-display text-2xl">Pas de réponse</p>
-              <p className="text-white/70">+0 pt</p>
+              <p className="font-display text-2xl">{t("play.noAnswer")}</p>
+              <p className="text-white/70">{t("play.zeroPt")}</p>
             </div>
           ) : (
-            <p className="text-center text-white/60">Résultats…</p>
+            <p className="text-center text-white/60">{t("play.results")}</p>
           )}
           {current?.type === "free_text" && correctChoice ? (
             <p className="text-center text-white/80">
-              Réponse attendue : «&nbsp;{correctChoice}&nbsp;»
+              {t("play.expectedAnswer", { answer: correctChoice })}
             </p>
           ) : null}
           {current?.options && correctChoice ? (
@@ -306,7 +309,10 @@ export function Play() {
           <Leaderboard entries={leaderboard} highlightUid={uid} max={5} />
           {myRank >= 0 ? (
             <p className="text-center text-white/60">
-              Tu es {ord(myRank)} · {score?.total ?? 0} pts
+              {t("play.rankLine", {
+                rank: ord(myRank),
+                pts: score?.total ?? 0,
+              })}
             </p>
           ) : null}
         </div>
@@ -320,7 +326,7 @@ export function Play() {
           <Podium entries={leaderboard} />
           {myRank >= 0 ? (
             <p className="text-center font-display text-xl">
-              Tu finis {ord(myRank)} ! 🎉
+              {t("play.podiumRank", { rank: ord(myRank) })}
             </p>
           ) : null}
           <Button
@@ -331,7 +337,7 @@ export function Play() {
               nav("/");
             }}
           >
-            Quitter
+            {t("play.quit")}
           </Button>
         </div>
       ) : null}

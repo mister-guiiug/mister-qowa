@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { WifiOff } from "lucide-react";
 import { useConnectionState } from "../hooks/useServerTime";
+import { useT } from "../i18n";
 
 /**
  * Bandeau discret « Hors ligne — reconnexion… » piloté par `.info/connected`.
@@ -8,6 +9,7 @@ import { useConnectionState } from "../hooks/useServerTime";
  * jamais au tout premier rendu (online par défaut).
  */
 export function ConnectionBanner() {
+  const t = useT();
   const online = useConnectionState();
   const [showOffline, setShowOffline] = useState(false);
 
@@ -27,7 +29,7 @@ export function ConnectionBanner() {
       className="mb-3 flex items-center justify-center gap-2 rounded-xl bg-amber-500/20 px-4 py-2 text-sm text-amber-100"
     >
       <WifiOff className="size-4" />
-      Hors ligne — reconnexion…
+      {t("connection.offline")}
     </div>
   );
 }

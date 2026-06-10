@@ -1,9 +1,10 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { LazyMotion, domMax, MotionConfig } from "framer-motion";
 import { Home } from "./routes/Home";
 import { UpdatePrompt } from "./components/UpdatePrompt";
 import { Spinner } from "./lib/ui";
+import { useLang } from "./i18n";
 
 // Code-splitting : seul l'accueil est chargé d'emblée ; les écrans qui tirent
 // Firebase (host/join/play/historique) sont en chunks séparés, chargés à la demande.
@@ -33,6 +34,11 @@ const History = lazy(() =>
 );
 
 export function App() {
+  const lang = useLang((s) => s.lang);
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
+
   return (
     // LazyMotion strict : seuls les composants `m.*` sont autorisés (bundle réduit) ;
     // domMax requis pour les animations `layout` du Leaderboard.

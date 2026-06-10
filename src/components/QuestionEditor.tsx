@@ -5,12 +5,13 @@ import type { DraftQuestion } from "../lib/quizDraft";
 import { blankOption, retypeQuestion } from "../lib/quizDraft";
 import { uploadQuestionImage } from "../lib/media";
 import { errMsg } from "../lib/err";
+import { useT, type Key } from "../i18n";
 
-const TYPE_LABELS: Record<QuestionType, string> = {
-  multiple_choice: "Choix multiple",
-  true_false: "Vrai / Faux",
-  free_text: "Réponse libre",
-  poll: "Sondage (sans bonne réponse)",
+const TYPE_KEYS: Record<QuestionType, Key> = {
+  multiple_choice: "qe.typeMultipleChoice",
+  true_false: "qe.typeTrueFalse",
+  free_text: "qe.typeFreeText",
+  poll: "qe.typePoll",
 };
 const TIME_OPTIONS = [10000, 15000, 20000, 30000, 60000];
 const POINTS_OPTIONS = [500, 1000, 2000];
@@ -33,6 +34,7 @@ export function QuestionEditor({
   onRemove: () => void;
   onMove: (dir: -1 | 1) => void;
 }) {
+  const tr = useT();
   const set = (patch: Partial<DraftQuestion>) => onChange({ ...q, ...patch });
   const hasOptions = q.type === "multiple_choice" || q.type === "poll";
   const [uploading, setUploading] = useState(false);
@@ -54,13 +56,15 @@ export function QuestionEditor({
   return (
     <div className="rounded-3xl bg-white/5 p-4 ring-1 ring-white/10">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <span className="font-display text-lg">Question {index + 1}</span>
+        <span className="font-display text-lg">
+          {tr("qe.questionN", { n: index + 1 })}
+        </span>
         <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={() => onMove(-1)}
             disabled={index === 0}
-            aria-label="Monter"
+            aria-label={tr("qe.moveUp")}
             className="rounded-lg p-1.5 text-white/60 hover:bg-white/10 disabled:opacity-30"
           >
             <ArrowUp className="size-4" />
@@ -69,7 +73,7 @@ export function QuestionEditor({
             type="button"
             onClick={() => onMove(1)}
             disabled={index === count - 1}
-            aria-label="Descendre"
+            aria-label={tr("qe.moveDown")}
             className="rounded-lg p-1.5 text-white/60 hover:bg-white/10 disabled:opacity-30"
           >
             <ArrowDown className="size-4" />
@@ -77,7 +81,7 @@ export function QuestionEditor({
           <button
             type="button"
             onClick={onRemove}
-            aria-label="Supprimer la question"
+            aria-label={tr("qe.removeQuestion")}
             className="rounded-lg p-1.5 text-rose-300 hover:bg-rose-500/15"
           >
             <Trash2 className="size-4" />
@@ -88,15 +92,15 @@ export function QuestionEditor({
       <div className="flex flex-col gap-3">
         <select
           value={q.type}
-          aria-label="Type de question"
+          aria-label={tr("qe.typeAria")}
           onChange={(e) =>
             onChange(retypeQuestion(q, e.target.value as QuestionType))
           }
           className={field}
         >
-          {QUESTION_TYPES.map((t) => (
-            <option key={t} value={t} className="bg-[#1a1230]">
-              {TYPE_LABELS[t]}
+          {QUESTION_TYPES.map((qt) => (
+            <option key={qt} value={qt} className="bg-[#1a1230]">
+              {tr(TYPE_KEYS[qt])}
             </option>
           ))}
         </select>
@@ -104,9 +108,9 @@ export function QuestionEditor({
         <input
           value={q.prompt}
           maxLength={300}
-          aria-label={`Énoncé de la question ${index + 1}`}
+          aria-label={tr("qe.promptAria", { n: index + 1 })}
           onChange={(e) => set({ prompt: e.target.value })}
-          placeholder="Énoncé de la question"
+          placeholder={tr("qe.promptPlaceholder")}
           className={field}
         />
 
@@ -126,21 +130,18 @@ export function QuestionEditor({
                 }
                 className="text-sm text-rose-300 hover:text-rose-200"
               >
-                Retirer l’image
+                {tr("qe.removeImage")}
               </button>
             </div>
             <input
               value={q.mediaAlt ?? ""}
               maxLength={200}
               onChange={(e) => set({ mediaAlt: e.target.value })}
-              placeholder="Description de l’image (lecteurs d’écran)"
-              aria-label={`Description de l’image de la question ${index + 1}`}
+              placeholder={tr("qe.mediaAltPlaceholder")}
+              aria-label={tr("qe.mediaAltAria", { n: index + 1 })}
               className={field}
             />
-            <p className="text-xs text-white/40">
-              Décris l’image sans révéler la réponse (visible des joueurs
-              malvoyants).
-            </p>
+            <p className="text-xs text-white/40">{tr("qe.mediaAltHint")}</p>
           </div>
         ) : (
           <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-sm hover:bg-white/15">
@@ -154,7 +155,7 @@ export function QuestionEditor({
               }}
             />
             <ImagePlus className="size-4" />{" "}
-            {uploading ? "Envoi…" : "Ajouter une image"}
+            {uploading ? tr("qe.uploading") : tr("qe.addImage")}
           </label>
         )}
         {mediaErr ? <p className="text-sm text-rose-300">{mediaErr}</p> : null}
@@ -170,7 +171,7 @@ export function QuestionEditor({
                     name={`correct-${q.id}`}
                     checked={q.correctOptionId === o.id}
                     onChange={() => set({ correctOptionId: o.id })}
-                    aria-label="Bonne réponse"
+                    aria-label={tr("qe.correctAnswerAria")}
                     className="size-5 accent-answer-green"
                   />
                 ) : null}
@@ -184,8 +185,8 @@ export function QuestionEditor({
                       ),
                     })
                   }
-                  placeholder={`Réponse ${i + 1}`}
-                  aria-label={`Réponse ${i + 1}`}
+                  placeholder={tr("qe.answerN", { n: i + 1 })}
+                  aria-label={tr("qe.answerN", { n: i + 1 })}
                   className={`${field} flex-1`}
                 />
                 {q.options.length > 2 ? (
@@ -198,7 +199,7 @@ export function QuestionEditor({
                           q.correctOptionId === o.id ? "" : q.correctOptionId,
                       })
                     }
-                    aria-label="Retirer l’option"
+                    aria-label={tr("qe.removeOption")}
                     className="rounded-lg p-1.5 text-white/50 hover:bg-white/10"
                   >
                     <X className="size-4" />
@@ -212,13 +213,11 @@ export function QuestionEditor({
                 onClick={() => set({ options: [...q.options, blankOption()] })}
                 className="inline-flex items-center gap-1 self-start text-sm text-brand-soft hover:text-white"
               >
-                <Plus className="size-4" /> Ajouter une option
+                <Plus className="size-4" /> {tr("qe.addOption")}
               </button>
             ) : null}
             {q.type === "multiple_choice" ? (
-              <p className="text-xs text-white/40">
-                Coche le rond vert à gauche de la bonne réponse.
-              </p>
+              <p className="text-xs text-white/40">{tr("qe.correctHint")}</p>
             ) : null}
           </div>
         ) : null}
@@ -227,18 +226,18 @@ export function QuestionEditor({
         {q.type === "true_false" ? (
           <div className="flex gap-2">
             {[
-              { v: true, label: "Vrai" },
-              { v: false, label: "Faux" },
-            ].map(({ v, label }) => (
+              { v: true, key: "qe.true" as const },
+              { v: false, key: "qe.false" as const },
+            ].map(({ v, key }) => (
               <button
-                key={label}
+                key={key}
                 type="button"
                 onClick={() => set({ correct: v })}
                 className={`flex-1 rounded-xl px-4 py-2 font-semibold ${
                   q.correct === v ? "bg-answer-green text-white" : "bg-white/10"
                 }`}
               >
-                {label}
+                {tr(key)}
               </button>
             ))}
           </div>
@@ -259,8 +258,8 @@ export function QuestionEditor({
                       ),
                     })
                   }
-                  placeholder={`Réponse acceptée ${i + 1}`}
-                  aria-label={`Réponse acceptée ${i + 1}`}
+                  placeholder={tr("qe.acceptedAnswerN", { n: i + 1 })}
+                  aria-label={tr("qe.acceptedAnswerN", { n: i + 1 })}
                   className={`${field} flex-1`}
                 />
                 {q.acceptedAnswers.length > 1 ? (
@@ -273,7 +272,7 @@ export function QuestionEditor({
                         ),
                       })
                     }
-                    aria-label="Retirer"
+                    aria-label={tr("qe.remove")}
                     className="rounded-lg p-1.5 text-white/50 hover:bg-white/10"
                   >
                     <X className="size-4" />
@@ -288,7 +287,7 @@ export function QuestionEditor({
               }
               className="inline-flex items-center gap-1 self-start text-sm text-brand-soft hover:text-white"
             >
-              <Plus className="size-4" /> Autre réponse acceptée
+              <Plus className="size-4" /> {tr("qe.addAcceptedAnswer")}
             </button>
             <label className="flex items-center gap-2 text-sm text-white/70">
               <input
@@ -297,7 +296,7 @@ export function QuestionEditor({
                 onChange={(e) => set({ caseSensitive: e.target.checked })}
                 className="size-4 accent-brand"
               />
-              Sensible à la casse
+              {tr("qe.caseSensitive")}
             </label>
           </div>
         ) : null}
@@ -308,8 +307,8 @@ export function QuestionEditor({
             value={q.explanation ?? ""}
             maxLength={300}
             onChange={(e) => set({ explanation: e.target.value })}
-            placeholder="Explication de la réponse (optionnelle)"
-            aria-label={`Explication de la question ${index + 1}`}
+            placeholder={tr("qe.explanationPlaceholder")}
+            aria-label={tr("qe.explanationAria", { n: index + 1 })}
             className={field}
           />
         ) : null}
@@ -317,22 +316,22 @@ export function QuestionEditor({
         {/* Réglages : temps + points */}
         <div className="flex gap-2">
           <label className="flex flex-1 flex-col gap-1 text-xs text-white/50">
-            Temps
+            {tr("qe.time")}
             <select
               value={q.timeLimitMs}
               onChange={(e) => set({ timeLimitMs: Number(e.target.value) })}
               className={field}
             >
-              {TIME_OPTIONS.map((t) => (
-                <option key={t} value={t} className="bg-[#1a1230]">
-                  {t / 1000}s
+              {TIME_OPTIONS.map((ms) => (
+                <option key={ms} value={ms} className="bg-[#1a1230]">
+                  {tr("qe.seconds", { n: ms / 1000 })}
                 </option>
               ))}
             </select>
           </label>
           {q.type !== "poll" ? (
             <label className="flex flex-1 flex-col gap-1 text-xs text-white/50">
-              Points
+              {tr("qe.points")}
               <select
                 value={q.basePoints}
                 onChange={(e) => set({ basePoints: Number(e.target.value) })}

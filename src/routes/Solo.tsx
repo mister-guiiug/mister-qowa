@@ -10,9 +10,11 @@ import { isCorrect, basePointsOf, publicQuestionFields } from "@shared/game";
 import { computeScore } from "@shared/scoring";
 import { STREAK_BONUS_PCT } from "@shared/gameState";
 import type { Quiz } from "@shared/contracts";
+import { useT } from "../i18n";
 
 /** Mode solo : on joue un quiz à son rythme, 100 % local (aucun backend). */
 export function Solo() {
+  const t = useT();
   const nav = useNavigate();
   const myQuizzes = useQuizLibrary((s) => s.quizzes);
 
@@ -104,7 +106,8 @@ export function Solo() {
       onClick={() => (quiz ? setQuiz(null) : nav("/"))}
       className="mb-4 inline-flex items-center gap-1 self-start text-sm text-white/60 hover:text-white"
     >
-      <ArrowLeft className="size-4" /> {quiz ? "Changer de quiz" : "Accueil"}
+      <ArrowLeft className="size-4" />{" "}
+      {quiz ? t("solo.changeQuiz") : t("common.home")}
     </button>
   );
 
@@ -114,7 +117,7 @@ export function Solo() {
     return (
       <Screen>
         {back}
-        <h1 className="font-display text-3xl">Jouer en solo</h1>
+        <h1 className="font-display text-3xl">{t("solo.title")}</h1>
         <div className="mt-6 flex flex-col gap-3">
           {all.map((qz) => (
             <Card
@@ -124,11 +127,11 @@ export function Solo() {
               <div>
                 <p className="font-semibold">{qz.title}</p>
                 <p className="text-sm text-white/60">
-                  {qz.questions.length} questions
+                  {t("create.questionsCount", { n: qz.questions.length })}
                 </p>
               </div>
               <Button onClick={() => start(qz)}>
-                <Play className="size-4" /> Jouer
+                <Play className="size-4" /> {t("solo.play")}
               </Button>
             </Card>
           ))}
@@ -141,16 +144,16 @@ export function Solo() {
   if (phase === "done") {
     return (
       <Screen className="justify-center text-center">
-        <h1 className="font-display text-4xl">Terminé ! 🎉</h1>
+        <h1 className="font-display text-4xl">{t("solo.finished")}</h1>
         <p className="mt-4 font-display text-2xl text-brand-soft">
-          {score} pts
+          {t("common.pts", { n: score })}
         </p>
         <div className="mt-10 flex flex-col gap-3">
           <Button full onClick={() => start(quiz)}>
-            Rejouer
+            {t("solo.replay")}
           </Button>
           <Button full variant="ghost" onClick={() => setQuiz(null)}>
-            Autre quiz
+            {t("solo.otherQuiz")}
           </Button>
         </div>
       </Screen>
@@ -170,12 +173,17 @@ export function Solo() {
       {back}
       <div className="flex items-center justify-between text-white/60">
         <span>
-          Question {index + 1}/{quiz.questions.length}
+          {t("common.questionN", {
+            n: index + 1,
+            total: quiz.questions.length,
+          })}
         </span>
         <span className="font-display text-2xl tabular-nums">
-          {phase === "question" ? `${remaining}s` : ""}
+          {phase === "question" ? t("solo.secondsShort", { n: remaining }) : ""}
         </span>
-        <span className="font-display tabular-nums">{score} pts</span>
+        <span className="font-display tabular-nums">
+          {t("common.pts", { n: score })}
+        </span>
       </div>
       <h2 className="mt-4 font-display text-xl">{q.prompt}</h2>
       {q.mediaUrl ? (
@@ -205,12 +213,12 @@ export function Solo() {
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 maxLength={200}
-                placeholder="Ta réponse…"
-                aria-label="Ta réponse"
+                placeholder={t("solo.answerPlaceholder")}
+                aria-label={t("solo.answerAria")}
                 className="rounded-2xl bg-white/10 px-4 py-3 text-lg outline-none ring-1 ring-white/15 focus:ring-brand"
               />
               <Button type="submit" full disabled={!text.trim()}>
-                Valider
+                {t("solo.validate")}
               </Button>
             </form>
           )}
@@ -222,7 +230,7 @@ export function Solo() {
               role="status"
               className="rounded-3xl bg-white/10 p-6 text-center"
             >
-              <p className="font-display text-2xl">Vote enregistré 🗳️</p>
+              <p className="font-display text-2xl">{t("solo.voteRecorded")}</p>
             </div>
           ) : (
             <div
@@ -237,12 +245,14 @@ export function Solo() {
               )}
               <p className="mt-2 font-display text-2xl">
                 {picked === null
-                  ? "Temps écoulé !"
+                  ? t("solo.timeUp")
                   : lastCorrect
-                    ? "Bonne réponse !"
-                    : "Raté !"}
+                    ? t("solo.correct")
+                    : t("solo.wrong")}
               </p>
-              <p className="text-white/80">+{lastAwarded} pts</p>
+              <p className="text-white/80">
+                {t("play.awarded", { n: lastAwarded })}
+              </p>
             </div>
           )}
           {q.explanation && q.type !== "poll" ? (
@@ -251,7 +261,9 @@ export function Solo() {
             </p>
           ) : null}
           <Button full onClick={next}>
-            {index + 1 >= quiz.questions.length ? "Voir le score" : "Suivant"}
+            {index + 1 >= quiz.questions.length
+              ? t("solo.seeScore")
+              : t("solo.next")}
           </Button>
         </div>
       )}

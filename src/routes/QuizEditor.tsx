@@ -14,11 +14,13 @@ import {
   type DraftQuestion,
 } from "../lib/quizDraft";
 import { loadDraft, saveDraft, clearDraft } from "../lib/draft";
+import { useT } from "../i18n";
 
 const field =
   "rounded-2xl bg-white/10 px-4 py-3 outline-none ring-1 ring-white/15 focus:ring-brand";
 
 export function QuizEditor() {
+  const t = useT();
   const nav = useNavigate();
   const { quizId } = useParams();
   const getQuiz = useQuizLibrary((s) => s.get);
@@ -83,10 +85,10 @@ export function QuizEditor() {
         }}
         className="mb-4 inline-flex items-center gap-1 self-start text-sm text-white/60 hover:text-white"
       >
-        <ArrowLeft className="size-4" /> Annuler
+        <ArrowLeft className="size-4" /> {t("editor.cancel")}
       </button>
       <h1 className="font-display text-3xl">
-        {quizId ? "Modifier le quiz" : "Nouveau quiz"}
+        {quizId ? t("editor.titleEdit") : t("editor.titleNew")}
       </h1>
 
       <div className="mt-5 flex flex-col gap-3">
@@ -94,14 +96,14 @@ export function QuizEditor() {
           value={draft.title}
           maxLength={120}
           onChange={(e) => setDraft({ ...draft, title: e.target.value })}
-          placeholder="Titre du quiz"
+          placeholder={t("editor.titlePlaceholder")}
           className={`${field} font-display text-xl`}
         />
         <input
           value={draft.description}
           maxLength={300}
           onChange={(e) => setDraft({ ...draft, description: e.target.value })}
-          placeholder="Description (optionnelle)"
+          placeholder={t("editor.descPlaceholder")}
           className={field}
         />
       </div>
@@ -121,7 +123,7 @@ export function QuizEditor() {
       </div>
 
       <Button variant="ghost" full className="mt-4" onClick={addQuestion}>
-        <Plus className="size-5" /> Ajouter une question
+        <Plus className="size-5" /> {t("editor.addQuestion")}
       </Button>
 
       {errors.length > 0 ? (
@@ -133,7 +135,7 @@ export function QuizEditor() {
       ) : null}
 
       <Button full className="mt-4" onClick={save}>
-        <Save className="size-5" /> Enregistrer le quiz
+        <Save className="size-5" /> {t("editor.save")}
       </Button>
     </Screen>
   );

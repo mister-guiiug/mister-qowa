@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { m, AnimatePresence } from "framer-motion";
+import { useT } from "../i18n";
 
 /** Emojis qui flottent vers le haut (overlay). */
 export function FloatingReactions({
@@ -31,6 +32,7 @@ const EMOJIS = ["👍", "❤️", "😂", "😮", "🎉", "🔥"];
 const COOLDOWN_MS = 1200;
 
 export function ReactionBar({ onSend }: { onSend: (emoji: string) => void }) {
+  const t = useT();
   // Anti-flood : 1 réaction max par période de refroidissement.
   const [coolingDown, setCoolingDown] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -49,7 +51,7 @@ export function ReactionBar({ onSend }: { onSend: (emoji: string) => void }) {
         <button
           key={e}
           type="button"
-          aria-label={`Envoyer la réaction ${e}`}
+          aria-label={t("reactions.sendAria", { emoji: e })}
           disabled={coolingDown}
           onClick={() => send(e)}
           className="rounded-full bg-white/10 px-3 py-2 text-xl transition hover:bg-white/20 active:scale-90 disabled:opacity-40"
