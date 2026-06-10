@@ -62,8 +62,8 @@
 
         "reactions": {
           ".read": true,
-          "$rid": {
-            ".write": "auth != null && !data.exists()",
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && newData.child('ts').val() === now && (!data.exists() || now > data.child('ts').val() + 800)",
             ".validate": "newData.hasChildren(['emoji','ts'])",
             "emoji": {
               ".validate": "newData.isString() && newData.val().length <= 12"

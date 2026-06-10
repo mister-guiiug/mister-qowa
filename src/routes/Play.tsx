@@ -14,15 +14,18 @@ import { FloatingReactions, ReactionBar } from "../components/Reactions";
 import { TeamLeaderboard } from "../components/TeamLeaderboard";
 import { AnswerGrid } from "../components/AnswerGrid";
 import { Countdown } from "../components/Countdown";
+import { TimerBar } from "../components/TimerBar";
 import { Leaderboard } from "../components/Leaderboard";
 import { Podium } from "../components/Podium";
 import { ConnectionBanner } from "../components/ConnectionBanner";
+import { useServerOffset } from "../hooks/useServerTime";
 import { feedback } from "../lib/feedback";
 import { useErr, useT } from "../i18n";
 
 export function Play() {
   const t = useT();
   const err = useErr();
+  const offset = useServerOffset();
   const { sessionId } = useParams();
   const nav = useNavigate();
   const uid = useAuthUid();
@@ -149,11 +152,16 @@ export function Play() {
       {state === "QUESTION_ACTIVE" && current ? (
         <div className="flex flex-1 flex-col gap-6">
           <div className="flex items-center justify-between text-white/60">
-            <span>
+            <span className="flex items-center gap-2">
               {t("common.questionN", {
                 n: current.index + 1,
                 total: current.total,
               })}
+              {score && score.streak >= 2 ? (
+                <span aria-hidden className="font-semibold text-amber-300">
+                  🔥 {score.streak}
+                </span>
+              ) : null}
             </span>
             {paused ? (
               <span className="rounded-xl bg-amber-500/20 px-3 py-1 font-display text-amber-200">
@@ -163,6 +171,13 @@ export function Play() {
               <Countdown endsAt={current.activatedAt + current.timeLimitMs} />
             )}
           </div>
+          {!paused ? (
+            <TimerBar
+              endsAt={current.activatedAt + current.timeLimitMs}
+              timeLimitMs={current.timeLimitMs}
+              offset={offset}
+            />
+          ) : null}
           <h2 className="font-display text-xl">{current.prompt}</h2>
           {current.mediaUrl ? (
             <div className="h-48 w-full overflow-hidden rounded-2xl bg-white/5">
@@ -253,6 +268,9 @@ export function Play() {
               </p>
               <p className="text-white/80">
                 {t("play.awarded", { n: reveal.awarded })}
+                {reveal.correct && score && score.streak >= 2 ? (
+                  <span aria-hidden> · 🔥 {score.streak}</span>
+                ) : null}
               </p>
             </div>
           ) : picked === null ? (
