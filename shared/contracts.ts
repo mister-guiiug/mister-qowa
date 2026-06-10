@@ -29,6 +29,8 @@ const baseQuestion = {
   mediaUrl: z.string().url().optional(),
   /** Texte alternatif de l'image (a11y) — publiable, ne doit pas révéler la réponse. */
   mediaAlt: z.string().max(200).optional(),
+  /** Explication de la bonne réponse — JAMAIS publiée pendant la question. */
+  explanation: z.string().max(300).optional(),
   timeLimitMs: z.number().int().positive(),
 };
 
@@ -104,6 +106,8 @@ export type Player = z.infer<typeof playerSchema>;
 export const scoreSchema = z.object({
   total: z.number().int().nonnegative(),
   streak: z.number().int().nonnegative(),
+  /** Mode élimination : le joueur est hors course (spectateur). */
+  eliminated: z.boolean().optional(),
 });
 export type Score = z.infer<typeof scoreSchema>;
 

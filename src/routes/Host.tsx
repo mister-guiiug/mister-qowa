@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Navigate } from "react-router-dom";
-import { X, Share2, SkipForward, RefreshCw } from "lucide-react";
+import {
+  X,
+  Share2,
+  SkipForward,
+  RefreshCw,
+  Pause,
+  Play,
+  RotateCcw,
+} from "lucide-react";
 import { Screen, Button, Spinner } from "../lib/ui";
 import {
   useHostView,
@@ -22,7 +30,10 @@ import {
   sendReaction,
   skipQuestion,
   restartSession,
+  closeSession,
   kickPlayer,
+  pauseQuestion,
+  replayQuestion,
 } from "../firebase/api";
 import { shareOrCopy } from "../lib/share";
 import { FloatingReactions, ReactionBar } from "../components/Reactions";
@@ -39,9 +50,20 @@ export function Host() {
   const pin = useGameStore((s) => s.pin);
   const quiz = useGameStore((s) => s.hostQuiz);
   const reset = useGameStore((s) => s.reset);
-  const { state, current, players, playerCount, leaderboard } = useHostView(
-    sessionId ?? null,
-  );
+  const {
+    state,
+    current,
+    players,
+    playerCount,
+    scores,
+    paused,
+    eliminationMode,
+    leaderboard,
+  } = useHostView(sessionId ?? null);
+  const eliminatedCount = Object.values(scores).filter(
+    (s) => s.eliminated,
+  ).length;
+  const survivors = Math.max(0, playerCount - eliminatedCount);
   const { busy, error, setError, run: act } = useAsyncAction();
   const [notFound, setNotFound] = useState(false);
   const [info, setInfo] = useState<string | null>(null);
@@ -52,8 +74,10 @@ export function Host() {
 
   // Auto-clôture quand le compte à rebours atteint 0 (closeQuestion est idempotent).
   // Deps exhaustives (activatedAt/timeLimitMs/index) + erreurs remontées.
+  // En pause : on n'arme pas le timer (la reprise étend timeLimitMs → ré-armement).
   useEffect(() => {
     if (state !== "QUESTION_ACTIVE" || !current || !quiz || !sessionId) return;
+    if (paused) return;
     const ms = current.activatedAt + current.timeLimitMs - serverNow(offset);
     const id = setTimeout(
       () =>
@@ -67,6 +91,7 @@ export function Host() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     state,
+    paused,
     current?.questionId,
     current?.activatedAt,
     current?.timeLimitMs,
@@ -233,7 +258,13 @@ export function Host() {
             <span>
               Question {current.index + 1}/{current.total}
             </span>
-            <Countdown endsAt={current.activatedAt + current.timeLimitMs} />
+            {paused ? (
+              <span className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500/20 px-3 py-1 font-display text-amber-200">
+                <Pause className="size-4" /> Pause
+              </span>
+            ) : (
+              <Countdown endsAt={current.activatedAt + current.timeLimitMs} />
+            )}
           </div>
           <h2 className="font-display text-2xl">{current.prompt}</h2>
           {current.mediaUrl ? (
@@ -260,28 +291,62 @@ export function Host() {
           ) : null}
           <p className="text-center text-white/70">
             {stats.count}/{playerCount} ont répondu
+            {eliminationMode ? ` · 💀 ${survivors} en lice` : ""}
           </p>
-          <div className="flex gap-2">
-            <Button
-              full
-              variant="ghost"
-              disabled={busy || !quiz}
-              onClick={() =>
-                quiz && act(() => skipQuestion(sessionId, quiz, current.index))
-              }
-            >
-              <SkipForward className="size-4" /> Passer
-            </Button>
-            <Button
-              full
-              variant="danger"
-              disabled={busy || !quiz}
-              onClick={() =>
-                quiz && act(() => closeQuestion(sessionId, quiz, current.index))
-              }
-            >
-              Clore maintenant
-            </Button>
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <Button
+                full
+                variant="ghost"
+                disabled={busy}
+                onClick={() => act(() => pauseQuestion(sessionId, !paused))}
+              >
+                {paused ? (
+                  <>
+                    <Play className="size-4" /> Reprendre
+                  </>
+                ) : (
+                  <>
+                    <Pause className="size-4" /> Pause
+                  </>
+                )}
+              </Button>
+              <Button
+                full
+                variant="ghost"
+                disabled={busy || !quiz}
+                onClick={() =>
+                  quiz &&
+                  act(() => replayQuestion(sessionId, quiz, current.index))
+                }
+              >
+                <RotateCcw className="size-4" /> Re-poser
+              </Button>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                full
+                variant="ghost"
+                disabled={busy || !quiz}
+                onClick={() =>
+                  quiz &&
+                  act(() => skipQuestion(sessionId, quiz, current.index))
+                }
+              >
+                <SkipForward className="size-4" /> Passer
+              </Button>
+              <Button
+                full
+                variant="danger"
+                disabled={busy || !quiz}
+                onClick={() =>
+                  quiz &&
+                  act(() => closeQuestion(sessionId, quiz, current.index))
+                }
+              >
+                Clore maintenant
+              </Button>
+            </div>
           </div>
         </div>
       ) : null}
@@ -300,9 +365,14 @@ export function Host() {
               correctId={correctId}
             />
           ) : null}
+          {eliminationMode ? (
+            <p className="text-center text-white/70">
+              💀 {survivors} joueur{survivors > 1 ? "s" : ""} encore en lice
+            </p>
+          ) : null}
           <Leaderboard entries={leaderboard} />
           <div className="mt-auto flex flex-col gap-2">
-            {!isLast ? (
+            {!isLast && !(eliminationMode && survivors <= 1) ? (
               <Button
                 full
                 disabled={busy || !quiz || !current}
@@ -349,6 +419,8 @@ export function Host() {
               full
               variant="ghost"
               onClick={() => {
+                // Libère la salle (session + PIN) — best-effort, sans bloquer la sortie.
+                closeSession(sessionId, pin).catch(() => undefined);
                 reset();
                 nav("/");
               }}

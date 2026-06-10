@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { resultsCsv, hardestQuestion, type GameResult } from "./results";
+import {
+  resultsCsv,
+  hardestQuestion,
+  aggregateByQuiz,
+  type GameResult,
+} from "./results";
 
 const base: GameResult = {
   id: "r1",
@@ -37,6 +42,34 @@ describe("resultsCsv", () => {
   it("omet le bloc stats quand absent", () => {
     const csv = resultsCsv({ ...base, questionStats: undefined });
     expect(csv).not.toContain("reussite");
+  });
+});
+
+describe("aggregateByQuiz", () => {
+  it("agrège parties, moyenne et record par quiz", () => {
+    const second: GameResult = {
+      ...base,
+      id: "r2",
+      sessionId: "s2",
+      ranking: [{ uid: "u3", pseudo: "Chris", total: 400 }],
+    };
+    const aggs = aggregateByQuiz([base, second]);
+    expect(aggs).toHaveLength(1);
+    expect(aggs[0].games).toBe(2);
+    expect(aggs[0].avgScore).toBe(Math.round((1200 + 800 + 400) / 3));
+    expect(aggs[0].bestScore).toBe(1200);
+  });
+
+  it("sépare les quiz différents et trie par nombre de parties", () => {
+    const other: GameResult = {
+      ...base,
+      id: "r3",
+      quizId: "autre",
+      quizTitle: "Autre",
+    };
+    const aggs = aggregateByQuiz([base, { ...base, id: "r2" }, other]);
+    expect(aggs.map((a) => a.quizTitle)).toEqual(["Test", "Autre"]);
+    expect(aggs[0].games).toBe(2);
   });
 });
 

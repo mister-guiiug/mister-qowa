@@ -7,6 +7,7 @@ import {
   resultsCsv,
   downloadCsv,
   hardestQuestion,
+  aggregateByQuiz,
   type GameResult,
 } from "../lib/results";
 import { errMsg } from "../lib/err";
@@ -56,54 +57,80 @@ export function History() {
           pour le voir ici !
         </p>
       ) : (
-        <div className="mt-6 flex flex-col gap-3">
-          {results.map((r) => (
-            <Card key={r.id} className="flex flex-col gap-3">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="font-semibold">{r.quizTitle}</p>
-                  <p className="text-sm text-white/60">
-                    {new Date(r.finishedAt).toLocaleString("fr-FR")} ·{" "}
-                    {r.playerCount} joueur{r.playerCount > 1 ? "s" : ""}
-                  </p>
-                  {r.ranking[0] ? (
-                    <p className="mt-1 inline-flex items-center gap-1 text-sm text-answer-yellow">
-                      <Trophy className="size-4" />
-                      {r.ranking[0].avatar ? (
-                        <span aria-hidden>{r.ranking[0].avatar}</span>
-                      ) : null}{" "}
-                      {r.ranking[0].pseudo} · {r.ranking[0].total} pts
-                    </p>
-                  ) : null}
-                  {(() => {
-                    const hard = hardestQuestion(r);
-                    return hard ? (
-                      <p className="mt-1 inline-flex items-start gap-1 text-sm text-white/50">
-                        <TrendingDown className="mt-0.5 size-4 shrink-0" />
-                        <span>
-                          Plus ratée : « {hard.prompt} » —{" "}
-                          {Math.round((100 * hard.correct) / hard.answered)}% de
-                          réussite
-                        </span>
-                      </p>
-                    ) : null;
-                  })()}
+        <>
+          {(() => {
+            const aggs = aggregateByQuiz(results);
+            return aggs.length > 0 ? (
+              <section className="mt-6">
+                <h2 className="mb-2 text-sm uppercase tracking-widest text-white/40">
+                  Par quiz
+                </h2>
+                <div className="flex flex-col gap-2">
+                  {aggs.map((a) => (
+                    <div
+                      key={a.quizId}
+                      className="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-2.5 text-sm"
+                    >
+                      <span className="font-semibold">{a.quizTitle}</span>
+                      <span className="text-white/60">
+                        {a.games} partie{a.games > 1 ? "s" : ""} · moy.{" "}
+                        {a.avgScore} · record {a.bestScore}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-                <Button
-                  variant="ghost"
-                  onClick={() =>
-                    downloadCsv(
-                      `${r.quizTitle.replace(/[^\w.-]+/g, "_")}.csv`,
-                      resultsCsv(r),
-                    )
-                  }
-                >
-                  <Download className="size-4" /> CSV
-                </Button>
-              </div>
-            </Card>
-          ))}
-        </div>
+              </section>
+            ) : null;
+          })()}
+          <div className="mt-6 flex flex-col gap-3">
+            {results.map((r) => (
+              <Card key={r.id} className="flex flex-col gap-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold">{r.quizTitle}</p>
+                    <p className="text-sm text-white/60">
+                      {new Date(r.finishedAt).toLocaleString("fr-FR")} ·{" "}
+                      {r.playerCount} joueur{r.playerCount > 1 ? "s" : ""}
+                    </p>
+                    {r.ranking[0] ? (
+                      <p className="mt-1 inline-flex items-center gap-1 text-sm text-answer-yellow">
+                        <Trophy className="size-4" />
+                        {r.ranking[0].avatar ? (
+                          <span aria-hidden>{r.ranking[0].avatar}</span>
+                        ) : null}{" "}
+                        {r.ranking[0].pseudo} · {r.ranking[0].total} pts
+                      </p>
+                    ) : null}
+                    {(() => {
+                      const hard = hardestQuestion(r);
+                      return hard ? (
+                        <p className="mt-1 inline-flex items-start gap-1 text-sm text-white/50">
+                          <TrendingDown className="mt-0.5 size-4 shrink-0" />
+                          <span>
+                            Plus ratée : « {hard.prompt} » —{" "}
+                            {Math.round((100 * hard.correct) / hard.answered)}%
+                            de réussite
+                          </span>
+                        </p>
+                      ) : null;
+                    })()}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    onClick={() =>
+                      downloadCsv(
+                        `${r.quizTitle.replace(/[^\w.-]+/g, "_")}.csv`,
+                        resultsCsv(r),
+                      )
+                    }
+                  >
+                    <Download className="size-4" /> CSV
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </>
       )}
     </Screen>
   );

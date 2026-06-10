@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { scoreRound } from "./round";
+import { scoreRound, eliminateAfterRound } from "./round";
 import { STREAK_BONUS_PCT } from "./gameState";
 import type { Question, Score } from "./contracts";
 
@@ -84,5 +84,41 @@ describe("scoreRound", () => {
       STREAK_BONUS_PCT,
     );
     expect(r.scores.u2).toBeUndefined();
+  });
+});
+
+describe("eliminateAfterRound", () => {
+  const players = ["u1", "u2", "u3", "u4"];
+
+  it("élimine les mauvaises réponses ET les silencieux, garde les bons", () => {
+    const fallen = eliminateAfterRound(
+      mcq,
+      { u1: { choice: "a" }, u2: { choice: "b" } }, // u3/u4 silencieux
+      players,
+      {},
+    );
+    expect(fallen.sort()).toEqual(["u2", "u3", "u4"]);
+  });
+
+  it("ne ré-élimine pas un joueur déjà hors course", () => {
+    const fallen = eliminateAfterRound(mcq, {}, players, {
+      u1: { total: 100, streak: 0, eliminated: true },
+    });
+    expect(fallen).not.toContain("u1");
+    expect(fallen.sort()).toEqual(["u2", "u3", "u4"]);
+  });
+
+  it("un sondage n'élimine personne", () => {
+    const poll: Question = {
+      id: "p",
+      type: "poll",
+      prompt: "?",
+      timeLimitMs: 10000,
+      options: [
+        { id: "x", label: "X" },
+        { id: "y", label: "Y" },
+      ],
+    };
+    expect(eliminateAfterRound(poll, {}, players, {})).toEqual([]);
   });
 });

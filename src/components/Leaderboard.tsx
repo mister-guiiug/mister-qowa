@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import type { LeaderboardEntry } from "@shared/contracts";
 
 export function Leaderboard({
@@ -17,7 +17,7 @@ export function Leaderboard({
   return (
     <ol className="flex flex-col gap-2">
       {entries.slice(0, max).map((e, i) => (
-        <motion.li
+        <m.li
           key={e.uid}
           layout
           initial={{ opacity: 0, y: 8 }}
@@ -35,7 +35,7 @@ export function Leaderboard({
             <span className="font-semibold">{e.pseudo}</span>
           </span>
           <span className="font-display tabular-nums">{e.total}</span>
-        </motion.li>
+        </m.li>
       ))}
     </ol>
   );

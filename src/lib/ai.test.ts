@@ -67,6 +67,21 @@ describe("aiQuizToDraft", () => {
     expect(draft.questions[1].correct).toBe(true);
   });
 
+  it("conserve l'explication (tronquée à 300)", () => {
+    const draft = aiQuizToDraft({
+      title: "T",
+      questions: [
+        {
+          type: "true_false",
+          prompt: "Q ?",
+          answer: false,
+          explanation: "e".repeat(400),
+        },
+      ],
+    });
+    expect(draft.questions[0].explanation?.length).toBe(300);
+  });
+
   it("borne un correctIndex hors limites à 0", () => {
     const draft = aiQuizToDraft({
       title: "T",

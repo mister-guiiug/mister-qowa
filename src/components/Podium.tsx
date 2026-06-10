@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Trophy } from "lucide-react";
 import type { LeaderboardEntry } from "@shared/contracts";
 import { Confetti } from "./Confetti";
@@ -18,7 +18,7 @@ export function Podium({ entries }: { entries: LeaderboardEntry[] }) {
           const e = top[rank];
           if (!e) return <div key={rank} className="flex-1" />;
           return (
-            <motion.div
+            <m.div
               key={e.uid}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -40,7 +40,7 @@ export function Podium({ entries }: { entries: LeaderboardEntry[] }) {
               <div
                 className={`w-full rounded-t-2xl bg-brand/80 ${HEIGHTS[rank]}`}
               />
-            </motion.div>
+            </m.div>
           );
         })}
       </div>

@@ -245,6 +245,11 @@ export function Solo() {
               <p className="text-white/80">+{lastAwarded} pts</p>
             </div>
           )}
+          {q.explanation && q.type !== "poll" ? (
+            <p className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-white/80">
+              💡 {q.explanation}
+            </p>
+          ) : null}
           <Button full onClick={next}>
             {index + 1 >= quiz.questions.length ? "Voir le score" : "Suivant"}
           </Button>

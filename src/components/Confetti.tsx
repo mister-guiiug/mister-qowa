@@ -1,4 +1,4 @@
-import { motion, useReducedMotion } from "framer-motion";
+import { m, useReducedMotion } from "framer-motion";
 
 const COLORS = ["#e21b3c", "#1368ce", "#d89e00", "#26890c", "#7c3aed"];
 
@@ -14,7 +14,7 @@ export function Confetti({ count = 28 }: { count?: number }) {
         const delay = Math.random() * 0.4;
         const duration = 1.8 + Math.random() * 1.4;
         return (
-          <motion.span
+          <m.span
             key={i}
             initial={{ top: "-5%", opacity: 1, rotate: 0 }}
             animate={{ top: "105%", rotate: 540, opacity: 0 }}

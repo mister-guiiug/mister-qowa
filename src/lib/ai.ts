@@ -54,6 +54,8 @@ const aiQuestionSchema = z.object({
   correctIndex: z.number().int().nonnegative().optional(),
   /** Vrai/Faux : la proposition est-elle vraie ? */
   answer: z.boolean().optional(),
+  /** Courte explication de la bonne réponse (montrée après la question). */
+  explanation: z.string().optional(),
 });
 
 const aiQuizSchema = z.object({
@@ -80,6 +82,7 @@ const RESPONSE_SCHEMA = {
           options: { type: "array", items: { type: "string" } },
           correctIndex: { type: "integer" },
           answer: { type: "boolean" },
+          explanation: { type: "string" },
         },
         required: ["type", "prompt"],
       },
@@ -118,14 +121,19 @@ const clamp = (s: string, max: number) => s.trim().slice(0, max);
 
 /** Mappe une question IA validée en DraftQuestion (mêmes contraintes que l'éditeur). */
 function aiQuestionToDraft(q: z.infer<typeof aiQuestionSchema>): DraftQuestion {
+  const explanation = q.explanation?.trim()
+    ? clamp(q.explanation, 300)
+    : undefined;
   if (q.type === "true_false") {
     const base = blankQuestion("true_false");
     base.prompt = clamp(q.prompt, 300);
     base.correct = q.answer ?? true;
+    base.explanation = explanation;
     return base;
   }
   const base = blankQuestion("multiple_choice");
   base.prompt = clamp(q.prompt, 300);
+  base.explanation = explanation;
   const labels = (q.options ?? [])
     .map((o) => clamp(String(o), 120))
     .filter(Boolean)
@@ -165,8 +173,8 @@ const SHAPE_EXAMPLE = `{
   "title": "titre court du quiz",
   "description": "une phrase de description",
   "questions": [
-    { "type": "multiple_choice", "prompt": "…", "options": ["A","B","C","D"], "correctIndex": 0 },
-    { "type": "true_false", "prompt": "…", "answer": true }
+    { "type": "multiple_choice", "prompt": "…", "options": ["A","B","C","D"], "correctIndex": 0, "explanation": "…" },
+    { "type": "true_false", "prompt": "…", "answer": true, "explanation": "…" }
   ]
 }`;
 
@@ -184,6 +192,8 @@ export function buildPrompt(p: GenParams): string {
     SHAPE_EXAMPLE,
     "Contraintes : prompt ≤ 300 caractères, chaque option ≤ 120 caractères,",
     "correctIndex est l'index 0-based dans options, exactement 4 options par QCM.",
+    "Ajoute pour chaque question une `explanation` : 1 phrase (≤ 300 caractères)",
+    "qui justifie la bonne réponse, montrée aux joueurs après la question.",
   ].join("\n");
 }
 

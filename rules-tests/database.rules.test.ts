@@ -1,0 +1,343 @@
+/**
+ * Suite de tests des Security Rules RTDB — verrouille le modèle anti-triche
+ * Spark host-authoritative. Tourne contre l'ÉMULATEUR (npm run test:rules).
+ *
+ * Invariants couverts :
+ *  - pins : lecture authentifiée seulement, pas d'écrasement, libération par le host ;
+ *  - players : un joueur n'écrit que SON nœud, forme validée, banni = rejeté ;
+ *  - nœuds host (state/current/scores/reveal/leaderboard) : host uniquement,
+ *    state borné à la machine à états, scores de forme {total, streak[, eliminated]} ;
+ *  - answers : 1 écriture par joueur, fenêtre temporelle, pause bloquante,
+ *    lecture host-only, purge host (re-poser/revanche) ;
+ *  - reveal : `correct`/`explanation` publics, reveal par joueur cloisonné ;
+ *  - session : suppression intégrale par le host uniquement.
+ */
+import { readFileSync } from "node:fs";
+import { beforeAll, afterAll, describe, it } from "vitest";
+import {
+  initializeTestEnvironment,
+  assertSucceeds,
+  assertFails,
+  type RulesTestEnvironment,
+} from "@firebase/rules-unit-testing";
+import { ref, set, get, update, serverTimestamp } from "firebase/database";
+import { shardOf } from "@shared/gameState";
+
+const HOST = "host-uid";
+const ALICE = "alice-uid";
+const BOB = "bob-uid";
+
+let env: RulesTestEnvironment;
+
+const db = (uid: string | null) =>
+  uid
+    ? env.authenticatedContext(uid).database()
+    : env.unauthenticatedContext().database();
+
+/** Seed sans rules : une session LOBBY appartenant à HOST. */
+async function seedSession(sid: string, extraMeta: object = {}) {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    const d = ctx.database();
+    await set(ref(d, `sessions/${sid}/meta`), {
+      hostUid: HOST,
+      quizId: "quiz1",
+      pin: "12345678",
+      createdAt: Date.now(),
+      totalQuestions: 5,
+      ...extraMeta,
+    });
+    await set(ref(d, `sessions/${sid}/state`), "LOBBY");
+  });
+}
+
+/** Passe la session en QUESTION_ACTIVE avec une fenêtre de réponse ouverte. */
+async function activateQuestion(sid: string, qid = "q1") {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    const d = ctx.database();
+    await set(ref(d, `sessions/${sid}/current`), {
+      questionId: qid,
+      index: 0,
+      total: 5,
+      type: "multiple_choice",
+      prompt: "?",
+      timeLimitMs: 20_000,
+      scored: true,
+      activatedAt: Date.now() - 1_000,
+    });
+    await set(ref(d, `sessions/${sid}/state`), "QUESTION_ACTIVE");
+  });
+}
+
+const answerPath = (sid: string, qid: string, uid: string) =>
+  `sessions/${sid}/answers/${qid}/${shardOf(uid)}/${uid}`;
+
+const validAnswer = () => ({ choice: "a", serverTs: serverTimestamp() });
+
+beforeAll(async () => {
+  const hostPort = (
+    process.env.FIREBASE_DATABASE_EMULATOR_HOST ?? "127.0.0.1:9000"
+  ).split(":");
+  env = await initializeTestEnvironment({
+    projectId: "demo-mister-qowa",
+    database: {
+      host: hostPort[0],
+      port: Number(hostPort[1]),
+      rules: readFileSync("database.rules.json", "utf8"),
+    },
+  });
+});
+
+afterAll(async () => {
+  await env?.cleanup();
+});
+
+describe("pins", () => {
+  it("lecture refusée sans auth, autorisée avec auth", async () => {
+    await env.withSecurityRulesDisabled((ctx) =>
+      set(ref(ctx.database(), "pins/00000001"), "sess-pin-read"),
+    );
+    await assertFails(get(ref(db(null), "pins/00000001")));
+    await assertSucceeds(get(ref(db(ALICE), "pins/00000001")));
+  });
+
+  it("création OK mais écrasement refusé", async () => {
+    await assertSucceeds(set(ref(db(HOST), "pins/00000002"), "sess-a"));
+    await assertFails(set(ref(db(ALICE), "pins/00000002"), "sess-b"));
+  });
+
+  it("libération par le host de la session, pas par un joueur", async () => {
+    await seedSession("sess-pin-del");
+    await env.withSecurityRulesDisabled((ctx) =>
+      set(ref(ctx.database(), "pins/00000003"), "sess-pin-del"),
+    );
+    await assertFails(set(ref(db(ALICE), "pins/00000003"), null));
+    await assertSucceeds(set(ref(db(HOST), "pins/00000003"), null));
+  });
+});
+
+describe("players", () => {
+  it("un joueur écrit SON nœud (avec avatar), pas celui d'un autre", async () => {
+    await seedSession("s-players");
+    await assertSucceeds(
+      set(ref(db(ALICE), `sessions/s-players/players/${ALICE}`), {
+        pseudo: "Alice",
+        joinedAt: Date.now(),
+        avatar: "🦊",
+      }),
+    );
+    await assertFails(
+      set(ref(db(ALICE), `sessions/s-players/players/${BOB}`), {
+        pseudo: "Imposteur",
+        joinedAt: Date.now(),
+      }),
+    );
+  });
+
+  it("champ inconnu et pseudo trop long rejetés", async () => {
+    await seedSession("s-players-shape");
+    await assertFails(
+      set(ref(db(ALICE), `sessions/s-players-shape/players/${ALICE}`), {
+        pseudo: "Alice",
+        joinedAt: Date.now(),
+        isAdmin: true,
+      }),
+    );
+    await assertFails(
+      set(ref(db(ALICE), `sessions/s-players-shape/players/${ALICE}`), {
+        pseudo: "x".repeat(30),
+        joinedAt: Date.now(),
+      }),
+    );
+  });
+
+  it("kick + ban : le host retire le joueur, le banni ne peut pas revenir", async () => {
+    await seedSession("s-kick");
+    await set(ref(db(ALICE), `sessions/s-kick/players/${ALICE}`), {
+      pseudo: "Alice",
+      joinedAt: Date.now(),
+    });
+    // Kick atomique : suppression + ban (écriture host).
+    await assertSucceeds(
+      update(ref(db(HOST)), {
+        [`sessions/s-kick/players/${ALICE}`]: null,
+        [`sessions/s-kick/meta/banned/${ALICE}`]: true,
+      }),
+    );
+    await assertFails(
+      set(ref(db(ALICE), `sessions/s-kick/players/${ALICE}`), {
+        pseudo: "Alice",
+        joinedAt: Date.now(),
+      }),
+    );
+  });
+});
+
+describe("nœuds host (state, scores, leaderboard)", () => {
+  it("un joueur ne peut écrire ni state, ni scores, ni leaderboard", async () => {
+    await seedSession("s-host-only");
+    await assertFails(
+      set(ref(db(ALICE), "sessions/s-host-only/state"), "PODIUM"),
+    );
+    await assertFails(
+      set(ref(db(ALICE), `sessions/s-host-only/scores/${ALICE}`), {
+        total: 99999,
+        streak: 9,
+      }),
+    );
+    await assertFails(
+      set(ref(db(ALICE), "sessions/s-host-only/leaderboard/top"), []),
+    );
+  });
+
+  it("state borné à la machine à états", async () => {
+    await seedSession("s-state");
+    await assertSucceeds(
+      set(ref(db(HOST), "sessions/s-state/state"), "QUESTION_ACTIVE"),
+    );
+    await assertFails(set(ref(db(HOST), "sessions/s-state/state"), "HACKED"));
+  });
+
+  it("scores : forme {total, streak[, eliminated]} validée", async () => {
+    await seedSession("s-scores");
+    await assertSucceeds(
+      set(ref(db(HOST), `sessions/s-scores/scores/${ALICE}`), {
+        total: 1200,
+        streak: 2,
+      }),
+    );
+    await assertSucceeds(
+      set(ref(db(HOST), `sessions/s-scores/scores/${ALICE}`), {
+        total: 1200,
+        streak: 0,
+        eliminated: true,
+      }),
+    );
+    await assertFails(
+      set(ref(db(HOST), `sessions/s-scores/scores/${ALICE}`), {
+        total: "beaucoup",
+        streak: 0,
+      }),
+    );
+    await assertFails(
+      set(ref(db(HOST), `sessions/s-scores/scores/${ALICE}`), {
+        total: 100,
+        streak: 0,
+        cheat: true,
+      }),
+    );
+  });
+});
+
+describe("answers (anti-triche)", () => {
+  it("le joueur écrit SA réponse une seule fois, pendant la fenêtre", async () => {
+    await seedSession("s-ans");
+    await activateQuestion("s-ans");
+    await assertSucceeds(
+      set(ref(db(ALICE), answerPath("s-ans", "q1", ALICE)), validAnswer()),
+    );
+    // Re-soumission refusée (!data.exists()).
+    await assertFails(
+      set(ref(db(ALICE), answerPath("s-ans", "q1", ALICE)), validAnswer()),
+    );
+    // Réponse au nom d'un autre refusée.
+    await assertFails(
+      set(ref(db(ALICE), answerPath("s-ans", "q1", BOB)), validAnswer()),
+    );
+  });
+
+  it("réponse refusée hors QUESTION_ACTIVE", async () => {
+    await seedSession("s-ans-closed");
+    await activateQuestion("s-ans-closed");
+    await env.withSecurityRulesDisabled((ctx) =>
+      set(ref(ctx.database(), "sessions/s-ans-closed/state"), "LEADERBOARD"),
+    );
+    await assertFails(
+      set(
+        ref(db(ALICE), answerPath("s-ans-closed", "q1", ALICE)),
+        validAnswer(),
+      ),
+    );
+  });
+
+  it("réponse refusée pendant la PAUSE", async () => {
+    await seedSession("s-ans-paused");
+    await activateQuestion("s-ans-paused");
+    await env.withSecurityRulesDisabled((ctx) =>
+      set(ref(ctx.database(), "sessions/s-ans-paused/meta/paused"), true),
+    );
+    await assertFails(
+      set(
+        ref(db(ALICE), answerPath("s-ans-paused", "q1", ALICE)),
+        validAnswer(),
+      ),
+    );
+  });
+
+  it("lecture des réponses : host oui, joueur non", async () => {
+    await seedSession("s-ans-read");
+    await activateQuestion("s-ans-read");
+    await set(
+      ref(db(ALICE), answerPath("s-ans-read", "q1", ALICE)),
+      validAnswer(),
+    );
+    await assertFails(get(ref(db(BOB), "sessions/s-ans-read/answers/q1")));
+    await assertSucceeds(get(ref(db(HOST), "sessions/s-ans-read/answers/q1")));
+  });
+
+  it("purge d'une question : host oui (re-poser/revanche), joueur non", async () => {
+    await seedSession("s-ans-purge");
+    await activateQuestion("s-ans-purge");
+    await set(
+      ref(db(ALICE), answerPath("s-ans-purge", "q1", ALICE)),
+      validAnswer(),
+    );
+    await assertFails(
+      set(ref(db(ALICE), "sessions/s-ans-purge/answers/q1"), null),
+    );
+    await assertSucceeds(
+      set(ref(db(HOST), "sessions/s-ans-purge/answers/q1"), null),
+    );
+  });
+});
+
+describe("reveal (cloisonné)", () => {
+  it("correct/explanation publics, reveal par joueur réservé à soi + host", async () => {
+    await seedSession("s-reveal");
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      const d = ctx.database();
+      await set(ref(d, "sessions/s-reveal/reveal/q1"), {
+        correct: "a",
+        explanation: "Parce que.",
+        [ALICE]: {
+          correct: true,
+          awarded: 800,
+          responseTimeMs: 1200,
+          total: 800,
+        },
+      });
+    });
+    await assertSucceeds(
+      get(ref(db(BOB), "sessions/s-reveal/reveal/q1/correct")),
+    );
+    await assertSucceeds(
+      get(ref(db(BOB), "sessions/s-reveal/reveal/q1/explanation")),
+    );
+    await assertSucceeds(
+      get(ref(db(ALICE), `sessions/s-reveal/reveal/q1/${ALICE}`)),
+    );
+    await assertFails(
+      get(ref(db(BOB), `sessions/s-reveal/reveal/q1/${ALICE}`)),
+    );
+    await assertSucceeds(
+      get(ref(db(HOST), `sessions/s-reveal/reveal/q1/${ALICE}`)),
+    );
+  });
+});
+
+describe("suppression de session", () => {
+  it("le host supprime la session entière, pas un joueur", async () => {
+    await seedSession("s-delete");
+    await assertFails(set(ref(db(ALICE), "sessions/s-delete"), null));
+    await assertSucceeds(set(ref(db(HOST), "sessions/s-delete"), null));
+  });
+});

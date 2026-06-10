@@ -18,12 +18,6 @@ import {
   type Database,
 } from "firebase/database";
 import {
-  initializeFirestore,
-  persistentLocalCache,
-  connectFirestoreEmulator,
-  type Firestore,
-} from "firebase/firestore";
-import {
   initializeAppCheck,
   ReCaptchaEnterpriseProvider,
 } from "firebase/app-check";
@@ -43,7 +37,6 @@ const firebaseConfig = {
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
 let db: Database | undefined;
-let fs: Firestore | undefined;
 
 /**
  * App Check AVANT toute autre init Firebase : sinon les premières requêtes
@@ -72,29 +65,22 @@ function initAppCheck(application: FirebaseApp): void {
 function ensure(): void {
   if (app) return;
   app = initializeApp(firebaseConfig);
-  initAppCheck(app); // doit précéder getDatabase/getFirestore
+  initAppCheck(app); // doit précéder getDatabase (et l'init Firestore lazy)
   auth = getAuth(app);
   db = getDatabase(app);
-  // Cache offline (IndexedDB) : historique consultable hors-ligne, lectures instantanées.
-  fs = initializeFirestore(app, { localCache: persistentLocalCache() });
+  // Firestore (historique) vit dans ./fs.ts, importé à la demande.
 
   if (useEmulator) {
     connectAuthEmulator(auth, "http://127.0.0.1:9099", {
       disableWarnings: true,
     });
     connectDatabaseEmulator(db, "127.0.0.1", 9000);
-    connectFirestoreEmulator(fs, "127.0.0.1", 8080);
   }
 }
 
 export function getDb(): Database {
   ensure();
   return db!;
-}
-
-export function getFs(): Firestore {
-  ensure();
-  return fs!;
 }
 
 export function getAuthInstance(): Auth {

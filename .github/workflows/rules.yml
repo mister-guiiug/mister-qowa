@@ -1,0 +1,28 @@
+# Tests des Security Rules RTDB sur l'émulateur Firebase (modèle anti-triche).
+name: Rules
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  rules:
+    name: Security Rules (émulateur RTDB)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - uses: mister-guiiug/dev-wpa-config/.github/actions/setup-pwa@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tests des rules (émulateur)
+        run: npm run test:rules
