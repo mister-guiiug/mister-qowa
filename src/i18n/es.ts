@@ -47,6 +47,9 @@ export const es = {
   "create.importAria": "Importar un cuestionario",
   "create.aiAria": "Generar un cuestionario con IA",
   "create.new": "Nuevo",
+  "create.searchPlaceholder": "Buscar un cuestionario…",
+  "create.sortRecent": "Recientes",
+  "create.sortAz": "A→Z",
   "create.teamMode": "Modo equipos",
   "create.teamsCountAria": "Número de equipos",
   "create.teamsOption": (v) => `${v.n} equipos`,
@@ -248,6 +251,8 @@ export const es = {
   "update.available": "Nueva versión disponible",
   "update.later": "Más tarde",
   "leaderboard.empty": "Nadie por ahora…",
+  "install.prompt": "¿Instalar Mister Qowa en tu dispositivo?",
+  "install.action": "Instalar",
 
   // errores
   "err.generic": "Se ha producido un error.",

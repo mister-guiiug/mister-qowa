@@ -3,6 +3,7 @@ import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { LazyMotion, domMax, MotionConfig } from "framer-motion";
 import { Home } from "./routes/Home";
 import { UpdatePrompt } from "./components/UpdatePrompt";
+import { InstallPrompt } from "./components/InstallPrompt";
 import { Spinner } from "./lib/ui";
 import { useLang } from "./i18n";
 
@@ -67,6 +68,7 @@ export function App() {
             </Routes>
           </Suspense>
           <UpdatePrompt />
+          <InstallPrompt />
         </HashRouter>
       </MotionConfig>
     </LazyMotion>

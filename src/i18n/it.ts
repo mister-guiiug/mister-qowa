@@ -46,6 +46,9 @@ export const it = {
   "create.importAria": "Importa un quiz",
   "create.aiAria": "Genera un quiz con l'IA",
   "create.new": "Nuovo",
+  "create.searchPlaceholder": "Cerca un quiz…",
+  "create.sortRecent": "Recenti",
+  "create.sortAz": "A→Z",
   "create.teamMode": "Modalità squadre",
   "create.teamsCountAria": "Numero di squadre",
   "create.teamsOption": (v) => `${v.n} squadre`,
@@ -248,6 +251,8 @@ export const it = {
   "pin.label": "Codice PIN",
   "update.available": "Nuova versione disponibile",
   "update.later": "Più tardi",
+  "install.prompt": "Installare Mister Qowa sul tuo dispositivo?",
+  "install.action": "Installa",
   "leaderboard.empty": "Ancora nessuno…",
 
   // errori

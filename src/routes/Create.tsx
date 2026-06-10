@@ -10,6 +10,9 @@ import {
   Download,
   Upload,
   Sparkles,
+  Search,
+  ArrowDownAZ,
+  Clock,
 } from "lucide-react";
 import { Screen, Button, Card, Spinner } from "../lib/ui";
 import { ConfirmDialog } from "../components/ConfirmDialog";
@@ -42,6 +45,19 @@ export function Create() {
   const [teamCount, setTeamCount] = useState(2);
   const [elimination, setElimination] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<Quiz | null>(null);
+  const [search, setSearch] = useState("");
+  const [sortAz, setSortAz] = useState(false);
+
+  // Filtre par titre + tri (récent par createdAt / alphabétique).
+  const shownQuizzes = myQuizzes
+    .filter((q) =>
+      q.title.toLowerCase().includes(search.trim().toLowerCase()),
+    )
+    .sort((a, b) =>
+      sortAz
+        ? a.title.localeCompare(b.title)
+        : (b.createdAt ?? 0) - (a.createdAt ?? 0),
+    );
 
   async function host(quiz: Quiz) {
     setBusy(quiz.id);
@@ -165,8 +181,35 @@ export function Create() {
           <h2 className="mb-2 text-sm uppercase tracking-widest text-white/40">
             {t("create.myQuizzes")}
           </h2>
+          {myQuizzes.length > 4 ? (
+            <div className="mb-3 flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/40" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder={t("create.searchPlaceholder")}
+                  aria-label={t("create.searchPlaceholder")}
+                  className="w-full rounded-xl bg-white/10 py-2 pl-9 pr-3 text-sm outline-none ring-1 ring-white/15 focus:ring-brand"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setSortAz((v) => !v)}
+                aria-pressed={sortAz}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-white/10 px-3 py-2 text-sm ring-1 ring-white/15 hover:bg-white/15"
+              >
+                {sortAz ? (
+                  <ArrowDownAZ className="size-4" />
+                ) : (
+                  <Clock className="size-4" />
+                )}
+                {sortAz ? t("create.sortAz") : t("create.sortRecent")}
+              </button>
+            </div>
+          ) : null}
           <div className="flex flex-col gap-3">
-            {myQuizzes.map((q) => (
+            {shownQuizzes.map((q) => (
               <Card key={q.id} className="flex flex-col gap-3">
                 <div>
                   <p className="font-semibold">{q.title}</p>
