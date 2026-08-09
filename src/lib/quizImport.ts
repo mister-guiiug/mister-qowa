@@ -83,10 +83,11 @@ function buildQuestion(
   }
 
   // true_false : un seul champ vrai/faux.
-  if (answers.length === 1 && answers[0].toLowerCase() in TRUE_FALSE) {
+  const only = answers.length === 1 ? answers[0]?.toLowerCase() : undefined;
+  if (only && only in TRUE_FALSE) {
     const q = blankQuestion("true_false");
     q.prompt = prompt;
-    q.correct = TRUE_FALSE[answers[0].toLowerCase()];
+    q.correct = TRUE_FALSE[only] ?? false;
     return q;
   }
 
@@ -99,7 +100,7 @@ function buildQuestion(
     const q = blankQuestion("multiple_choice");
     q.prompt = prompt;
     q.options = opts;
-    q.correctOptionId = opts[starred].id;
+    q.correctOptionId = opts[starred]!.id;
     return q;
   }
 

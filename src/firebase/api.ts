@@ -178,6 +178,7 @@ export async function nextQuestion(
   addBreadcrumb("host", `nextQuestion#${index}`);
   const db = getDb();
   const q = quiz.questions[index];
+  if (!q) throw new AppError("err.noMoreQuestions");
   await hostWrite("nextQuestion", async () => {
     await set(ref(db, currentPath(sessionId)), {
       ...publicQuestionFields(q, index, quiz.questions.length),
@@ -198,6 +199,7 @@ export async function closeQuestion(
     return;
   addBreadcrumb("host", `closeQuestion#${index}`);
   const q = quiz.questions[index];
+  if (!q) return;
   const [curSnap, ansSnap, scoresSnap, playersSnap, metaSnap] =
     await Promise.all([
       get(ref(db, currentPath(sessionId))),
@@ -441,6 +443,7 @@ export async function replayQuestion(
 ): Promise<void> {
   const db = getDb();
   const q = quiz.questions[index];
+  if (!q) throw new AppError("err.noMoreQuestions");
   await hostWrite("replayQuestion", () =>
     update(ref(db), {
       [answersQuestionPath(sessionId, q.id)]: null,

@@ -50,9 +50,9 @@ describe("aiQuizToDraft", () => {
 
   it("relie correctOptionId à l'option d'index correctIndex", () => {
     const draft = aiQuizToDraft(ai);
-    const q0 = draft.questions[0];
+    const q0 = draft.questions[0]!;
     expect(q0.type).toBe("multiple_choice");
-    expect(q0.correctOptionId).toBe(q0.options[0].id);
+    expect(q0.correctOptionId).toBe(q0.options[0]!.id);
     expect(q0.options.map((o) => o.label)).toEqual([
       "Paris",
       "Lyon",
@@ -63,8 +63,8 @@ describe("aiQuizToDraft", () => {
 
   it("mappe le Vrai/Faux", () => {
     const draft = aiQuizToDraft(ai);
-    expect(draft.questions[1].type).toBe("true_false");
-    expect(draft.questions[1].correct).toBe(true);
+    expect(draft.questions[1]!.type).toBe("true_false");
+    expect(draft.questions[1]!.correct).toBe(true);
   });
 
   it("conserve l'explication (tronquée à 300)", () => {
@@ -79,7 +79,7 @@ describe("aiQuizToDraft", () => {
         },
       ],
     });
-    expect(draft.questions[0].explanation?.length).toBe(300);
+    expect(draft.questions[0]!.explanation?.length).toBe(300);
   });
 
   it("borne un correctIndex hors limites à 0", () => {
@@ -94,8 +94,8 @@ describe("aiQuizToDraft", () => {
         },
       ],
     });
-    expect(draft.questions[0].correctOptionId).toBe(
-      draft.questions[0].options[0].id,
+    expect(draft.questions[0]!.correctOptionId).toBe(
+      draft.questions[0]!.options[0]!.id,
     );
     expect(validateDraft(draft)).toEqual([]);
   });
@@ -113,7 +113,7 @@ describe("aiQuizToDraft", () => {
         },
       ],
     });
-    expect(draft.questions[0].options[0].label.length).toBe(120);
+    expect(draft.questions[0]!.options[0]!.label.length).toBe(120);
     expect(validateDraft(draft)).toEqual([]);
   });
 });

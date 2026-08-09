@@ -29,7 +29,7 @@ export function correctChoiceOf(q: Question): string {
     case "true_false":
       return q.correct ? "true" : "false";
     case "free_text":
-      return q.acceptedAnswers[0];
+      return q.acceptedAnswers[0] ?? "";
     case "poll":
       return "";
   }

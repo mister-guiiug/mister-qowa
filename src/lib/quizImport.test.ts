@@ -27,7 +27,10 @@ describe("parseQuizText", () => {
     const draft = parseQuizText(raw, "Géo");
     expect(draft.title).toBe("Géo");
     expect(draft.questions).toHaveLength(4);
-    const [mc, tf, ft, poll] = draft.questions;
+    const mc = draft.questions[0]!;
+    const tf = draft.questions[1]!;
+    const ft = draft.questions[2]!;
+    const poll = draft.questions[3]!;
     expect(mc.type).toBe("multiple_choice");
     expect(mc.options).toHaveLength(3);
     expect(mc.options.find((o) => o.id === mc.correctOptionId)?.label).toBe(
@@ -55,12 +58,12 @@ describe("parseQuizText", () => {
       "T",
     );
     expect(draft.questions).toHaveLength(1);
-    expect(draft.questions[0].type).toBe("true_false");
+    expect(draft.questions[0]!.type).toBe("true_false");
   });
 
   it("gère un « ; » échappé dans un énoncé", () => {
     const draft = parseQuizText('"Un, deux ; trois ?" ; *Oui ; Non', "T");
-    expect(draft.questions[0].prompt).toBe("Un, deux ; trois ?");
-    expect(draft.questions[0].options).toHaveLength(2);
+    expect(draft.questions[0]!.prompt).toBe("Un, deux ; trois ?");
+    expect(draft.questions[0]!.options).toHaveLength(2);
   });
 });

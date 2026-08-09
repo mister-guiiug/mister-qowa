@@ -55,9 +55,9 @@ describe("aggregateByQuiz", () => {
     };
     const aggs = aggregateByQuiz([base, second]);
     expect(aggs).toHaveLength(1);
-    expect(aggs[0].games).toBe(2);
-    expect(aggs[0].avgScore).toBe(Math.round((1200 + 800 + 400) / 3));
-    expect(aggs[0].bestScore).toBe(1200);
+    expect(aggs[0]!.games).toBe(2);
+    expect(aggs[0]!.avgScore).toBe(Math.round((1200 + 800 + 400) / 3));
+    expect(aggs[0]!.bestScore).toBe(1200);
   });
 
   it("sépare les quiz différents et trie par nombre de parties", () => {
@@ -69,7 +69,7 @@ describe("aggregateByQuiz", () => {
     };
     const aggs = aggregateByQuiz([base, { ...base, id: "r2" }, other]);
     expect(aggs.map((a) => a.quizTitle)).toEqual(["Test", "Autre"]);
-    expect(aggs[0].games).toBe(2);
+    expect(aggs[0]!.games).toBe(2);
   });
 });
 

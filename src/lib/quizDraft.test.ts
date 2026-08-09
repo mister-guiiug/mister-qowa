@@ -12,7 +12,7 @@ import { quizSchema } from "@shared/contracts";
 function validMcDraft() {
   const d = blankQuiz();
   d.title = "Test";
-  const q = d.questions[0];
+  const q = d.questions[0]!;
   q.prompt = "2 + 2 ?";
   q.options[0] = { id: "a", label: "3" };
   q.options[1] = { id: "b", label: "4" };
@@ -33,8 +33,8 @@ describe("quizDraft", () => {
 
   it("roundtrip toDraft(toQuiz) conserve type + bonne réponse", () => {
     const d2 = toDraft(toQuiz(validMcDraft()));
-    expect(d2.questions[0].type).toBe("multiple_choice");
-    expect(d2.questions[0].correctOptionId).toBe("b");
+    expect(d2.questions[0]!.type).toBe("multiple_choice");
+    expect(d2.questions[0]!.correctOptionId).toBe("b");
   });
 
   it("true_false → Quiz valide", () => {
@@ -51,7 +51,7 @@ describe("quizDraft", () => {
 
   it("MC sans bonne réponse → erreur", () => {
     const d = validMcDraft();
-    d.questions[0].correctOptionId = "";
+    d.questions[0]!.correctOptionId = "";
     expect(validateDraft(d).some((e) => e.key === "err.vSelectCorrect")).toBe(
       true,
     );
@@ -65,7 +65,7 @@ describe("quizDraft", () => {
   });
 
   it("retype multiple_choice → poll → multiple_choice conserve la bonne réponse", () => {
-    let q = validMcDraft().questions[0];
+    let q = validMcDraft().questions[0]!;
     q = retypeQuestion(q, "poll");
     q = retypeQuestion(q, "multiple_choice");
     expect(q.correctOptionId).toBe("b");
@@ -73,7 +73,7 @@ describe("quizDraft", () => {
 
   it("détecte deux réponses identiques", () => {
     const d = validMcDraft();
-    d.questions[0].options[1] = { id: "c", label: "3" };
+    d.questions[0]!.options[1] = { id: "c", label: "3" };
     expect(
       validateDraft(d).some((e) => e.key === "err.vDuplicateOptions"),
     ).toBe(true);
@@ -81,8 +81,8 @@ describe("quizDraft", () => {
 
   it("détecte des identifiants d'option en double", () => {
     const d = validMcDraft();
-    d.questions[0].options[1] = { id: "a", label: "5" };
-    d.questions[0].correctOptionId = "a";
+    d.questions[0]!.options[1] = { id: "a", label: "5" };
+    d.questions[0]!.correctOptionId = "a";
     expect(
       validateDraft(d).some((e) => e.key === "err.vDuplicateOptionIds"),
     ).toBe(true);

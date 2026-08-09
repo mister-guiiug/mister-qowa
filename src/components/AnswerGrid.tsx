@@ -29,7 +29,7 @@ export function AnswerGrid({
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       {options.map((o, i) => {
-        const s = STYLES[i % STYLES.length];
+        const s = STYLES[i % STYLES.length]!;
         const dim = picked !== null && picked !== o.id;
         return (
           <button
