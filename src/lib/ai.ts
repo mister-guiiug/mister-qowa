@@ -147,7 +147,7 @@ function aiQuestionToDraft(q: z.infer<typeof aiQuestionSchema>): DraftQuestion {
     q.correctIndex != null && q.correctIndex < base.options.length
       ? q.correctIndex
       : 0;
-  base.correctOptionId = base.options[idx].id;
+  base.correctOptionId = base.options[idx]!.id;
   return base;
 }
 
@@ -406,14 +406,14 @@ export async function generateOneQuestion(
   }
   const draft = aiQuizToDraft({
     title: "x",
-    questions: [parsed.data.questions[0]],
+    questions: [parsed.data.questions[0]!],
   });
-  return draft.questions[0];
+  return draft.questions[0]!;
 }
 
 /** Brouillon de DÉMONSTRATION (sans clé) : réutilise un quiz seed, titre honnête. */
 export function demoDraft(topic: string): DraftQuiz {
-  const base = toDraft(DEMO_QUIZZES[0]);
+  const base = toDraft(DEMO_QUIZZES[0]!);
   return {
     ...base,
     id: crypto.randomUUID(),

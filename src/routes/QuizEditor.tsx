@@ -63,7 +63,11 @@ export function QuizEditor() {
       const j = i + dir;
       if (j < 0 || j >= d.questions.length) return d;
       const qs = [...d.questions];
-      [qs[i], qs[j]] = [qs[j], qs[i]];
+      const a = qs[i];
+      const b = qs[j];
+      if (!a || !b) return d;
+      qs[i] = b;
+      qs[j] = a;
       return { ...d, questions: qs };
     });
 

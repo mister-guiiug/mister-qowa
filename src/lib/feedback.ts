@@ -115,7 +115,7 @@ export const feedback = {
           return;
         }
         const remaining = timeLimitMs - (now.currentTime - startT) * 1000;
-        tone(pattern[step % pattern.length], 130, "sine", 0.03);
+        tone(pattern[step % pattern.length]!, 130, "sine", 0.03);
         step += 1;
         // Accélère sur la fin pour monter la tension (sans saturer le tick).
         ambientTimer = setTimeout(beat, remaining < 3000 ? 200 : 380);

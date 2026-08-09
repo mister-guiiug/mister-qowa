@@ -26,9 +26,9 @@ describe("scoreRound", () => {
       STREAK_BONUS_PCT,
     );
     expect(r.correctChoice).toBe("a");
-    expect(r.scores.u1.total).toBeGreaterThan(0);
-    expect(r.scores.u1.streak).toBe(1);
-    expect(r.reveals.u1.correct).toBe(true);
+    expect(r.scores.u1!.total).toBeGreaterThan(0);
+    expect(r.scores.u1!.streak).toBe(1);
+    expect(r.reveals.u1!.correct).toBe(true);
   });
 
   it("donne 0 et remet la série à zéro sur mauvaise réponse", () => {
@@ -40,10 +40,10 @@ describe("scoreRound", () => {
       0,
       STREAK_BONUS_PCT,
     );
-    expect(r.reveals.u1.correct).toBe(false);
-    expect(r.reveals.u1.awarded).toBe(0);
-    expect(r.scores.u1.total).toBe(500); // inchangé
-    expect(r.scores.u1.streak).toBe(0);
+    expect(r.reveals.u1!.correct).toBe(false);
+    expect(r.reveals.u1!.awarded).toBe(0);
+    expect(r.scores.u1!.total).toBe(500); // inchangé
+    expect(r.scores.u1!.streak).toBe(0);
   });
 
   it("répondre vite rapporte plus que répondre tard", () => {
@@ -55,7 +55,7 @@ describe("scoreRound", () => {
       0,
       0,
     );
-    expect(fast.scores.u.total).toBeGreaterThan(slow.scores.u.total);
+    expect(fast.scores.u!.total).toBeGreaterThan(slow.scores.u!.total);
   });
 
   it("ne score pas un sondage (correctChoice null, scores vides)", () => {
