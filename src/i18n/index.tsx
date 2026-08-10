@@ -9,6 +9,7 @@
  * vit dans le store ; le sélecteur déclenche le chargement puis l'applique.
  * Ajouter une langue = 1 fichier dico + 1 entrée dans `LOADERS`/`LANGS`.
  */
+import { useCallback } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { fr, type Key } from "./fr";
@@ -90,7 +91,9 @@ function render(dict: Dict, key: Key, vars?: Vars): string {
 /** Hook de traduction : `const t = useT(); t("home.host")`. */
 export function useT(): TFn {
   const dict = useLang((s) => s.dict);
-  return (key, vars) => render(dict, key, vars);
+  // Référence stable tant que la langue ne change pas : les consommateurs
+  // peuvent déclarer `t` (ou `err`) en dépendance d'un effet sans boucler.
+  return useCallback<TFn>((key, vars) => render(dict, key, vars), [dict]);
 }
 
 /** Traduction HORS React (ErrorBoundary…) — lit le dico actif du store. */
@@ -101,10 +104,13 @@ export function tStatic(key: Key, vars?: Vars): string {
 /** Hook d'affichage d'erreur : traduit une AppError, sinon message brut. */
 export function useErr(): (e: unknown) => string {
   const t = useT();
-  return (e) => {
-    if (e instanceof AppError) return t(e.key, e.vars);
-    if (e instanceof Error) return e.message;
-    if (typeof e === "string") return e;
-    return t("err.generic");
-  };
+  return useCallback(
+    (e: unknown) => {
+      if (e instanceof AppError) return t(e.key, e.vars);
+      if (e instanceof Error) return e.message;
+      if (typeof e === "string") return e;
+      return t("err.generic");
+    },
+    [t]
+  );
 }

@@ -33,11 +33,17 @@ import { reportError } from "../lib/report";
 
 function useRtdbValue<T>(path: string | null): T | undefined {
   const [value, setValue] = useState<T | undefined>(undefined);
+  // Changement de chemin (ou passage à null) : on repart d'une valeur vide
+  // pendant le rendu, plutôt que par un setState synchrone dans l'effet. Effet
+  // de bord bienvenu : plus de valeur héritée du chemin précédent affichée en
+  // attendant le premier snapshot du nouveau.
+  const [lastPath, setLastPath] = useState(path);
+  if (path !== lastPath) {
+    setLastPath(path);
+    setValue(undefined);
+  }
   useEffect(() => {
-    if (!path) {
-      setValue(undefined);
-      return;
-    }
+    if (!path) return;
     const off = onValue(
       ref(getDb(), path),
       (snap) => {
@@ -202,11 +208,15 @@ export function useAnswerStats(
   questionId: string | null,
 ): AnswerStats {
   const [stats, setStats] = useState<AnswerStats>({ count: 0, byChoice: {} });
+  // Remise à zéro pendant le rendu au changement de question (cf. useRtdbValue).
+  const statsKey = `${sessionId ?? ""}#${questionId ?? ""}`;
+  const [lastStatsKey, setLastStatsKey] = useState(statsKey);
+  if (statsKey !== lastStatsKey) {
+    setLastStatsKey(statsKey);
+    setStats({ count: 0, byChoice: {} });
+  }
   useEffect(() => {
-    if (!sessionId || !questionId) {
-      setStats({ count: 0, byChoice: {} });
-      return;
-    }
+    if (!sessionId || !questionId) return;
     const off = onValue(
       ref(getDb(), answersQuestionPath(sessionId, questionId)),
       (snap) => {
@@ -245,11 +255,14 @@ export function useReactions(
   sessionId: string | null,
 ): { id: number; emoji: string }[] {
   const [items, setItems] = useState<{ id: number; emoji: string }[]>([]);
+  // Remise à zéro pendant le rendu au changement de session (cf. useRtdbValue).
+  const [lastSessionId, setLastSessionId] = useState(sessionId);
+  if (sessionId !== lastSessionId) {
+    setLastSessionId(sessionId);
+    setItems([]);
+  }
   useEffect(() => {
-    if (!sessionId) {
-      setItems([]);
-      return;
-    }
+    if (!sessionId) return;
     let counter = 0;
     const timers: ReturnType<typeof setTimeout>[] = [];
     // 1 nœud par joueur : un nouvel envoi est un onChildAdded (1re fois) OU un

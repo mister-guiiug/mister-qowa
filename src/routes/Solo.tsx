@@ -81,8 +81,15 @@ export function Solo() {
   }
 
   // Temps écoulé -> on clôt la question (sans réponse).
+  //
+  // `set-state-in-effect` est désactivé sciemment : la source de vérité est une
+  // horloge externe (l'intervalle qui alimente `now`), et c'est précisément le
+  // cas d'usage d'un effet. Déplacer la détection dans le callback de
+  // l'intervalle imposerait de garder `answer`/`q`/`startedAt` à jour dans des
+  // refs, pour un gain nul et un risque réel sur le minuteur de jeu.
   useEffect(() => {
     if (phase === "question" && q && now && now - startedAt >= q.timeLimitMs) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       answer(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -97,8 +104,13 @@ export function Solo() {
     setPhase("question");
     setPicked(null);
     setText("");
-    setStartedAt(Date.now());
-    setNow(Date.now());
+    // `start` n'est appelé que depuis un onClick : l'horloge est lue hors rendu.
+    // Le compilateur ne peut pas le prouver depuis le corps du composant, d'où
+    // la désactivation ciblée. Une seule lecture, pour éviter tout décalage.
+    // eslint-disable-next-line react-hooks/purity
+    const t0 = Date.now();
+    setStartedAt(t0);
+    setNow(t0);
   }
 
   function next() {

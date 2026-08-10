@@ -34,7 +34,7 @@ export function History() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [err]);
 
   return (
     <Screen>

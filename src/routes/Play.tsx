@@ -50,21 +50,32 @@ export function Play() {
   const [picked, setPicked] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [notFound, setNotFound] = useState(false);
+  const [waitedTooLong, setWaitedTooLong] = useState(false);
 
   // Reset à chaque nouvelle question OU re-pose de la même (activatedAt change).
-  useEffect(() => {
+  // Ajusté pendant le rendu plutôt que dans un effet : c'est le motif recommandé
+  // pour réinitialiser un état quand une entrée change, sans rendu en cascade.
+  const questionKey = `${current?.questionId ?? ""}#${current?.activatedAt ?? ""}`;
+  const [lastQuestionKey, setLastQuestionKey] = useState(questionKey);
+  if (questionKey !== lastQuestionKey) {
+    setLastQuestionKey(questionKey);
     setPicked(null);
     setText("");
-  }, [current?.questionId, current?.activatedAt]);
+  }
+
+  // Idem pour le compte à rebours « session injoignable » : l'état ne porte que
+  // le dépassement du délai, la condition d'affichage est dérivée.
+  const [lastState, setLastState] = useState(state);
+  if (state !== lastState) {
+    setLastState(state);
+    setWaitedTooLong(false);
+  }
+  const notFound = !state && waitedTooLong;
 
   // Session injoignable après un délai : sortie de secours plutôt qu'un spinner figé.
   useEffect(() => {
-    if (state) {
-      setNotFound(false);
-      return;
-    }
-    const id = setTimeout(() => setNotFound(true), 8000);
+    if (state) return;
+    const id = setTimeout(() => setWaitedTooLong(true), 8000);
     return () => clearTimeout(id);
   }, [state]);
 
