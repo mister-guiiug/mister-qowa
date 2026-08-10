@@ -1,5 +1,5 @@
 /** Primitives UI partagées (Tailwind v4). Mobile-first, contrastées, tactiles. */
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
 export function Screen({
   children,
@@ -33,7 +33,9 @@ export function Card({
   );
 }
 
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+// `ComponentProps<'button'>` plutôt que `ButtonHTMLAttributes` : inclut `ref`,
+// que React 19 passe comme une prop ordinaire (cf. focus initial de ConfirmDialog).
+type ButtonProps = ComponentProps<"button"> & {
   variant?: "primary" | "ghost" | "danger";
   full?: boolean;
 };
