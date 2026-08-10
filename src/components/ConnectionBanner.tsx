@@ -11,18 +11,24 @@ import { useT } from "../i18n";
 export function ConnectionBanner() {
   const t = useT();
   const online = useConnectionState();
-  const [showOffline, setShowOffline] = useState(false);
+  const [debounced, setDebounced] = useState(false);
+  const [lastOnline, setLastOnline] = useState(online);
+
+  // Remise à zéro pendant le rendu (et non dans un effet) : c'est le motif
+  // recommandé pour réinitialiser un état quand une entrée change, et ça évite
+  // le rendu en cascade d'un setState synchrone dans un effet.
+  if (online !== lastOnline) {
+    setLastOnline(online);
+    setDebounced(false);
+  }
 
   useEffect(() => {
-    if (online) {
-      setShowOffline(false);
-      return;
-    }
-    const id = setTimeout(() => setShowOffline(true), 1500);
+    if (online) return;
+    const id = setTimeout(() => setDebounced(true), 1500);
     return () => clearTimeout(id);
   }, [online]);
 
-  if (!showOffline) return null;
+  if (online || !debounced) return null;
   return (
     <div
       role="status"

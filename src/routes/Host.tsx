@@ -71,7 +71,7 @@ export function Host() {
   ).length;
   const survivors = Math.max(0, playerCount - eliminatedCount);
   const { busy, error, setError, run: act } = useAsyncAction();
-  const [notFound, setNotFound] = useState(false);
+  const [waitedTooLong, setWaitedTooLong] = useState(false);
   const [quizLost, setQuizLost] = useState(false);
   const [info, setInfo] = useState<string | null>(null);
   const { quizId: metaQuizId, pin: metaPin } = useSessionMeta(
@@ -113,12 +113,18 @@ export function Host() {
   ]);
 
   // Session injoignable après un délai : on ne reste pas bloqué sur le spinner.
+  // L'état ne porte que le dépassement du délai ; la remise à zéro se fait
+  // pendant le rendu (motif recommandé) et la condition d'affichage est dérivée.
+  const [lastState, setLastState] = useState(state);
+  if (state !== lastState) {
+    setLastState(state);
+    setWaitedTooLong(false);
+  }
+  const notFound = !state && waitedTooLong;
+
   useEffect(() => {
-    if (state) {
-      setNotFound(false);
-      return;
-    }
-    const id = setTimeout(() => setNotFound(true), 8000);
+    if (state) return;
+    const id = setTimeout(() => setWaitedTooLong(true), 8000);
     return () => clearTimeout(id);
   }, [state]);
 
@@ -126,6 +132,12 @@ export function Host() {
   // ou autre onglet). On le reconstruit depuis la bibliothèque locale via
   // meta.quizId (jamais depuis RTDB — aucune réponse exposée) ; à défaut, on
   // signale une salle non récupérable sur cet appareil plutôt qu'un gel muet.
+  //
+  // `set-state-in-effect` est désactivé sciemment : cet effet synchronise React
+  // avec deux systèmes externes (l'état RTDB et la bibliothèque locale), ce qui
+  // est exactement son rôle. La reconstruction n'est pas dérivable du rendu :
+  // elle écrit dans le store `setHost`.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (quiz || !state || !sessionId || !metaQuizId || !metaPin) return;
     const found = useQuizLibrary.getState().get(metaQuizId);
@@ -136,6 +148,7 @@ export function Host() {
       setQuizLost(true);
     }
   }, [quiz, state, sessionId, metaQuizId, metaPin, setHost]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Fanfare au podium (host).
   useEffect(() => {
