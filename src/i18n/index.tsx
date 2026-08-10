@@ -111,6 +111,6 @@ export function useErr(): (e: unknown) => string {
       if (typeof e === "string") return e;
       return t("err.generic");
     },
-    [t]
+    [t],
   );
 }
