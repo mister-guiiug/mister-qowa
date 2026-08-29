@@ -1,4 +1,8 @@
 /** Duplication + import/export JSON d'un quiz (quiz local-first). */
+import {
+  downloadJson,
+  readJsonFile,
+} from "@mister-guiiug/dev-wpa-config/download";
 import { quizSchema, type Quiz } from "@shared/contracts";
 import { AppError } from "./appError";
 
@@ -33,21 +37,16 @@ export function duplicateQuiz(quiz: Quiz): Quiz {
 }
 
 export function exportQuiz(quiz: Quiz): void {
-  const blob = new Blob([JSON.stringify(quiz, null, 2)], {
-    type: "application/json",
-  });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${(quiz.title || "quiz").replace(/[^\w.-]+/g, "_")}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
+  downloadJson(
+    quiz,
+    `${(quiz.title || "quiz").replace(/[^\w.-]+/g, "_")}.json`,
+  );
 }
 
 export async function importQuizFile(file: File): Promise<Quiz> {
   let json: unknown;
   try {
-    json = JSON.parse(await file.text());
+    json = await readJsonFile(file);
   } catch {
     throw new AppError("err.fileUnreadable");
   }
