@@ -1,4 +1,5 @@
 /** Lecture de l'historique des parties (Firestore lazy) + export CSV. */
+import { toCsv } from "@mister-guiiug/dev-wpa-config/csv";
 
 export interface RankRow {
   uid: string;
@@ -86,37 +87,31 @@ export async function fetchMyResults(): Promise<GameResult[]> {
   return rows.sort((a, b) => b.finishedAt - a.finishedAt);
 }
 
-const csvCell = (v: string) => `"${v.replace(/"/g, '""')}"`;
+// Dialecte `unix` : virgule + `\n` sans BOM, comme l'export historique de
+// l'app. Seule différence avec l'ancien `csvCell` maison : les guillemets ne
+// sont posés que là où RFC 4180 l'exige (contenu des cellules inchangé).
+const CSV = { dialect: "unix" } as const;
 
 export function resultsCsv(r: GameResult): string {
-  const header = "rang,pseudo,avatar,score";
-  const lines = r.ranking.map(
-    (row, i) =>
-      `${i + 1},${csvCell(row.pseudo)},${csvCell(row.avatar ?? "")},${row.total}`,
+  const ranking = toCsv(
+    r.ranking.map((row, i) => ({
+      rang: i + 1,
+      pseudo: row.pseudo,
+      avatar: row.avatar ?? "",
+      score: row.total,
+    })),
+    { ...CSV, columns: ["rang", "pseudo", "avatar", "score"] },
   );
   // Bloc optionnel : taux de réussite par question.
   const stats = r.questionStats ?? [];
-  const statLines = stats.length
-    ? [
-        "",
-        "question,enonce,reussite",
-        ...stats.map(
-          (q) =>
-            `${q.index + 1},${csvCell(q.prompt)},${
-              q.answered ? Math.round((100 * q.correct) / q.answered) : 0
-            }%`,
-        ),
-      ]
-    : [];
-  return [header, ...lines, ...statLines].join("\n");
-}
-
-export function downloadCsv(filename: string, csv: string): void {
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
+  if (stats.length === 0) return ranking;
+  const statBlock = toCsv(
+    stats.map((q) => ({
+      question: q.index + 1,
+      enonce: q.prompt,
+      reussite: `${q.answered ? Math.round((100 * q.correct) / q.answered) : 0}%`,
+    })),
+    { ...CSV, columns: ["question", "enonce", "reussite"] },
+  );
+  return [ranking, "", statBlock].join("\n");
 }

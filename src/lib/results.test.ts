@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { parseCsv } from "@mister-guiiug/dev-wpa-config/csv";
 import {
   resultsCsv,
   hardestQuestion,
@@ -25,18 +26,26 @@ const base: GameResult = {
 };
 
 describe("resultsCsv", () => {
+  // Depuis l'adoption du socle, les guillemets ne sont posés que là où
+  // RFC 4180 l'exige (l'ancien csvCell maison guillemetait tout).
   it("inclut rang, pseudo, avatar et score (avec échappement)", () => {
     const csv = resultsCsv(base);
     expect(csv).toContain("rang,pseudo,avatar,score");
-    expect(csv).toContain('1,"Alex","🦊",1200');
-    expect(csv).toContain('2,"Bo""b","",800'); // guillemet échappé
+    expect(csv).toContain("1,Alex,🦊,1200");
+    expect(csv).toContain('2,"Bo""b",,800'); // guillemet doublé, pas échappé
+  });
+
+  it("relit les mêmes cellules après un aller-retour parseCsv", () => {
+    const rows = parseCsv(resultsCsv(base));
+    expect(rows[1]).toEqual(["1", "Alex", "🦊", "1200"]);
+    expect(rows[2]).toEqual(["2", 'Bo"b', "", "800"]);
   });
 
   it("ajoute le bloc de réussite par question", () => {
     const csv = resultsCsv(base);
     expect(csv).toContain("question,enonce,reussite");
-    expect(csv).toContain('1,"Facile ?",100%');
-    expect(csv).toContain('2,"Dure ?",0%');
+    expect(csv).toContain("1,Facile ?,100%");
+    expect(csv).toContain("2,Dure ?,0%");
   });
 
   it("omet le bloc stats quand absent", () => {
