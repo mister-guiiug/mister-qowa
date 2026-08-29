@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Download, Trophy, TrendingDown } from "lucide-react";
 import { Screen, Card, Button, Spinner } from "../lib/ui";
+import { downloadText } from "@mister-guiiug/dev-wpa-config/download";
 import {
   fetchMyResults,
   resultsCsv,
-  downloadCsv,
   hardestQuestion,
   aggregateByQuiz,
   type GameResult,
@@ -130,9 +130,10 @@ export function History() {
                   <Button
                     variant="ghost"
                     onClick={() =>
-                      downloadCsv(
-                        `${r.quizTitle.replace(/[^\w.-]+/g, "_")}.csv`,
+                      downloadText(
                         resultsCsv(r),
+                        `${r.quizTitle.replace(/[^\w.-]+/g, "_")}.csv`,
+                        "text/csv;charset=utf-8",
                       )
                     }
                   >

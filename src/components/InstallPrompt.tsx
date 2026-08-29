@@ -1,39 +1,30 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useInstallPrompt } from "@mister-guiiug/dev-wpa-config/react/use-install-prompt";
 import { Download, X } from "lucide-react";
 import { useT } from "../i18n";
 
-/** Événement non standard `beforeinstallprompt` (Chromium). */
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
-
 const DISMISS_KEY = "mister-qowa:install-dismissed";
 
+function isDismissed(): boolean {
+  try {
+    return localStorage.getItem(DISMISS_KEY) !== null;
+  } catch {
+    /* localStorage indisponible : on tente quand même */
+    return false;
+  }
+}
+
 /**
- * Bannière d'installation PWA : capte `beforeinstallprompt`, propose
- * l'installation, et ne re-propose plus une fois rejetée (localStorage).
- * N'apparaît que si le navigateur émet l'événement (app pas déjà installée).
+ * Bannière d'installation PWA : le hook du socle capte `beforeinstallprompt`
+ * (et détecte l'app déjà installée) ; la persistance du rejet reste locale —
+ * une fois rejetée, la bannière ne se re-propose plus (localStorage).
  */
 export function InstallPrompt() {
   const t = useT();
-  const [evt, setEvt] = useState<BeforeInstallPromptEvent | null>(null);
+  const { canInstall, promptInstall } = useInstallPrompt();
+  const [dismissed, setDismissed] = useState(isDismissed);
 
-  useEffect(() => {
-    try {
-      if (localStorage.getItem(DISMISS_KEY)) return;
-    } catch {
-      /* localStorage indisponible : on tente quand même */
-    }
-    const onBip = (e: Event) => {
-      e.preventDefault();
-      setEvt(e as BeforeInstallPromptEvent);
-    };
-    window.addEventListener("beforeinstallprompt", onBip);
-    return () => window.removeEventListener("beforeinstallprompt", onBip);
-  }, []);
-
-  if (!evt) return null;
+  if (!canInstall || dismissed) return null;
 
   const dismiss = () => {
     try {
@@ -41,10 +32,10 @@ export function InstallPrompt() {
     } catch {
       /* ignore */
     }
-    setEvt(null);
+    setDismissed(true);
   };
   const install = () => {
-    void evt.prompt().finally(dismiss);
+    void promptInstall().finally(dismiss);
   };
 
   return (
