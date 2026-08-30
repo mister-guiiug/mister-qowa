@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, Navigate } from "react-router-dom";
 import { Check, X, Share2 } from "lucide-react";
 import { Screen, Button, Spinner } from "../lib/ui";
-import { shareOrCopy } from "../lib/share";
+import {
+  shareOrCopy,
+  currentAppUrl,
+} from "@mister-guiiug/dev-wpa-config/share";
 import { useAuthUid } from "../hooks/useAuthUid";
 import {
   usePlayerView,
@@ -403,7 +406,7 @@ export function Play() {
                     rank: ord(myRank),
                     pts: score?.total ?? 0,
                   }),
-                  url: `${window.location.origin}${import.meta.env.BASE_URL}`,
+                  url: currentAppUrl(),
                 })
               }
             >
