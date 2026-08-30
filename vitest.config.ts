@@ -10,7 +10,15 @@ import {
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    alias: { "@shared": fileURLToPath(new URL("./shared", import.meta.url)) },
+    alias: {
+      "@shared": fileURLToPath(new URL("./shared", import.meta.url)),
+      // `virtual:pwa-register` n'est fourni que par vite-plugin-pwa, absent
+      // d'ici : sans ce double, tout test qui monte la bannière de mise à
+      // jour échoue à l'import, avant d'avoir rien éprouvé.
+      "virtual:pwa-register": fileURLToPath(
+        new URL("./src/test/pwa-register-stub.ts", import.meta.url),
+      ),
+    },
   },
   test: {
     ...baseTestOptions,

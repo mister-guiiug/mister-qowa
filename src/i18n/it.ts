@@ -278,6 +278,7 @@ export const it = {
   "connection.offline": "Offline — riconnessione…",
   "pin.label": "Codice PIN",
   "update.available": "Nuova versione disponibile",
+  "update.updating": "Aggiornamento…",
   "update.later": "Più tardi",
   "install.prompt": "Installare Mister Qowa sul tuo dispositivo?",
   "install.action": "Installa",

@@ -1,13 +1,10 @@
 import { registerSW } from "virtual:pwa-register";
-import {
-  useUpdatePrompt,
-  type RegisterSW,
-} from "@mister-guiiug/dev-wpa-config/react/use-update-prompt";
-import { RotateCw } from "lucide-react";
+import { UpdatePromptBanner } from "@mister-guiiug/dev-wpa-config/react/update-prompt-banner";
+import type { RegisterSW } from "@mister-guiiug/dev-wpa-config/react/use-update-prompt";
 import { useT } from "../i18n";
 
 /**
- * `registerSW` + revérification horaire. Le hook du socle ne paramètre pas
+ * `registerSW` + revérification horaire. Le bandeau du socle ne paramètre pas
  * l'intervalle de vérification : on le garde ici, autour de la fonction
  * injectée. Déclarée AU NIVEAU MODULE : le hook mémorise sa connexion par
  * identité de fonction (une fonction recréée à chaque rendu ré-enregistrerait
@@ -29,37 +26,30 @@ const registerSWHourly: RegisterSW = (options) =>
  * Bannière de mise à jour PWA. Le SW est en `prompt` (pas d'auto-reload pendant
  * une partie) : quand une nouvelle version est prête, on propose de recharger.
  * Voir aussi le bouton « Recharger » manuel du footer.
+ *
+ * La mécanique ET l'habillage viennent du socle (`react/update-prompt-banner`,
+ * non stylé, habillé par `components.css` via les jetons `--dwc-*` de
+ * `index.css`). Ne reste ici que ce que le socle ne sait pas :
+ *   - `registerSW` INJECTÉ — sans lui `needRefresh` reste faux et le bandeau
+ *     ne peut structurellement jamais s'afficher (éprouvé par le test voisin) ;
+ *   - la revérification horaire, absente du socle ;
+ *   - les libellés, traduits par l'i18n de l'app (5 langues, le socle n'en
+ *     connaît que 2) ;
+ *   - le placement flottant en bas d'écran, que le socle laisse à l'app.
+ *
+ * `snoozeHours` reste à 0 (défaut) : « Plus tard » écarte le bandeau pour la
+ * session, exactement comme la bannière locale qu'elle remplace.
  */
 export function UpdatePrompt() {
   const t = useT();
-  const { visible, update, dismiss } = useUpdatePrompt({
-    registerSW: registerSWHourly,
-  });
-
-  if (!visible) return null;
-
   return (
-    <div
-      role="alert"
-      className="fixed inset-x-3 bottom-3 z-50 mx-auto flex max-w-md items-center justify-between gap-3 rounded-2xl bg-brand px-4 py-3 text-white shadow-xl ring-1 ring-white/20"
-    >
-      <span className="text-sm font-medium">{t("update.available")}</span>
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={dismiss}
-          className="text-sm text-white/70 hover:text-white"
-        >
-          {t("update.later")}
-        </button>
-        <button
-          type="button"
-          onClick={() => void update()}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-white/20 px-3 py-1.5 text-sm font-semibold hover:bg-white/30"
-        >
-          <RotateCw className="size-4" /> {t("common.reload")}
-        </button>
-      </div>
-    </div>
+    <UpdatePromptBanner
+      registerSW={registerSWHourly}
+      title={t("update.available")}
+      updateLabel={t("common.reload")}
+      updatingLabel={t("update.updating")}
+      dismissLabel={t("update.later")}
+      className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-md"
+    />
   );
 }

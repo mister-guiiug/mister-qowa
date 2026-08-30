@@ -275,6 +275,7 @@ export const de = {
   "connection.offline": "Offline — verbinde neu…",
   "pin.label": "PIN-Code",
   "update.available": "Neue Version verfügbar",
+  "update.updating": "Wird aktualisiert…",
   "update.later": "Später",
   "install.prompt": "Mister Qowa auf deinem Gerät installieren?",
   "install.action": "Installieren",
