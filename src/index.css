@@ -1,5 +1,8 @@
 @import "tailwindcss";
 @import "@mister-guiiug/dev-wpa-config/tailwind-preset.css";
+/* Habillage partagé des composants [data-dwc] (AppFooter, ConfirmDialog). En
+   `@layer components` : tout CSS non layered de ce fichier l'emporte. */
+@import "@mister-guiiug/dev-wpa-config/components.css";
 
 /*
  * Univers « Mister Qowa » : énergie de plateau de quiz télévisé. Fond violet
@@ -22,6 +25,46 @@
 
 :root {
   color-scheme: dark;
+}
+
+/*
+ * Contrat des composants partagés : les quinze jetons `--dwc-*` branchés sur
+ * la palette Qowa (app sombre uniquement — un seul jeu de valeurs suffit).
+ *
+ * PAS UNE SIMPLE RECOPIE : chaque couple a été mesuré sur la surface #1a1230
+ * (le panneau de l'ex-ConfirmDialog local) ou sur le dégradé de page.
+ * Changer une valeur demande de refaire le calcul.
+ */
+:root {
+  --dwc-surface: #1a1230; /* panneaux — texte dessus : 16,3:1 */
+  --dwc-surface-2: #241a3d; /* fond en retrait */
+  --dwc-text: #f5f3ff;
+  /* Entre le blanc/70 du message et le blanc/50 du pied de page locaux :
+     6,9:1 sur la surface, 7,3:1 sur la page. */
+  --dwc-text-soft: #a3a0ac;
+  /* Filet de séparation : le ring-white/15 historique des panneaux. */
+  --dwc-border: rgb(255 255 255 / 0.15);
+  /* Contour d'un CONTRÔLE (WCAG 1.4.11 : 3:1) — 4,5:1 sur la surface. */
+  --dwc-border-strong: #817d8d;
+  /* Le violet de marque porte les APLATS (blanc dessus : 5,7:1). En TEXTE sur
+     fond sombre il ne tient que 3,1:1 — d'où l'écart « pied de page » plus
+     bas, qui garde le survol blanc de l'app. */
+  --dwc-primary: var(--color-brand);
+  --dwc-primary-contrast: #ffffff;
+  --dwc-primary-soft: color-mix(in srgb, var(--color-brand) 25%, #1a1230);
+  /* Tons d'état : versions claires lisibles en texte sur fond sombre — les
+     couleurs de réponse (#26890c…) sont des aplats, pas des encres. */
+  --dwc-success: #4ade80; /* 10,3:1 */
+  --dwc-warning: #fbbf24; /* 10,7:1 */
+  /* Le rose-600 du bouton `danger` local : blanc dessus 4,7:1 — l'aplat du
+     bouton destructif du socle reprend exactement la couleur de l'app. */
+  --dwc-danger: #e11d48;
+  --dwc-info: #60a5fa; /* 7,0:1 */
+  /* 1 rem = le rounded-2xl des boutons locaux ; le panneau du socle fait
+     ×1,4 = 1,4 rem, l'ex rounded-3xl. --radius-card (1,5 rem) reste aux cartes. */
+  --dwc-radius: 1rem;
+  /* Pas d'ombre portée dans l'app : on reproduit le ring-1 ring-white/15. */
+  --dwc-shadow: 0 0 0 1px rgb(255 255 255 / 0.15);
 }
 
 * {
@@ -53,10 +96,25 @@ h3,
   font-family: var(--font-display);
 }
 
-:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+/* Le panneau modal est exclu : il porte `tabindex="-1"` pour recevoir le focus
+   à l'ouverture, et la règle lui imposerait 0,75 rem au lieu de ses 1,4 rem
+   (piège relevé chez miss-uwh). */
+:where(a, button, input, select, textarea, [tabindex]):not(
+    [data-dwc="confirm-panel"]
+  ):focus-visible {
   outline: 3px solid var(--color-brand-soft);
   outline-offset: 2px;
   border-radius: 0.75rem;
+}
+
+/* Identité Qowa sur les composants du socle — seuls les écarts VOULUS par
+   rapport à `components.css` figurent ici (CSS non layered : il gagne). */
+
+/* Pied de page : l'app survole en blanc depuis l'origine (`hover:text-white`),
+   et le violet de marque ne tient pas 4,5:1 en texte sur fond sombre. */
+[data-dwc="footer-source"]:hover,
+[data-dwc="footer-sponsor"]:hover {
+  color: #ffffff;
 }
 
 @media (prefers-reduced-motion: reduce) {

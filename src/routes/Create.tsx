@@ -16,7 +16,7 @@ import {
   FileText,
 } from "lucide-react";
 import { Screen, Button, Card, Spinner } from "../lib/ui";
-import { ConfirmDialog } from "../components/ConfirmDialog";
+import { ConfirmDialog } from "@mister-guiiug/dev-wpa-config/react/confirm-dialog";
 import { DEMO_QUIZZES } from "@shared/seed";
 import type { Quiz } from "@shared/contracts";
 import { createSession } from "../firebase/api";
@@ -302,12 +302,18 @@ export function Create() {
 
       {busy ? <Spinner label={t("create.creating")} /> : null}
 
+      {/* ConfirmDialog du socle : mêmes rôle/focus que la copie locale
+          (alertdialog, focus initial sur Annuler, Échap et fond annulent),
+          plus piège de focus et verrou de scroll. Libellés passés en props :
+          l'i18n reste celui de l'app. */}
       {pendingDelete ? (
         <ConfirmDialog
+          open
           title={t("create.deleteTitle", { title: pendingDelete.title })}
           message={t("create.deleteMsg")}
           confirmLabel={t("create.deleteAria")}
-          danger
+          cancelLabel={t("common.cancel")}
+          destructive
           onConfirm={() => {
             remove(pendingDelete.id);
             setPendingDelete(null);

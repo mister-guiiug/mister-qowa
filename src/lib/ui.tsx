@@ -34,7 +34,7 @@ export function Card({
 }
 
 // `ComponentProps<'button'>` plutôt que `ButtonHTMLAttributes` : inclut `ref`,
-// que React 19 passe comme une prop ordinaire (cf. focus initial de ConfirmDialog).
+// que React 19 passe comme une prop ordinaire.
 type ButtonProps = ComponentProps<"button"> & {
   variant?: "primary" | "ghost" | "danger";
   full?: boolean;
