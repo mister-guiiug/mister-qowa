@@ -37,7 +37,12 @@ import {
   pauseQuestion,
   replayQuestion,
 } from "../firebase/api";
-import { shareOrCopy } from "../lib/share";
+import {
+  shareOrCopy,
+  currentAppUrl,
+  type ShareResult,
+} from "@mister-guiiug/dev-wpa-config/share";
+import { shareInfoKey } from "../lib/shareFeedback";
 import { FloatingReactions, ReactionBar } from "../components/Reactions";
 import { TeamLeaderboard } from "../components/TeamLeaderboard";
 import { PinBadge } from "../components/PinBadge";
@@ -236,18 +241,15 @@ export function Host() {
           ? "true"
           : "false"
         : undefined;
-  const joinUrl = pin
-    ? `${window.location.origin}${import.meta.env.BASE_URL}#/join?pin=${pin}`
-    : "";
+  const joinUrl = pin ? `${currentAppUrl()}#/join?pin=${pin}` : "";
 
-  const flash = (r: "shared" | "copied" | "failed") =>
-    setInfo(
-      r === "copied"
-        ? t("host.linkCopied")
-        : r === "failed"
-          ? t("host.shareUnavailable")
-          : null,
-    );
+  // `shareInfoKey` décide QUOI dire ; l'i18n décide COMMENT. Annuler ne dit
+  // plus rien — avant la migration, fermer la feuille de partage affichait
+  // « Partage indisponible » à quelqu'un qui avait simplement changé d'avis.
+  const flash = (r: ShareResult) => {
+    const key = shareInfoKey(r);
+    setInfo(key ? t(key) : null);
+  };
   const invite = () =>
     shareOrCopy({
       title: "Mister Qowa",

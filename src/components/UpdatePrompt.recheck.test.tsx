@@ -2,53 +2,73 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "@testing-library/react";
 
 /**
- * LA CAPACITÉ QUI N'EST PAS DANS LE SOCLE. `UpdatePromptBanner` sait afficher
- * un bandeau quand vite-plugin-pwa annonce un worker en attente, mais il ne
- * DEMANDE jamais au navigateur d'aller voir s'il en existe un : une page
- * laissée ouverte toute une soirée de quiz ne découvrirait la mise à jour
- * qu'au rechargement suivant. `registerSWHourly` garde cette revérification
- * horaire autour de la fonction injectée. Ce test la tient.
+ * LA CAPACITÉ, ET SEULEMENT ELLE. `UpdatePromptBanner` sait afficher un bandeau
+ * quand vite-plugin-pwa annonce un worker en attente, mais il ne DEMANDE jamais
+ * au navigateur d'aller voir s'il en existe un : une page laissée ouverte toute
+ * une soirée de quiz ne découvrirait la mise à jour qu'au rechargement suivant.
+ *
+ * CE QUI A CHANGÉ. Cette revérification était portée par un `registerSWHourly`
+ * local. Elle est en réalité DANS le socle, sous la prop `checkEvery` — promue
+ * depuis cette app, qui était la seule à la faire. Ce test ne vérifie donc plus
+ * notre plomberie mais l'USAGE : au bout d'une heure, l'app demande bien au
+ * navigateur d'aller regarder.
+ *
+ * Le mécanisme a changé avec le propriétaire : le socle passe par
+ * `navigator.serviceWorker.getRegistration()` plutôt que par la registration
+ * remise par `onRegisteredSW`. D'où le double ci-dessous. C'est plus robuste —
+ * l'intervalle est clairé au démontage, et un `update()` qui échoue est avalé.
  *
  * Fichier séparé à dessein : le hook du socle mémorise sa connexion dans une
  * `WeakMap` de module, par identité de `registerSW`. Un second fichier = un
  * graphe de modules neuf, donc un enregistrement neuf à observer.
  */
 
-type Registered = (
-  swUrl: string,
-  registration?: ServiceWorkerRegistration,
-) => void;
-
-const registration = { update: vi.fn() };
-
-// Le double appelle `onRegisteredSW` comme le fait vite-plugin-pwa une fois le
-// service worker enregistré — c'est ce rappel qui arme l'intervalle.
 vi.mock("virtual:pwa-register", () => ({
-  registerSW: (options?: { onRegisteredSW?: Registered }) => {
-    options?.onRegisteredSW?.(
-      "/sw.js",
-      registration as unknown as ServiceWorkerRegistration,
-    );
-    return vi.fn();
-  },
+  registerSW: () => vi.fn(),
 }));
+
+const update = vi.fn().mockResolvedValue(undefined);
+const getRegistration = vi.fn().mockResolvedValue({ update });
 
 const { UpdatePrompt } = await import("./UpdatePrompt");
 
 const HOUR = 60 * 60 * 1000;
 
 describe("revérification horaire", () => {
-  beforeEach(() => vi.useFakeTimers());
-  afterEach(() => vi.useRealTimers());
+  beforeEach(() => {
+    vi.useFakeTimers();
+    update.mockClear();
+    getRegistration.mockClear();
+    Object.defineProperty(navigator, "serviceWorker", {
+      configurable: true,
+      value: { getRegistration },
+    });
+  });
 
-  it("demande une vérification au navigateur toutes les heures", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    Reflect.deleteProperty(navigator, "serviceWorker");
+  });
+
+  it("demande une vérification au navigateur toutes les heures", async () => {
     render(<UpdatePrompt />);
-    expect(registration.update).not.toHaveBeenCalled();
+    expect(update).not.toHaveBeenCalled();
 
-    vi.advanceTimersByTime(HOUR);
-    expect(registration.update).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(HOUR);
+    expect(update).toHaveBeenCalledTimes(1);
 
-    vi.advanceTimersByTime(HOUR);
-    expect(registration.update).toHaveBeenCalledTimes(2);
+    await vi.advanceTimersByTimeAsync(HOUR);
+    expect(update).toHaveBeenCalledTimes(2);
+  });
+
+  it("cesse de demander une fois l'app démontée", async () => {
+    const { unmount } = render(<UpdatePrompt />);
+    await vi.advanceTimersByTimeAsync(HOUR);
+    expect(update).toHaveBeenCalledTimes(1);
+
+    // L'intervalle local n'était JAMAIS clairé : il survivait au démontage.
+    unmount();
+    await vi.advanceTimersByTimeAsync(3 * HOUR);
+    expect(update).toHaveBeenCalledTimes(1);
   });
 });

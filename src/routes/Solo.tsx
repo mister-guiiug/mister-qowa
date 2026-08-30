@@ -2,7 +2,10 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Check, X, Play, Share2 } from "lucide-react";
 import { Screen, Button, Card } from "../lib/ui";
-import { shareOrCopy } from "../lib/share";
+import {
+  shareOrCopy,
+  currentAppUrl,
+} from "@mister-guiiug/dev-wpa-config/share";
 import { AnswerGrid } from "../components/AnswerGrid";
 import { TimerBar } from "../components/TimerBar";
 import { feedback } from "../lib/feedback";
@@ -192,7 +195,7 @@ export function Solo() {
               void shareOrCopy({
                 title: "Mister Qowa",
                 text: t("solo.shareText", { score }),
-                url: `${window.location.origin}${import.meta.env.BASE_URL}`,
+                url: currentAppUrl(),
               })
             }
           >
