@@ -1,6 +1,9 @@
 import { RotateCw, Volume2, VolumeX } from "lucide-react";
 import { AppFooter as FamilyFooter } from "@mister-guiiug/dev-wpa-config/react/app-footer";
-import { REPO_URL, SPONSOR_URL } from "../links";
+import {
+  SPONSOR_URL,
+  repoUrl,
+} from "@mister-guiiug/dev-wpa-config/apps-catalog";
 import { useAiSettings } from "../store/settingsStore";
 import { useT, useLang, LANGS } from "../i18n";
 
@@ -10,6 +13,10 @@ import { useT, useLang, LANGS } from "../i18n";
  * aussi les icônes GitHub/café — le SVG GitHub en ligne local est retiré.
  * Les libellés restent traduits par l'i18n de l'app (5 langues, le socle
  * n'en connaît que 2) : ils sont passés en props.
+ *
+ * Les URL viennent du catalogue famille (`apps-catalog`, module pur) et non
+ * plus d'une copie locale : `repoUrl('mister-qowa')` dérive l'adresse du
+ * dépôt de l'identifiant catalogue, qui EST le nom du dépôt GitHub.
  */
 export function AppFooter() {
   const t = useT();
@@ -63,7 +70,7 @@ export function AppFooter() {
       </div>
       <FamilyFooter
         className="justify-center"
-        repoUrl={REPO_URL}
+        repoUrl={repoUrl("mister-qowa")}
         sponsorUrl={SPONSOR_URL}
         sourceLabel={t("footer.source")}
         sponsorLabel={t("footer.support")}
