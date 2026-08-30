@@ -8,7 +8,12 @@ import { useProfile } from "../store/profileStore";
 import { PIN_LENGTH, MAX_PSEUDO_LEN } from "@shared/gameState";
 import { AVATARS } from "@shared/avatars";
 import type { Team } from "@shared/teams";
+import { normalizeCode } from "@mister-guiiug/dev-wpa-config/pairing";
 import { useErr, useT } from "../i18n";
+
+/** Saisie ou deep-link `?pin=` → chiffres seuls, bornés à PIN_LENGTH. */
+const toPin = (raw: string) =>
+  normalizeCode(raw, { alphabet: "numeric", maxLength: PIN_LENGTH });
 
 export function Join() {
   const t = useT();
@@ -18,9 +23,7 @@ export function Join() {
   const profile = useProfile((s) => s.profile);
   const setIdentity = useProfile((s) => s.setIdentity);
   const [searchParams] = useSearchParams();
-  const [pin, setPin] = useState(() =>
-    (searchParams.get("pin") ?? "").replace(/\D/g, "").slice(0, PIN_LENGTH),
-  );
+  const [pin, setPin] = useState(() => toPin(searchParams.get("pin") ?? ""));
   // Pré-remplissage depuis le profil local (rejoindre en 1 tap au retour).
   const [pseudo, setPseudo] = useState(profile.pseudo);
   const [avatar, setAvatar] = useState<string>(profile.avatar || AVATARS[0]);
@@ -112,9 +115,7 @@ export function Join() {
                 inputMode="numeric"
                 autoComplete="off"
                 value={pin}
-                onChange={(e) =>
-                  setPin(e.target.value.replace(/\D/g, "").slice(0, PIN_LENGTH))
-                }
+                onChange={(e) => setPin(toPin(e.target.value))}
                 aria-label={t("join.pinAria", {
                   n: pin.length,
                   total: PIN_LENGTH,
