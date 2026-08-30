@@ -22,7 +22,7 @@ import { useAsyncAction } from "../hooks/useAsyncAction";
 import { ConnectionBanner } from "../components/ConnectionBanner";
 import { feedback } from "../lib/feedback";
 import { AnswerDistribution } from "../components/AnswerDistribution";
-import { QRCodeSVG } from "qrcode.react";
+import { JoinQr } from "../components/JoinQr";
 import { useGameStore } from "../store/gameStore";
 import { useQuizLibrary } from "../store/quizStore";
 import {
@@ -285,12 +285,7 @@ export function Host() {
           {pin ? <PinBadge pin={pin} /> : null}
           {pin ? (
             <div className="rounded-2xl bg-white p-3">
-              <QRCodeSVG
-                value={joinUrl}
-                size={148}
-                bgColor="#ffffff"
-                fgColor="#0f0a1e"
-              />
+              <JoinQr url={joinUrl} />
             </div>
           ) : null}
           <p className="text-white/70">

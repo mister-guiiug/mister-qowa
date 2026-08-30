@@ -48,17 +48,12 @@ import {
 } from "@shared/round";
 import { publicQuestionFields } from "@shared/game";
 import type { Quiz, Score } from "@shared/contracts";
+import { generateCode } from "@mister-guiiug/dev-wpa-config/pairing";
 import { AppError } from "../lib/appError";
 import { reportError } from "../lib/report";
 import { addBreadcrumb } from "../lib/breadcrumbs";
 
 type AnswerNode = { choice: string; serverTs: number };
-
-function randomPin(): string {
-  const a = new Uint32Array(PIN_LENGTH);
-  crypto.getRandomValues(a);
-  return Array.from(a, (n) => String(n % 10)).join("");
-}
 
 const sleep = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -149,7 +144,8 @@ export async function createSession(
 
   let pin = "";
   for (let i = 0; i < 12; i += 1) {
-    const cand = randomPin();
+    // PIN numérique via le socle : aléa crypto, équiprobable (sans biais `%`).
+    const cand = generateCode(PIN_LENGTH, { alphabet: "numeric" });
     const res = await runTransaction(ref(db, pinIndexPath(cand)), (cur) =>
       cur === null ? sessionId : undefined,
     );
