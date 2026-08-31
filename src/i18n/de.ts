@@ -273,6 +273,8 @@ export const de = {
   "reactions.sendAria": (v) => `Reaktion ${v.emoji} senden`,
   "countdown.aria": (v) => `${v.n} Sekunden übrig`,
   "connection.offline": "Offline — verbinde neu…",
+  "guard.offline":
+    "Offline nicht verfügbar — dafür braucht es eine Verbindung.",
   "pin.label": "PIN-Code",
   "update.available": "Neue Version verfügbar",
   "update.updating": "Wird aktualisiert…",

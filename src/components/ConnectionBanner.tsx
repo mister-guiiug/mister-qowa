@@ -1,41 +1,44 @@
-import { useEffect, useState } from "react";
 import { WifiOff } from "lucide-react";
-import { useConnectionState } from "../hooks/useServerTime";
+import { ConnectionBanner as SocleConnectionBanner } from "@mister-guiiug/dev-wpa-config/react/connection-banner";
+import { useAppOnline } from "../hooks/useNetworkGuard";
 import { useT } from "../i18n";
 
 /**
- * Bandeau discret « Hors ligne — reconnexion… » piloté par `.info/connected`.
- * Débounce ~1,5 s pour ne pas clignoter sur les micro-coupures, et ne s'affiche
- * jamais au tout premier rendu (online par défaut).
+ * Bandeau « Hors ligne — reconnexion… ».
+ *
+ * LE SOCLE EST PROMU D'ICI, ON LUI REND LA MAIN. `react/connection-banner`
+ * (3.24.0) est la copie de ce fichier : même temporisation de 1,5 s hors ligne
+ * CONTINU, même remise à zéro pendant le rendu, même `role="status"`. Ne reste
+ * ici que ce que le socle ne peut pas savoir : le texte dans les 5 langues de
+ * l'app, l'icône, le placement, et la SOURCE de connectivité.
+ *
+ * La source, justement, est la seule chose que l'app fait de plus : le socle lit
+ * `navigator.onLine`, qui ment par excès (portail captif). `useAppOnline`
+ * combine `navigator.onLine` ET le socket RTDB observé par les écrans temps
+ * réel — c'est le `online` que le socle prévoit explicitement en prop.
+ *
+ * MONTÉ UNE SEULE FOIS, dans `App.tsx`. Il était auparavant posé dans `Host` et
+ * `Play`, donc absent de l'accueil, de la création et du salon de connexion — là
+ * où l'on décide de lancer une partie.
  */
 export function ConnectionBanner() {
   const t = useT();
-  const online = useConnectionState();
-  const [debounced, setDebounced] = useState(false);
-  const [lastOnline, setLastOnline] = useState(online);
-
-  // Remise à zéro pendant le rendu (et non dans un effet) : c'est le motif
-  // recommandé pour réinitialiser un état quand une entrée change, et ça évite
-  // le rendu en cascade d'un setState synchrone dans un effet.
-  if (online !== lastOnline) {
-    setLastOnline(online);
-    setDebounced(false);
-  }
-
-  useEffect(() => {
-    if (online) return;
-    const id = setTimeout(() => setDebounced(true), 1500);
-    return () => clearTimeout(id);
-  }, [online]);
-
-  if (online || !debounced) return null;
+  const online = useAppOnline();
   return (
-    <div
-      role="status"
-      className="mb-3 flex items-center justify-center gap-2 rounded-xl bg-amber-500/20 px-4 py-2 text-sm text-amber-100"
-    >
-      <WifiOff className="size-4" />
-      {t("connection.offline")}
-    </div>
+    <SocleConnectionBanner
+      online={online}
+      // DANS LE FLUX, pas en surimpression. Un `fixed top-3` recouvrait le lien
+      // « ← Accueil » de chaque écran — on aurait échangé un échec muet contre
+      // une sortie masquée. `sticky` le garde visible au défilement sans rien
+      // cacher ; il reste EN HAUT, alors que les deux autres invites (mise à
+      // jour, installation) sont ancrées en bas : jamais d'empilement.
+      className="sticky top-0 z-50 mx-auto mt-2 flex w-[calc(100%-1.5rem)] max-w-md items-center justify-center gap-2"
+      label={
+        <>
+          <WifiOff className="size-4" aria-hidden />
+          {t("connection.offline")}
+        </>
+      }
+    />
   );
 }

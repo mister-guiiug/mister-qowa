@@ -275,6 +275,7 @@ export const es = {
   "reactions.sendAria": (v) => `Enviar la reacción ${v.emoji}`,
   "countdown.aria": (v) => `${v.n} segundos restantes`,
   "connection.offline": "Sin conexión — reconectando…",
+  "guard.offline": "No disponible sin conexión — esto necesita red.",
   "pin.label": "Código PIN",
   "update.available": "Nueva versión disponible",
   "update.updating": "Actualizando…",

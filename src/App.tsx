@@ -10,6 +10,7 @@ import { LazyMotion, domMax, MotionConfig } from "framer-motion";
 import { Home } from "./routes/Home";
 import { UpdatePrompt } from "./components/UpdatePrompt";
 import { InstallPrompt } from "./components/InstallPrompt";
+import { ConnectionBanner } from "./components/ConnectionBanner";
 import { Spinner } from "./lib/ui";
 import { useLang, tStatic } from "./i18n";
 import { isConfigOk } from "./firebase/env";
@@ -81,6 +82,10 @@ export function App() {
       <MotionConfig reducedMotion="user">
         <HashRouter>
           <RouteBreadcrumbs />
+          {/* Un seul bandeau réseau pour toute l'app. En TÊTE du document, donc
+              au-dessus de l'écran courant et jamais par-dessus lui ; les deux
+              autres invites (mise à jour, installation) sont ancrées en bas. */}
+          <ConnectionBanner />
           <Suspense
             fallback={
               <div className="flex min-h-dvh items-center justify-center">

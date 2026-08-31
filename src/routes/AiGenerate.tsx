@@ -26,6 +26,7 @@ import {
 } from "../lib/ai";
 import type { DraftQuestion, DraftQuiz } from "../lib/quizDraft";
 import { saveDraft } from "../lib/draft";
+import { useNetworkGuard } from "../hooks/useNetworkGuard";
 import { useErr, useT, type Key } from "../i18n";
 
 const field =
@@ -70,6 +71,9 @@ export function AiGenerate() {
   const [regenIndex, setRegenIndex] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<DraftQuiz | null>(null);
+  // Générer appelle un fournisseur d'IA par HTTP : impossible hors ligne. Le quiz
+  // de démonstration, lui, est en dur dans le bundle — il reste disponible.
+  const guard = useNetworkGuard();
 
   const apiKey = keys[provider] ?? "";
   const params: GenParams = { topic, count, difficulty, language, sourceText };
@@ -157,7 +161,8 @@ export function AiGenerate() {
                 </p>
                 <Button
                   variant="ghost"
-                  onClick={() => void regenerate(i)}
+                  {...guard.disabledProps}
+                  onClick={guard.wrap(() => void regenerate(i))}
                   disabled={regenIndex !== null}
                   aria-label={t("ai.regenAria", { n: i + 1 })}
                   className="shrink-0 px-3 py-2"
@@ -280,10 +285,25 @@ export function AiGenerate() {
         </p>
       ) : null}
 
+      {guard.reason ? (
+        <p
+          role="status"
+          className="mt-4 rounded-xl bg-amber-500/20 px-4 py-2 text-sm text-amber-100"
+        >
+          {guard.reason}
+        </p>
+      ) : null}
+
       <div className="mt-5 flex flex-col gap-2">
-        <Button full onClick={generate} disabled={busy}>
+        <Button
+          full
+          {...guard.disabledProps}
+          onClick={guard.wrap(generate)}
+          disabled={busy}
+        >
           <Sparkles className="size-5" /> {t("ai.generate")}
         </Button>
+        {/* PAS de garde ici : la démo est locale, elle marche hors ligne. */}
         <Button full variant="ghost" onClick={tryDemo} disabled={busy}>
           {t("ai.tryDemo")}
         </Button>

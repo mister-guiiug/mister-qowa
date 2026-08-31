@@ -9,6 +9,7 @@ import { PIN_LENGTH, MAX_PSEUDO_LEN } from "@shared/gameState";
 import { AVATARS } from "@shared/avatars";
 import type { Team } from "@shared/teams";
 import { normalizeCode } from "@mister-guiiug/dev-wpa-config/pairing";
+import { useNetworkGuard } from "../hooks/useNetworkGuard";
 import { useErr, useT } from "../i18n";
 
 /** Saisie ou deep-link `?pin=` → chiffres seuls, bornés à PIN_LENGTH. */
@@ -32,6 +33,8 @@ export function Join() {
   const [error, setError] = useState<string | null>(null);
 
   const ready = pin.length === PIN_LENGTH && pseudo.trim().length > 0;
+  // Rejoindre une partie EN DIRECT : sans réseau, il n'y a rien à rejoindre.
+  const guard = useNetworkGuard();
 
   async function go(teamId?: string) {
     setBusy(true);
@@ -54,7 +57,9 @@ export function Join() {
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if (!ready) return;
+    // La touche Entrée soumet le formulaire SANS passer par le bouton : le garde
+    // doit donc aussi tenir ici, pas seulement sur `disabledProps`.
+    if (!ready || !guard.allowed) return;
     setBusy(true);
     setError(null);
     try {
@@ -91,8 +96,9 @@ export function Join() {
               key={t.id}
               type="button"
               disabled={busy}
-              onClick={() => void go(t.id)}
-              className="rounded-2xl px-4 py-3 text-left text-lg font-bold text-white shadow-lg transition active:scale-[.98] disabled:opacity-60"
+              {...guard.disabledProps}
+              onClick={guard.wrap(() => void go(t.id))}
+              className="rounded-2xl px-4 py-3 text-left text-lg font-bold text-white shadow-lg transition active:scale-[.98] disabled:opacity-60 aria-disabled:opacity-60"
               style={{ background: t.color }}
             >
               {t.name}
@@ -101,6 +107,14 @@ export function Join() {
           {error ? (
             <p className="rounded-xl bg-rose-500/20 px-4 py-2 text-sm text-rose-200">
               {error}
+            </p>
+          ) : null}
+          {guard.reason ? (
+            <p
+              role="status"
+              className="rounded-xl bg-amber-500/20 px-4 py-2 text-sm text-amber-100"
+            >
+              {guard.reason}
             </p>
           ) : null}
         </div>
@@ -182,8 +196,21 @@ export function Join() {
               {error}
             </p>
           ) : null}
+          {guard.reason ? (
+            <p
+              role="status"
+              className="rounded-xl bg-amber-500/20 px-4 py-2 text-sm text-amber-100"
+            >
+              {guard.reason}
+            </p>
+          ) : null}
 
-          <Button type="submit" full disabled={!ready || busy}>
+          <Button
+            type="submit"
+            full
+            disabled={!ready || busy}
+            {...guard.disabledProps}
+          >
             {busy ? t("common.connecting") : t("join.submit")}
           </Button>
         </form>

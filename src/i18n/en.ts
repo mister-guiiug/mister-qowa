@@ -276,6 +276,7 @@ export const en = {
   "reactions.sendAria": (v) => `Send reaction ${v.emoji}`,
   "countdown.aria": (v) => `${v.n} seconds left`,
   "connection.offline": "Offline — reconnecting…",
+  "guard.offline": "Unavailable offline — this needs a connection.",
   "pin.label": "PIN code",
   "update.available": "New version available",
   "update.updating": "Updating…",
