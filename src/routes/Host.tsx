@@ -17,9 +17,12 @@ import {
   useTeamLeaderboard,
   useSessionMeta,
 } from "../hooks/useGameSubscription";
-import { useServerOffset, serverNow } from "../hooks/useServerTime";
+import {
+  useServerOffset,
+  useRtdbPresence,
+  serverNow,
+} from "../hooks/useServerTime";
 import { useAsyncAction } from "../hooks/useAsyncAction";
-import { ConnectionBanner } from "../components/ConnectionBanner";
 import { feedback } from "../lib/feedback";
 import { AnswerDistribution } from "../components/AnswerDistribution";
 import { JoinQr } from "../components/JoinQr";
@@ -50,6 +53,7 @@ import { Countdown } from "../components/Countdown";
 import { TimerBar } from "../components/TimerBar";
 import { Leaderboard } from "../components/Leaderboard";
 import { Podium } from "../components/Podium";
+import { useNetworkGuard } from "../hooks/useNetworkGuard";
 import { useErr, useT } from "../i18n";
 
 export function Host() {
@@ -83,6 +87,14 @@ export function Host() {
     sessionId ?? null,
   );
   const offset = useServerOffset();
+  // Publie `.info/connected` pour le bandeau du shell (cet écran a déjà payé le SDK).
+  useRtdbPresence();
+  // TOUTE commande d'animation est une écriture RTDB. Hors ligne, le SDK ne
+  // rejette pas : il met en attente et la promesse ne se règle JAMAIS — le
+  // `busy` de `useAsyncAction` resterait à `true` pour l'éternité. On refuse
+  // donc d'entrer dans cette file. Partager le lien / les résultats reste
+  // possible : c'est du presse-papiers, pas du réseau.
+  const guard = useNetworkGuard();
   const stats = useAnswerStats(sessionId ?? null, current?.questionId ?? null);
   const reactions = useReactions(sessionId ?? null);
   const teamStandings = useTeamLeaderboard(sessionId ?? null);
@@ -270,10 +282,17 @@ export function Host() {
   return (
     <Screen>
       <FloatingReactions items={reactions} />
-      <ConnectionBanner />
       {error ? (
         <p className="mb-4 rounded-xl bg-rose-500/20 px-4 py-2 text-sm text-rose-200">
           {error}
+        </p>
+      ) : null}
+      {guard.reason ? (
+        <p
+          role="status"
+          className="mb-4 rounded-xl bg-amber-500/20 px-4 py-2 text-center text-sm text-amber-100"
+        >
+          {guard.reason}
         </p>
       ) : null}
       {info ? (
@@ -303,9 +322,10 @@ export function Host() {
                 {p.pseudo}
                 <button
                   type="button"
-                  onClick={() => void kickPlayer(sessionId, puid)}
+                  {...guard.disabledProps}
+                  onClick={guard.wrap(() => void kickPlayer(sessionId, puid))}
                   aria-label={t("host.kickAria", { pseudo: p.pseudo })}
-                  className="rounded-full p-0.5 text-white/40 hover:bg-rose-500/30 hover:text-rose-200"
+                  className="rounded-full p-0.5 text-white/40 hover:bg-rose-500/30 hover:text-rose-200 aria-disabled:opacity-50"
                 >
                   <X className="size-3.5" />
                 </button>
@@ -321,9 +341,10 @@ export function Host() {
             <Button
               full
               disabled={busy || playerCount === 0 || !quiz}
-              onClick={() =>
-                quiz && act(() => nextQuestion(sessionId, quiz, 0))
-              }
+              {...guard.disabledProps}
+              onClick={guard.wrap(
+                () => quiz && act(() => nextQuestion(sessionId, quiz, 0)),
+              )}
             >
               {t("host.start")}
             </Button>
@@ -388,7 +409,10 @@ export function Host() {
                 full
                 variant="ghost"
                 disabled={busy}
-                onClick={() => act(() => pauseQuestion(sessionId, !paused))}
+                {...guard.disabledProps}
+                onClick={guard.wrap(() =>
+                  act(() => pauseQuestion(sessionId, !paused)),
+                )}
               >
                 {paused ? (
                   <>
@@ -404,10 +428,12 @@ export function Host() {
                 full
                 variant="ghost"
                 disabled={busy || !quiz}
-                onClick={() =>
-                  quiz &&
-                  act(() => replayQuestion(sessionId, quiz, current.index))
-                }
+                {...guard.disabledProps}
+                onClick={guard.wrap(
+                  () =>
+                    quiz &&
+                    act(() => replayQuestion(sessionId, quiz, current.index)),
+                )}
               >
                 <RotateCcw className="size-4" /> {t("host.replay")}
               </Button>
@@ -417,10 +443,12 @@ export function Host() {
                 full
                 variant="ghost"
                 disabled={busy || !quiz}
-                onClick={() =>
-                  quiz &&
-                  act(() => skipQuestion(sessionId, quiz, current.index))
-                }
+                {...guard.disabledProps}
+                onClick={guard.wrap(
+                  () =>
+                    quiz &&
+                    act(() => skipQuestion(sessionId, quiz, current.index)),
+                )}
               >
                 <SkipForward className="size-4" /> {t("host.skip")}
               </Button>
@@ -428,10 +456,12 @@ export function Host() {
                 full
                 variant="danger"
                 disabled={busy || !quiz}
-                onClick={() =>
-                  quiz &&
-                  act(() => closeQuestion(sessionId, quiz, current.index))
-                }
+                {...guard.disabledProps}
+                onClick={guard.wrap(
+                  () =>
+                    quiz &&
+                    act(() => closeQuestion(sessionId, quiz, current.index)),
+                )}
               >
                 {t("host.closeNow")}
               </Button>
@@ -467,11 +497,13 @@ export function Host() {
               <Button
                 full
                 disabled={busy || !quiz || !current}
-                onClick={() =>
-                  quiz &&
-                  current &&
-                  act(() => nextQuestion(sessionId, quiz, current.index + 1))
-                }
+                {...guard.disabledProps}
+                onClick={guard.wrap(
+                  () =>
+                    quiz &&
+                    current &&
+                    act(() => nextQuestion(sessionId, quiz, current.index + 1)),
+                )}
               >
                 {t("host.nextQuestion")}
               </Button>
@@ -480,7 +512,10 @@ export function Host() {
               full
               variant={isLast ? "primary" : "ghost"}
               disabled={busy}
-              onClick={() => act(() => endGame(sessionId, quiz ?? undefined))}
+              {...guard.disabledProps}
+              onClick={guard.wrap(() =>
+                act(() => endGame(sessionId, quiz ?? undefined)),
+              )}
             >
               {t("host.endPodium")}
             </Button>
@@ -501,7 +536,10 @@ export function Host() {
             <Button
               full
               disabled={busy || !quiz}
-              onClick={() => quiz && act(() => restartSession(sessionId, quiz))}
+              {...guard.disabledProps}
+              onClick={guard.wrap(
+                () => quiz && act(() => restartSession(sessionId, quiz)),
+              )}
             >
               <RefreshCw className="size-4" /> {t("host.replayWithSame")}
             </Button>

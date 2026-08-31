@@ -22,15 +22,25 @@ import { Countdown } from "../components/Countdown";
 import { TimerBar } from "../components/TimerBar";
 import { Leaderboard } from "../components/Leaderboard";
 import { Podium } from "../components/Podium";
-import { ConnectionBanner } from "../components/ConnectionBanner";
-import { useServerOffset, serverNow } from "../hooks/useServerTime";
+import {
+  useServerOffset,
+  useRtdbPresence,
+  serverNow,
+} from "../hooks/useServerTime";
 import { feedback } from "../lib/feedback";
+import { useNetworkGuard } from "../hooks/useNetworkGuard";
 import { useErr, useT } from "../i18n";
 
 export function Play() {
   const t = useT();
   const err = useErr();
   const offset = useServerOffset();
+  // Publie `.info/connected` pour le bandeau du shell (cet écran a déjà payé le SDK).
+  useRtdbPresence();
+  // Répondre écrit dans RTDB. Hors ligne la promesse ne se règle jamais : l'écran
+  // afficherait « Réponse envoyée » pour une réponse qui n'est jamais partie.
+  // C'est le mensonge que ce garde supprime.
+  const guard = useNetworkGuard();
   const { sessionId } = useParams();
   const nav = useNavigate();
   const uid = useAuthUid();
@@ -129,6 +139,7 @@ export function Play() {
 
   async function pick(choice: string) {
     if (!sessionId || !current || picked || paused || eliminated) return;
+    if (!guard.allowed) return;
     setPicked(choice);
     setError(null);
     try {
@@ -187,7 +198,6 @@ export function Play() {
   return (
     <Screen>
       <FloatingReactions items={reactions} />
-      <ConnectionBanner />
       {state === "LOBBY" ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
           <p className="font-display text-2xl">
@@ -249,8 +259,10 @@ export function Play() {
           {current.options ? (
             <AnswerGrid
               options={current.options}
-              onPick={pick}
-              disabled={picked !== null || paused || eliminated}
+              onPick={guard.wrap(pick)}
+              disabled={
+                picked !== null || paused || eliminated || !guard.allowed
+              }
               picked={picked}
             />
           ) : (
@@ -275,11 +287,20 @@ export function Play() {
                 disabled={
                   picked !== null || paused || eliminated || !text.trim()
                 }
+                {...guard.disabledProps}
               >
                 {t("play.send")}
               </Button>
             </form>
           )}
+          {guard.reason ? (
+            <p
+              role="status"
+              className="rounded-xl bg-amber-500/20 px-4 py-2 text-center text-sm text-amber-100"
+            >
+              {guard.reason}
+            </p>
+          ) : null}
           {picked ? (
             <p className="text-center text-white/60">{t("play.sent")}</p>
           ) : null}
@@ -428,7 +449,9 @@ export function Play() {
 
       {state !== "LOBBY" ? (
         <div className="mt-auto pt-4">
-          <ReactionBar onSend={(e) => void sendReaction(sessionId, e)} />
+          <ReactionBar
+            onSend={guard.wrap((e: string) => void sendReaction(sessionId, e))}
+          />
         </div>
       ) : null}
     </Screen>

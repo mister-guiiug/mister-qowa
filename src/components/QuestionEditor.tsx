@@ -4,6 +4,7 @@ import { QUESTION_TYPES, type QuestionType } from "@shared/gameState";
 import type { DraftQuestion } from "../lib/quizDraft";
 import { blankOption, retypeQuestion } from "../lib/quizDraft";
 import { uploadQuestionImage } from "../lib/media";
+import { useNetworkGuard } from "../hooks/useNetworkGuard";
 import { useErr, useT, type Key } from "../i18n";
 
 const TYPE_KEYS: Record<QuestionType, Key> = {
@@ -39,6 +40,9 @@ export function QuestionEditor({
   const hasOptions = q.type === "multiple_choice" || q.type === "poll";
   const [uploading, setUploading] = useState(false);
   const [mediaErr, setMediaErr] = useState<string | null>(null);
+  // Seul l'envoi d'image sort de l'appareil (Firebase Storage). Tout le reste de
+  // l'éditeur est un brouillon local — il doit continuer sans un mot.
+  const guard = useNetworkGuard();
 
   async function onPickImage(file: File | undefined) {
     if (!file) return;
@@ -144,11 +148,15 @@ export function QuestionEditor({
             <p className="text-xs text-white/40">{tr("qe.mediaAltHint")}</p>
           </div>
         ) : (
-          <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-sm hover:bg-white/15">
+          <label
+            {...guard.disabledProps}
+            className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-sm hover:bg-white/15 aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
+          >
             <input
               type="file"
               accept="image/*"
               className="hidden"
+              disabled={!guard.allowed}
               onChange={(e) => {
                 void onPickImage(e.target.files?.[0]);
                 e.target.value = "";
@@ -158,6 +166,11 @@ export function QuestionEditor({
             {uploading ? tr("qe.uploading") : tr("qe.addImage")}
           </label>
         )}
+        {guard.reason ? (
+          <p role="status" className="text-sm text-amber-200">
+            {guard.reason}
+          </p>
+        ) : null}
         {mediaErr ? <p className="text-sm text-rose-300">{mediaErr}</p> : null}
 
         {/* Choix multiple / Sondage : options */}

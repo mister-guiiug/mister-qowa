@@ -29,6 +29,7 @@ import {
   findDuplicate,
 } from "../lib/quizIo";
 import { makeTeams } from "@shared/teams";
+import { useNetworkGuard } from "../hooks/useNetworkGuard";
 import { useErr, useT } from "../i18n";
 
 export function Create() {
@@ -48,6 +49,10 @@ export function Create() {
   const [pendingDelete, setPendingDelete] = useState<Quiz | null>(null);
   const [search, setSearch] = useState("");
   const [sortAz, setSortAz] = useState(false);
+  // Héberger, c'est CRÉER une session RTDB : rien à faire hors ligne. Le reste de
+  // cet écran (bibliothèque, duplication, export, import, édition) est local et
+  // ne bouge pas d'un pouce.
+  const guard = useNetworkGuard();
 
   // Filtre par titre + tri (récent par createdAt / alphabétique).
   const shownQuizzes = myQuizzes
@@ -182,6 +187,17 @@ export function Create() {
         </p>
       ) : null}
 
+      {/* Le motif du blocage, à côté des boutons grisés : un bouton inerte qui
+          ne dit pas POURQUOI est le défaut que `useActionGuard` corrige. */}
+      {guard.reason ? (
+        <p
+          role="status"
+          className="mt-4 rounded-xl bg-amber-500/20 px-4 py-2 text-sm text-amber-100"
+        >
+          {guard.reason}
+        </p>
+      ) : null}
+
       {myQuizzes.length > 0 ? (
         <section className="mt-6">
           <h2 className="mb-2 text-sm uppercase tracking-widest text-white/40">
@@ -225,7 +241,8 @@ export function Create() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Button
-                    onClick={() => host(q)}
+                    {...guard.disabledProps}
+                    onClick={guard.wrap(() => host(q))}
                     disabled={busy !== null}
                     className="flex-1"
                   >
@@ -291,7 +308,11 @@ export function Create() {
                 >
                   <Copy className="size-4" />
                 </Button>
-                <Button onClick={() => host(q)} disabled={busy !== null}>
+                <Button
+                  {...guard.disabledProps}
+                  onClick={guard.wrap(() => host(q))}
+                  disabled={busy !== null}
+                >
                   <Play className="size-4" /> {t("create.launch")}
                 </Button>
               </div>

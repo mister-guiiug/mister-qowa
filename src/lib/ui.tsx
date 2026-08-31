@@ -53,7 +53,12 @@ export function Button({
   };
   return (
     <button
-      className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl px-5 py-3 text-base font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+      // `aria-disabled` reçoit le MÊME habillage que `disabled` : c'est ce que
+      // pose `useActionGuard` du socle, qui refuse `disabled` natif pour garder
+      // le bouton focusable — l'utilisateur doit pouvoir DÉCOUVRIR le motif.
+      // Sans cette paire de variantes, un bouton gardé resterait plein contraste
+      // et donnerait envie de cliquer.
+      className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl px-5 py-3 text-base font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 ${
         styles[variant]
       } ${full ? "w-full" : ""} ${className}`}
       {...props}
