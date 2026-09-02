@@ -5,6 +5,9 @@
  * seule. Branche un collecteur (Sentry/own) en fournissant simplement l'URL.
  */
 import { dumpBreadcrumbs } from "./breadcrumbs";
+import { createLogger } from "@mister-guiiug/dev-wpa-config/logger";
+
+const log = createLogger("report");
 
 type Ctx = Record<string, unknown>;
 
@@ -21,7 +24,7 @@ export function reportError(error: unknown, context?: Ctx): void {
     breadcrumbs: dumpBreadcrumbs(),
     ...context,
   };
-  console.error("[report]", payload);
+  log.error("[report]", { error: payload });
 
   const endpoint = import.meta.env.VITE_ERROR_ENDPOINT;
   if (endpoint && typeof navigator !== "undefined" && navigator.sendBeacon) {

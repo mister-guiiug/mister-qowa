@@ -22,6 +22,9 @@ import {
   ReCaptchaEnterpriseProvider,
 } from "firebase/app-check";
 import { useEmulator } from "./env";
+import { createLogger } from "@mister-guiiug/dev-wpa-config/logger";
+
+const log = createLogger("firebase");
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -47,7 +50,7 @@ function initAppCheck(application: FirebaseApp): void {
   const appCheckKey = import.meta.env.VITE_FIREBASE_APPCHECK_KEY;
   if (!appCheckKey) {
     if (import.meta.env.PROD) {
-      console.error(
+      log.error(
         "[Mister Qowa] App Check non configuré (VITE_FIREBASE_APPCHECK_KEY absente) : " +
           "la production n'est PAS protégée contre les bots. Activez App Check dans la " +
           "console Firebase (RTDB + Firestore → Enforce) et fournissez la clé reCAPTCHA Enterprise.",
@@ -80,11 +83,6 @@ function ensure(): void {
 export function getDb(): Database {
   ensure();
   return db!;
-}
-
-export function getAuthInstance(): Auth {
-  ensure();
-  return auth!;
 }
 
 /** Garantit une session Auth (invité anonyme) et renvoie le User. */

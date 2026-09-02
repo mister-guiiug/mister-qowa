@@ -23,7 +23,7 @@ function canvasToBlob(
  * Compresse une image (resize + WebP/JPEG). Renvoie le fichier d'origine si la
  * compression échoue (GIF animé, navigateur exotique…) ou n'apporte rien.
  */
-export async function compressImage(
+async function compressImage(
   file: File,
 ): Promise<{ blob: Blob; contentType: string }> {
   try {

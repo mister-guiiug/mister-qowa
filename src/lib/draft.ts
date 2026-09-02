@@ -1,7 +1,7 @@
 /** Brouillon « nouveau quiz » partagé (éditeur + génération IA), persistant. */
 import type { DraftQuiz } from "./quizDraft";
 
-export const DRAFT_KEY = "mister-qowa:draft";
+const DRAFT_KEY = "mister-qowa:draft";
 
 export function saveDraft(d: DraftQuiz): void {
   try {
