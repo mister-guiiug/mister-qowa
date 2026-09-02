@@ -11,7 +11,10 @@ const analyze = process.env.ANALYZE === "1";
 
 // Déployé sur GitHub Pages : https://mister-guiiug.github.io/mister-qowa/
 export default defineConfig(({ command }) => {
-  const base = command === "build" ? "/mister-qowa/" : "/";
+  // VITE_BASE_PATH d'abord : la CI Lighthouse du socle sert dist/ à la racine
+  // (sinon NO_FCP, les assets partent chercher /mister-qowa/…).
+  const base =
+    process.env.VITE_BASE_PATH ?? (command === "build" ? "/mister-qowa/" : "/");
   return {
     base,
     resolve: {
