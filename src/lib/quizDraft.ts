@@ -120,7 +120,7 @@ export function toDraft(quiz: Quiz): DraftQuiz {
   };
 }
 
-export function toQuestion(d: DraftQuestion): Question {
+function toQuestion(d: DraftQuestion): Question {
   const prompt = d.prompt.trim();
   const opts = d.options.filter((o) => o.label.trim());
   const media = {

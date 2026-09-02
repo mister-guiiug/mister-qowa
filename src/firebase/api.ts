@@ -52,6 +52,9 @@ import { generateCode } from "@mister-guiiug/dev-wpa-config/pairing";
 import { AppError } from "../lib/appError";
 import { reportError } from "../lib/report";
 import { addBreadcrumb } from "../lib/breadcrumbs";
+import { createLogger } from "@mister-guiiug/dev-wpa-config/logger";
+
+const log = createLogger("firebase");
 
 type AnswerNode = { choice: string; serverTs: number };
 
@@ -315,7 +318,7 @@ export async function endGame(sessionId: string, quiz?: Quiz): Promise<void> {
       ...(questionStats.length ? { questionStats } : {}),
     });
   } catch (e) {
-    console.error("[endGame] archivage Firestore échoué", e);
+    log.error("[endGame] archivage Firestore échoué", { error: e });
   }
 }
 
