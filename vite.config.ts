@@ -4,6 +4,8 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 import { visualizer } from "rollup-plugin-visualizer";
+import { pwaSeoPlugin } from "@mister-guiiug/dev-wpa-config/vite-pwa-base";
+import { cspPlugin } from "@mister-guiiug/dev-wpa-config/vite-csp";
 
 const analyze = process.env.ANALYZE === "1";
 
@@ -21,6 +23,30 @@ export default defineConfig(({ command }) => {
     plugins: [
       react(),
       tailwindcss(),
+      // Sitemap, robots, canonique, Open Graph — et deux <meta theme-color>
+      // par schéma (relevé du 02/09/2026 : qowa n'avait rien de tout ça).
+      pwaSeoPlugin({
+        basePath: base,
+        logoPath: "/icons/icon-512.png",
+        themeColor: { light: "#7c3aed", dark: "#0f0a1e" },
+      }),
+      // CSP par hash (socle). connect-src : Firebase (Auth, Firestore, RTDB en
+      // websocket, Functions) ; les polices Google viennent d'index.html.
+      cspPlugin({
+        dev: command === "serve",
+        connectSrc: [
+          "'self'",
+          "https://*.googleapis.com",
+          "https://*.firebaseio.com",
+          "wss://*.firebaseio.com",
+          "https://*.firebasedatabase.app",
+          "wss://*.firebasedatabase.app",
+          "https://*.cloudfunctions.net",
+          "https://api.anthropic.com",
+        ],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
+      }),
       VitePWA({
         registerType: "prompt",
         includeAssets: ["icons/icon.svg", "icons/apple-touch-icon.png"],
