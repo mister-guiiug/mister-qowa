@@ -1,8 +1,8 @@
 @import "tailwindcss";
-@import "@mister-guiiug/dev-wpa-config/tailwind-preset.css";
+@import "@mister-guiiug/dev-pwa-config/tailwind-preset.css";
 /* Habillage partagé des composants [data-dwc] (AppFooter, ConfirmDialog). En
    `@layer components` : tout CSS non layered de ce fichier l'emporte. */
-@import "@mister-guiiug/dev-wpa-config/components.css";
+@import "@mister-guiiug/dev-pwa-config/components.css";
 
 /*
  * Univers « Mister Qowa » : énergie de plateau de quiz télévisé. Fond violet

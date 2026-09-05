@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Download, Trophy, TrendingDown } from "lucide-react";
 import { Screen, Card, Button, Spinner } from "../lib/ui";
-import { downloadText } from "@mister-guiiug/dev-wpa-config/download";
+import { downloadText } from "@mister-guiiug/dev-pwa-config/download";
 import {
   fetchMyResults,
   resultsCsv,

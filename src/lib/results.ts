@@ -1,5 +1,5 @@
 /** Lecture de l'historique des parties (Firestore lazy) + export CSV. */
-import { toCsv } from "@mister-guiiug/dev-wpa-config/csv";
+import { toCsv } from "@mister-guiiug/dev-pwa-config/csv";
 
 export interface RankRow {
   uid: string;

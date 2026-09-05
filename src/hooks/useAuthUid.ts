@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ensureAuth } from "../firebase/app";
-import { createLogger } from "@mister-guiiug/dev-wpa-config/logger";
+import { createLogger } from "@mister-guiiug/dev-pwa-config/logger";
 
 const log = createLogger("hooks");
 

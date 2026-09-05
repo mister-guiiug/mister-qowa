@@ -4,7 +4,7 @@ PWA de **quiz interactif en temps réel** (type Kahoot) — mobile-first, instal
 Membre de la famille `miss-*`/`mister-*` (owner GitHub **mister-guiiug**).
 
 - **Frontend** : React 19 + Vite 8 + Tailwind v4 + Zustand + zod + framer-motion, PWA déployée sur GitHub Pages
-  (`https://mister-guiiug.github.io/mister-qowa/`), via `@mister-guiiug/dev-wpa-config`.
+  (`https://mister-guiiug.github.io/mister-qowa/`), via `@mister-guiiug/dev-pwa-config`.
 - **Backend** : Firebase **Spark (gratuit, sans Cloud Functions)** — **Realtime Database** (état de jeu live) +
   **Auth** (invité anonyme + Google host). Autorité côté **host** : le host détient le quiz localement (réponses
   jamais publiées) et calcule les scores ; les **Security Rules** garantissent que seul le host écrit l'état/scores,

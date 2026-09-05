@@ -5,7 +5,7 @@ import { Screen, Button, Spinner } from "../lib/ui";
 import {
   shareOrCopy,
   currentAppUrl,
-} from "@mister-guiiug/dev-wpa-config/share";
+} from "@mister-guiiug/dev-pwa-config/share";
 import { useAuthUid } from "../hooks/useAuthUid";
 import {
   usePlayerView,

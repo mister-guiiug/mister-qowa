@@ -4,8 +4,8 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 import { visualizer } from "rollup-plugin-visualizer";
-import { pwaSeoPlugin } from "@mister-guiiug/dev-wpa-config/vite-pwa-base";
-import { cspPlugin } from "@mister-guiiug/dev-wpa-config/vite-csp";
+import { pwaSeoPlugin } from "@mister-guiiug/dev-pwa-config/vite-pwa-base";
+import { cspPlugin } from "@mister-guiiug/dev-pwa-config/vite-csp";
 
 const analyze = process.env.ANALYZE === "1";
 
