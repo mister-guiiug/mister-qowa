@@ -11,6 +11,7 @@ import { Home } from "./routes/Home";
 import { UpdatePrompt } from "./components/UpdatePrompt";
 import { InstallPrompt } from "./components/InstallPrompt";
 import { ConnectionBanner } from "./components/ConnectionBanner";
+import { FamilyLinks } from "./components/FamilyLinks";
 import { Spinner } from "./lib/ui";
 import { useLang, tStatic } from "./i18n";
 import { isConfigOk } from "./firebase/env";
@@ -108,6 +109,11 @@ export function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>
+          {/* HORS des routes : le code source et le soutien sont ainsi sur
+              TOUS les écrans, et plus seulement sur l'accueil — la règle
+              famille. Les libellés viennent de l'i18n de l'app, qui connaît
+              cinq langues là où le socle en connaît deux. */}
+          <FamilyLinks />
           <UpdatePrompt />
           <InstallPrompt />
         </HashRouter>
