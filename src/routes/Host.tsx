@@ -44,7 +44,7 @@ import {
   shareOrCopy,
   currentAppUrl,
   type ShareResult,
-} from "@mister-guiiug/dev-wpa-config/share";
+} from "@mister-guiiug/dev-pwa-config/share";
 import { shareInfoKey } from "../lib/shareFeedback";
 import { FloatingReactions, ReactionBar } from "../components/Reactions";
 import { TeamLeaderboard } from "../components/TeamLeaderboard";

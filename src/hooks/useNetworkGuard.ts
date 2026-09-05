@@ -13,8 +13,8 @@
  * dans cette file ; on ne rejoue rien, on refuse d'écrire.
  */
 import { useMemo } from "react";
-import { useActionGuard } from "@mister-guiiug/dev-wpa-config/react/use-action-guard";
-import { useOnline } from "@mister-guiiug/dev-wpa-config/react/use-online";
+import { useActionGuard } from "@mister-guiiug/dev-pwa-config/react/use-action-guard";
+import { useOnline } from "@mister-guiiug/dev-pwa-config/react/use-online";
 import { useConnectivity } from "../store/connectivityStore";
 import { useT } from "../i18n";
 

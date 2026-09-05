@@ -8,7 +8,7 @@ import { useProfile } from "../store/profileStore";
 import { PIN_LENGTH, MAX_PSEUDO_LEN } from "@shared/gameState";
 import { AVATARS } from "@shared/avatars";
 import type { Team } from "@shared/teams";
-import { normalizeCode } from "@mister-guiiug/dev-wpa-config/pairing";
+import { normalizeCode } from "@mister-guiiug/dev-pwa-config/pairing";
 import { useNetworkGuard } from "../hooks/useNetworkGuard";
 import { useErr, useT } from "../i18n";
 

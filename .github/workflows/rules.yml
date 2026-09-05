@@ -20,7 +20,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: mister-guiiug/dev-wpa-config/.github/actions/setup-pwa@v3
+      - uses: mister-guiiug/dev-pwa-config/.github/actions/setup-pwa@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 

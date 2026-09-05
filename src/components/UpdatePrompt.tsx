@@ -1,5 +1,5 @@
 import { registerSW } from "virtual:pwa-register";
-import { AppUpdates } from "@mister-guiiug/dev-wpa-config/react/app-updates";
+import { AppUpdates } from "@mister-guiiug/dev-pwa-config/react/app-updates";
 import { useT } from "../i18n";
 
 /**

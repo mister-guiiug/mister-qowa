@@ -5,7 +5,7 @@ import {
   baseTestOptions,
   coveragePreset,
   pwaRegisterAlias,
-} from "@mister-guiiug/dev-wpa-config/vitest-base";
+} from "@mister-guiiug/dev-pwa-config/vitest-base";
 
 // Tests jsdom (composants) + tests Node purs (shared/: moteur de score, contrats).
 export default defineConfig({

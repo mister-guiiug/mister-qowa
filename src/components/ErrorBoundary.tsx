@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ErrorBoundary as DwcErrorBoundary } from "@mister-guiiug/dev-wpa-config/react/error-boundary";
+import { ErrorBoundary as DwcErrorBoundary } from "@mister-guiiug/dev-pwa-config/react/error-boundary";
 import { tStatic } from "../i18n";
 import { reportError } from "../lib/report";
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseCsv } from "@mister-guiiug/dev-wpa-config/csv";
+import { parseCsv } from "@mister-guiiug/dev-pwa-config/csv";
 import {
   resultsCsv,
   hardestQuestion,

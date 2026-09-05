@@ -48,11 +48,11 @@ import {
 } from "@shared/round";
 import { publicQuestionFields } from "@shared/game";
 import type { Quiz, Score } from "@shared/contracts";
-import { generateCode } from "@mister-guiiug/dev-wpa-config/pairing";
+import { generateCode } from "@mister-guiiug/dev-pwa-config/pairing";
 import { AppError } from "../lib/appError";
 import { reportError } from "../lib/report";
 import { addBreadcrumb } from "../lib/breadcrumbs";
-import { createLogger } from "@mister-guiiug/dev-wpa-config/logger";
+import { createLogger } from "@mister-guiiug/dev-pwa-config/logger";
 
 const log = createLogger("firebase");
 

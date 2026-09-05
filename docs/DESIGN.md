@@ -2546,7 +2546,7 @@ export function Countdown({
 
 ### 6.7 Extrait `vite.config.ts` (base + manifest PWA)
 
-Aligné sur le parc : `base="/mister-qowa/"` (surchargeable par `VITE_BASE_PATH` pour Lighthouse CI), plugin SEO `dev-wpa-config`, `vite-plugin-pwa` en `registerType: 'prompt'`, et un `manualChunks` séparant `firebase` du reste (gros poids réseau).
+Aligné sur le parc : `base="/mister-qowa/"` (surchargeable par `VITE_BASE_PATH` pour Lighthouse CI), plugin SEO `dev-pwa-config`, `vite-plugin-pwa` en `registerType: 'prompt'`, et un `manualChunks` séparant `firebase` du reste (gros poids réseau).
 
 ```typescript
 // vite.config.ts (extrait)
@@ -2554,7 +2554,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
-import { pwaSeoPlugin } from '@mister-guiiug/dev-wpa-config/vite-pwa-base';
+import { pwaSeoPlugin } from '@mister-guiiug/dev-pwa-config/vite-pwa-base';
 
 const base = process.env.VITE_BASE_PATH ?? '/mister-qowa/';
 
@@ -3432,7 +3432,7 @@ gh secret set FIREBASE_SERVICE_ACCOUNT --repo mister-guiiug/mister-qowa < servic
 
 #### 8.1.5 CI — workflow réutilisable du parc
 
-La CI (PR + push) est **déléguée** au reusable workflow `pwa-ci.yml@v1` de `dev-wpa-config`. Le build client exige des `VITE_FIREBASE_*` : on injecte des valeurs **factices** via `build-env` (le client ne contacte jamais Firebase au build), et on type-check le dossier `functions/` via `server-dir`.
+La CI (PR + push) est **déléguée** au reusable workflow `pwa-ci.yml@v1` de `dev-pwa-config`. Le build client exige des `VITE_FIREBASE_*` : on injecte des valeurs **factices** via `build-env` (le client ne contacte jamais Firebase au build), et on type-check le dossier `functions/` via `server-dir`.
 
 ```yaml
 # .github/workflows/ci.yml
@@ -3446,10 +3446,10 @@ concurrency:
   cancel-in-progress: true
 permissions:
   contents: read
-  packages: read   # lecture de @mister-guiiug/dev-wpa-config sur GitHub Packages
+  packages: read   # lecture de @mister-guiiug/dev-pwa-config sur GitHub Packages
 jobs:
   ci:
-    uses: mister-guiiug/dev-wpa-config/.github/workflows/pwa-ci.yml@v1
+    uses: mister-guiiug/dev-pwa-config/.github/workflows/pwa-ci.yml@v1
     secrets: inherit
     with:
       server-dir: functions
@@ -3489,7 +3489,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: mister-guiiug/dev-wpa-config/.github/actions/setup-pwa@v1
+      - uses: mister-guiiug/dev-pwa-config/.github/actions/setup-pwa@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -3545,7 +3545,7 @@ gh api -X POST repos/mister-guiiug/mister-qowa/pages -f build_type=workflow   # 
 Déploiement manuel des Functions/Rules en local (hors CI) :
 
 ```bash
-export NODE_AUTH_TOKEN="$(gh auth token)"   # lecture du package dev-wpa-config
+export NODE_AUTH_TOKEN="$(gh auth token)"   # lecture du package dev-pwa-config
 firebase deploy --only functions,database,firestore,storage --project prod
 ```
 

@@ -1,9 +1,9 @@
 import { RotateCw, Volume2, VolumeX } from "lucide-react";
-import { AppFooter as FamilyFooter } from "@mister-guiiug/dev-wpa-config/react/app-footer";
+import { AppFooter as FamilyFooter } from "@mister-guiiug/dev-pwa-config/react/app-footer";
 import {
   SPONSOR_URL,
   repoUrl,
-} from "@mister-guiiug/dev-wpa-config/apps-catalog";
+} from "@mister-guiiug/dev-pwa-config/apps-catalog";
 import { useAiSettings } from "../store/settingsStore";
 import { useT, useLang, LANGS } from "../i18n";
 

@@ -22,7 +22,7 @@ import {
   ReCaptchaEnterpriseProvider,
 } from "firebase/app-check";
 import { useEmulator } from "./env";
-import { createLogger } from "@mister-guiiug/dev-wpa-config/logger";
+import { createLogger } from "@mister-guiiug/dev-pwa-config/logger";
 
 const log = createLogger("firebase");
 

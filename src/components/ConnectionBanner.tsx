@@ -1,5 +1,5 @@
 import { WifiOff } from "lucide-react";
-import { ConnectionBanner as SocleConnectionBanner } from "@mister-guiiug/dev-wpa-config/react/connection-banner";
+import { ConnectionBanner as SocleConnectionBanner } from "@mister-guiiug/dev-pwa-config/react/connection-banner";
 import { useAppOnline } from "../hooks/useNetworkGuard";
 import { useT } from "../i18n";
 

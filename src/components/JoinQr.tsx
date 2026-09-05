@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { qrToSvg } from "@mister-guiiug/dev-wpa-config/qr";
+import { qrToSvg } from "@mister-guiiug/dev-pwa-config/qr";
 
 /**
  * QR du lien d'invitation (lobby host) — `qrToSvg` du socle : la peer `qrcode`

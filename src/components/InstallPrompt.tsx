@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useInstallPrompt } from "@mister-guiiug/dev-wpa-config/react/use-install-prompt";
+import { useInstallPrompt } from "@mister-guiiug/dev-pwa-config/react/use-install-prompt";
 import { Download, X } from "lucide-react";
 import { useT } from "../i18n";
 

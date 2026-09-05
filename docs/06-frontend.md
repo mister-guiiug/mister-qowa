@@ -588,7 +588,7 @@ export function Countdown({
 
 ### 6.7 Extrait `vite.config.ts` (base + manifest PWA)
 
-Aligné sur le parc : `base="/mister-qowa/"` (surchargeable par `VITE_BASE_PATH` pour Lighthouse CI), plugin SEO `dev-wpa-config`, `vite-plugin-pwa` en `registerType: 'prompt'`, et un `manualChunks` séparant `firebase` du reste (gros poids réseau).
+Aligné sur le parc : `base="/mister-qowa/"` (surchargeable par `VITE_BASE_PATH` pour Lighthouse CI), plugin SEO `dev-pwa-config`, `vite-plugin-pwa` en `registerType: 'prompt'`, et un `manualChunks` séparant `firebase` du reste (gros poids réseau).
 
 ```typescript
 // vite.config.ts (extrait)
@@ -596,7 +596,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
-import { pwaSeoPlugin } from '@mister-guiiug/dev-wpa-config/vite-pwa-base';
+import { pwaSeoPlugin } from '@mister-guiiug/dev-pwa-config/vite-pwa-base';
 
 const base = process.env.VITE_BASE_PATH ?? '/mister-qowa/';
 

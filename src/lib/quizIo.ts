@@ -2,7 +2,7 @@
 import {
   downloadJson,
   readJsonFile,
-} from "@mister-guiiug/dev-wpa-config/download";
+} from "@mister-guiiug/dev-pwa-config/download";
 import { quizSchema, type Quiz } from "@shared/contracts";
 import { AppError } from "./appError";
 

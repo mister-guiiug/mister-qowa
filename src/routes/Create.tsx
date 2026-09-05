@@ -16,7 +16,7 @@ import {
   FileText,
 } from "lucide-react";
 import { Screen, Button, Card, Spinner } from "../lib/ui";
-import { ConfirmDialog } from "@mister-guiiug/dev-wpa-config/react/confirm-dialog";
+import { ConfirmDialog } from "@mister-guiiug/dev-pwa-config/react/confirm-dialog";
 import { DEMO_QUIZZES } from "@shared/seed";
 import type { Quiz } from "@shared/contracts";
 import { createSession } from "../firebase/api";

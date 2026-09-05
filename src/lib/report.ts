@@ -5,7 +5,7 @@
  * seule. Branche un collecteur (Sentry/own) en fournissant simplement l'URL.
  */
 import { dumpBreadcrumbs } from "./breadcrumbs";
-import { createLogger } from "@mister-guiiug/dev-wpa-config/logger";
+import { createLogger } from "@mister-guiiug/dev-pwa-config/logger";
 
 const log = createLogger("report");
 

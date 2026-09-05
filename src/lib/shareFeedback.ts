@@ -1,4 +1,4 @@
-import type { ShareResult } from "@mister-guiiug/dev-wpa-config/share";
+import type { ShareResult } from "@mister-guiiug/dev-pwa-config/share";
 
 /** Clés i18n que l'hôte peut afficher après un partage. */
 export type ShareInfoKey = "host.linkCopied" | "host.shareUnavailable";
