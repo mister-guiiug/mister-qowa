@@ -58,6 +58,7 @@ export const de = {
   // Fußzeile
   "footer.source": "Quellcode",
   "footer.support": "Unterstützen",
+  "footer.issues": "Ein Problem melden",
   "footer.reload": "Neu laden",
   "footer.soundOn": "Ton an",
   "footer.soundOff": "Ton aus",

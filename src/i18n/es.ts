@@ -59,6 +59,7 @@ export const es = {
   // pie
   "footer.source": "Código fuente",
   "footer.support": "Apoyar",
+  "footer.issues": "Informar de un problema",
   "footer.reload": "Recargar",
   "footer.soundOn": "Sonido activado",
   "footer.soundOff": "Sonido apagado",

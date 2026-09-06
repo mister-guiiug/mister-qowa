@@ -55,6 +55,7 @@ export const fr = {
   // pied de page
   "footer.source": "Code source",
   "footer.support": "Soutenir",
+  "footer.issues": "Signaler un problème",
   "footer.reload": "Recharger",
   "footer.soundOn": "Son activé",
   "footer.soundOff": "Son coupé",

@@ -58,6 +58,7 @@ export const it = {
   // piè di pagina
   "footer.source": "Codice sorgente",
   "footer.support": "Sostieni",
+  "footer.issues": "Segnala un problema",
   "footer.reload": "Ricarica",
   "footer.soundOn": "Audio attivo",
   "footer.soundOff": "Audio disattivato",

@@ -62,6 +62,7 @@ export const en = {
   // footer
   "footer.source": "Source code",
   "footer.support": "Support",
+  "footer.issues": "Report a problem",
   "footer.reload": "Reload",
   "footer.soundOn": "Sound on",
   "footer.soundOff": "Sound off",

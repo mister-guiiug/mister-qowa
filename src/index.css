@@ -118,10 +118,29 @@ h3,
 /* Identité Qowa sur les composants du socle — seuls les écarts VOULUS par
    rapport à `components.css` figurent ici (CSS non layered : il gagne). */
 
+/* « Signaler un problème » : LE TROISIÈME LIEN N'EST PAS HABILLÉ PAR LE SOCLE.
+   `components.css` de la 4.4.1 pose la couleur et la mise en ligne de
+   `footer-source` et `footer-sponsor`, et oublie `footer-issues`, arrivé avec
+   la 4.4.0. Le lien retombait donc sur la couleur de lien PAR DÉFAUT DU
+   NAVIGATEUR : noir sur le violet nuit du fond en WebKit — contraste 1,08,
+   refusé en « serious » par axe sur webkit et mobile-safari, et surtout
+   illisible pour qui cherche à signaler quelque chose. Chromium ne le voyait
+   pas ; les deux e2e Safari, si.
+   À REMONTER AU SOCLE (le trou touche toute app qui pose `issues`) ; en
+   attendant, l'app aligne le troisième lien sur les deux autres. */
+[data-dwc="footer-issues"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--dwc-text-soft);
+  text-decoration: none;
+}
+
 /* Pied de page : l'app survole en blanc depuis l'origine (`hover:text-white`),
    et le violet de marque ne tient pas 4,5:1 en texte sur fond sombre. */
 [data-dwc="footer-source"]:hover,
-[data-dwc="footer-sponsor"]:hover {
+[data-dwc="footer-sponsor"]:hover,
+[data-dwc="footer-issues"]:hover {
   color: #ffffff;
 }
 
