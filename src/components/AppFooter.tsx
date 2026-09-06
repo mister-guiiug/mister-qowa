@@ -1,22 +1,16 @@
 import { RotateCw, Volume2, VolumeX } from "lucide-react";
-import { AppFooter as FamilyFooter } from "@mister-guiiug/dev-pwa-config/react/app-footer";
-import {
-  SPONSOR_URL,
-  repoUrl,
-} from "@mister-guiiug/dev-pwa-config/apps-catalog";
 import { useAiSettings } from "../store/settingsStore";
 import { useT, useLang, LANGS } from "../i18n";
 
 /**
- * Pied de page : commandes propres à l'app (langue, son, rechargement) +
- * liens famille source/sponsor via le socle (`react/app-footer`), qui fournit
- * aussi les icônes GitHub/café — le SVG GitHub en ligne local est retiré.
- * Les libellés restent traduits par l'i18n de l'app (5 langues, le socle
- * n'en connaît que 2) : ils sont passés en props.
+ * Pied de page de l'ACCUEIL : les commandes propres à l'app — langue, son,
+ * rechargement.
  *
- * Les URL viennent du catalogue famille (`apps-catalog`, module pur) et non
- * plus d'une copie locale : `repoUrl('mister-qowa')` dérive l'adresse du
- * dépôt de l'identifiant catalogue, qui EST le nom du dépôt GitHub.
+ * LES LIENS FAMILLE N'Y SONT PLUS. Ils y étaient, et cet écran est le seul à
+ * rendre ce composant : le code source et le soutien n'existaient donc que sur
+ * l'accueil. La règle famille du 05/09/2026 les veut aussi ailleurs, et la
+ * réponse du socle est de les rendre dans la COQUILLE, hors des routes. C'est
+ * ce que fait `App.tsx`.
  */
 export function AppFooter() {
   const t = useT();
@@ -68,13 +62,10 @@ export function AppFooter() {
           <RotateCw className="size-4" /> {t("footer.reload")}
         </button>
       </div>
-      <FamilyFooter
-        className="justify-center"
-        repoUrl={repoUrl("mister-qowa")}
-        sponsorUrl={SPONSOR_URL}
-        sourceLabel={t("footer.source")}
-        sponsorLabel={t("footer.support")}
-      />
+      {/* Les liens famille ne sont plus ici : ils sont rendus par la coquille
+          (`App.tsx`), hors des routes, donc sur TOUS les écrans et plus
+          seulement sur l'accueil. Ce pied de page garde ce qui lui est propre
+          — langue, son, rechargement. */}
     </div>
   );
 }
