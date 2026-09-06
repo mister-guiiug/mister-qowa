@@ -31,6 +31,7 @@ export const es = {
   "home.join": "Unirse a una partida",
   "home.solo": "Jugar en solitario",
   "home.myGames": "Mis partidas",
+  "home.myAccount": "Mi cuenta",
 
   // perfil del jugador (local)
   "profile.summary": (v) =>
@@ -272,6 +273,40 @@ export const es = {
   "history.winnerLine": (v) => `${v.pseudo} · ${v.pts} pts`,
   "history.hardest": (v) => `Más fallada: «${v.prompt}» — ${v.pct}% de acierto`,
 
+  // mi cuenta (cerrar sesión + eliminación)
+  "account.title": "Mi cuenta",
+  "account.guestTitle": "Cuenta de invitado",
+  "account.guestBody":
+    "Mister Qowa no pide correo ni contraseña: se crea para ti una cuenta de invitado anónima en la primera partida. Es la que vincula contigo las partidas que organizas.",
+  "account.uidLabel": "Identificador",
+  "account.uidPending": "Todavía no hay cuenta.",
+  "account.signOutTitle": "Cerrar sesión",
+  "account.signOutBody":
+    "Una cuenta de invitado no se recupera: sin correo ni contraseña, nada permite volver a ella. En la próxima partida se creará una cuenta de invitado nueva, y el historial de esta quedará ilegible para siempre — sin llegar a borrarse. Para borrarlo, usa la eliminación de abajo.",
+  "account.signOut": "Cerrar sesión",
+  "account.signOutConfirm": "¿Cerrar la sesión de esta cuenta de invitado?",
+  "account.signOutDone":
+    "Sesión cerrada. Se creará una cuenta de invitado nueva en tu próxima partida.",
+  "account.dangerTitle": "Zona peligrosa",
+  "account.deleteTitle": "Eliminar mi cuenta",
+  "account.deleteBody": "Se borra, sin vuelta atrás:",
+  "account.deleteItemResults":
+    "las partidas que has organizado, con los apodos y las puntuaciones de los jugadores que contienen;",
+  "account.deleteItemQuizzes": "los cuestionarios de los que eres propietario;",
+  "account.deleteItemLocal":
+    "lo que guarda este dispositivo — biblioteca de cuestionarios, perfil, clave de API de IA (el idioma elegido sí se conserva);",
+  "account.deleteItemAccount": "la propia cuenta de invitado.",
+  "account.deleteLimit":
+    "Lo que no se va: si has jugado en la partida de otra persona, tu apodo y tu puntuación figuran en SU partida archivada. Le pertenece y solo ella puede borrarla — borrarla en su lugar se llevaría también la clasificación de los demás jugadores.",
+  "account.typeToConfirm": "Para confirmar, escribe «{word}» abajo.",
+  "account.confirmWord": "ELIMINAR",
+  "account.delete": "Eliminar definitivamente",
+  "account.deleting": "Eliminando…",
+  "account.deleteDone":
+    "Cuenta eliminada. Todo lo que te pertenecía se ha borrado.",
+  "account.deleteDoneNoAccount":
+    "Tus datos se han borrado. Firebase se niega a retirar el identificador sin un inicio de sesión reciente, y una cuenta de invitado no tiene forma de volver a iniciar sesión: queda un identificador vacío, sin ningún dato asociado. Cierra la sesión para empezar con una cuenta nueva.",
+
   // reacciones / varios
   "reactions.sendAria": (v) => `Enviar la reacción ${v.emoji}`,
   "countdown.aria": (v) => `${v.n} segundos restantes`,
@@ -293,6 +328,9 @@ export const es = {
   "err.configTitle": "Servicio no disponible",
   "err.appCheckMissing":
     "La protección antibots (App Check) no está configurada para este despliegue. Contacta con el organizador.",
+  "err.accountDeleteFailed":
+    "La eliminación no se ha podido completar. Inténtalo de nuevo; si persiste, infórmalo desde el pie de página.",
+  "err.signOutFailed": "No se ha podido cerrar la sesión — inténtalo de nuevo.",
   "err.pinAllocFailed": "No se pudo asignar un PIN.",
   "err.noMoreQuestions": "No hay más preguntas.",
   "err.pinInvalid": "PIN no válido.",

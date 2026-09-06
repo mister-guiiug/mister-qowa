@@ -30,6 +30,7 @@ export const it = {
   "home.join": "Unisciti a una partita",
   "home.solo": "Gioca in solitario",
   "home.myGames": "Le mie partite",
+  "home.myAccount": "Il mio account",
 
   // profilo giocatore (locale)
   "profile.summary": (v) =>
@@ -273,6 +274,40 @@ export const it = {
   "history.hardest": (v) =>
     `Più sbagliata: «${v.prompt}» — ${v.pct}% di risposte corrette`,
 
+  // il mio account (disconnessione + eliminazione)
+  "account.title": "Il mio account",
+  "account.guestTitle": "Account ospite",
+  "account.guestBody":
+    "Mister Qowa non chiede né e-mail né password: alla prima partita viene creato per te un account ospite anonimo. È lui a legare a te le partite che ospiti.",
+  "account.uidLabel": "Identificatore",
+  "account.uidPending": "Nessun account per ora.",
+  "account.signOutTitle": "Disconnettersi",
+  "account.signOutBody":
+    "Un account ospite non si ritrova: senza e-mail né password, nulla permette di tornarci. Alla prossima partita verrà creato un nuovo account ospite, e la cronologia di questo diventerà illeggibile per sempre — senza però essere cancellata. Per cancellarla, usa l'eliminazione qui sotto.",
+  "account.signOut": "Disconnettersi",
+  "account.signOutConfirm": "Disconnettersi da questo account ospite?",
+  "account.signOutDone":
+    "Disconnesso. Alla prossima partita verrà creato un nuovo account ospite.",
+  "account.dangerTitle": "Zona pericolosa",
+  "account.deleteTitle": "Elimina il mio account",
+  "account.deleteBody": "Vengono cancellati, senza ritorno:",
+  "account.deleteItemResults":
+    "le partite che hai ospitato, con i soprannomi e i punteggi dei giocatori che contengono;",
+  "account.deleteItemQuizzes": "i quiz di cui sei proprietario;",
+  "account.deleteItemLocal":
+    "ciò che questo dispositivo conserva — libreria di quiz, profilo, chiave API IA (la lingua scelta viene mantenuta);",
+  "account.deleteItemAccount": "l'account ospite stesso.",
+  "account.deleteLimit":
+    "Ciò che non sparisce: se hai giocato da qualcun altro, il tuo soprannome e il tuo punteggio compaiono nella SUA partita archiviata. Appartiene a lui e solo lui può cancellarla — cancellarla al suo posto porterebbe via anche la classifica degli altri giocatori.",
+  "account.typeToConfirm": "Per confermare, scrivi «{word}» qui sotto.",
+  "account.confirmWord": "ELIMINA",
+  "account.delete": "Elimina definitivamente",
+  "account.deleting": "Eliminazione in corso…",
+  "account.deleteDone":
+    "Account eliminato. Tutto ciò che ti apparteneva è stato cancellato.",
+  "account.deleteDoneNoAccount":
+    "I tuoi dati sono stati cancellati. Firebase rifiuta di rimuovere l'identificatore senza un accesso recente, e un account ospite non ha modo di riconnettersi: resta un identificatore vuoto, a cui non è più legato alcun dato. Disconnettiti per ripartire con un account nuovo.",
+
   // reazioni / varie
   "reactions.sendAria": (v) => `Invia la reazione ${v.emoji}`,
   "countdown.aria": (v) => `${v.n} secondi rimasti`,
@@ -293,6 +328,9 @@ export const it = {
   "err.configTitle": "Servizio non disponibile",
   "err.appCheckMissing":
     "La protezione anti-bot (App Check) non è configurata per questa pubblicazione. Contatta l'organizzatore.",
+  "err.accountDeleteFailed":
+    "L'eliminazione non è andata a buon fine. Riprova; se persiste, segnalalo dal piè di pagina.",
+  "err.signOutFailed": "Disconnessione non riuscita — riprova.",
   "err.pinAllocFailed": "Impossibile assegnare un PIN.",
   "err.noMoreQuestions": "Nessun'altra domanda.",
   "err.pinInvalid": "PIN non valido.",

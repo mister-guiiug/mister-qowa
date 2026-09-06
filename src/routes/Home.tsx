@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Zap, Users, Gamepad2, History, Play } from "lucide-react";
+import { Zap, Users, Gamepad2, History, Play, UserCog } from "lucide-react";
 import { Screen, Button } from "../lib/ui";
 import { AppFooter } from "../components/AppFooter";
 import { useGameStore } from "../store/gameStore";
@@ -79,13 +79,25 @@ export function Home() {
           <Gamepad2 className="size-5" /> {t("home.solo")}
         </Button>
       </div>
-      <button
-        type="button"
-        onClick={() => nav("/history")}
-        className="mt-4 inline-flex items-center justify-center gap-1.5 text-sm text-white/50 hover:text-white"
-      >
-        <History className="size-4" /> {t("home.myGames")}
-      </button>
+      {/* Deux entrées secondaires : l'historique, et le compte — la seule
+          porte vers la déconnexion et la suppression, qui n'existaient
+          nulle part. */}
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-5">
+        <button
+          type="button"
+          onClick={() => nav("/history")}
+          className="inline-flex items-center justify-center gap-1.5 text-sm text-white/50 hover:text-white"
+        >
+          <History className="size-4" /> {t("home.myGames")}
+        </button>
+        <button
+          type="button"
+          onClick={() => nav("/account")}
+          className="inline-flex items-center justify-center gap-1.5 text-sm text-white/50 hover:text-white"
+        >
+          <UserCog className="size-4" /> {t("home.myAccount")}
+        </button>
+      </div>
       <AppFooter />
     </Screen>
   );

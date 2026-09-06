@@ -19,7 +19,15 @@ service cloud.firestore {
       // Le host archive sa propre partie (mode Spark, autorité côté host).
       allow create: if request.auth != null
         && request.resource.data.hostUid == request.auth.uid;
-      allow update, delete: if false;
+      // Une archive ne se RÉÉCRIT pas : un classement modifiable après coup
+      // n'est plus une archive.
+      allow update: if false;
+      // Mais elle s'EFFACE, par celui qu'elle désigne. `delete: if false`
+      // rendait la suppression de compte impossible à tenir : les pseudos et
+      // scores des joueurs restaient chez Firebase pour toujours, et aucune
+      // Function n'existe en mode Spark pour les retirer à sa place.
+      allow delete: if request.auth != null
+        && resource.data.hostUid == request.auth.uid;
     }
 
     match /users/{uid} {

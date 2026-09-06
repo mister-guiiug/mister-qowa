@@ -27,6 +27,7 @@ export const fr = {
   "home.join": "Rejoindre une partie",
   "home.solo": "Jouer en solo",
   "home.myGames": "Mes parties",
+  "home.myAccount": "Mon compte",
 
   // profil joueur (local)
   "profile.summary": (v) =>
@@ -271,6 +272,40 @@ export const fr = {
   "history.hardest": (v) =>
     `Plus ratée : « ${v.prompt} » — ${v.pct}% de réussite`,
 
+  // mon compte (déconnexion + suppression)
+  "account.title": "Mon compte",
+  "account.guestTitle": "Compte invité",
+  "account.guestBody":
+    "Mister Qowa ne demande ni e-mail ni mot de passe : un compte invité anonyme est créé pour toi à la première partie. C’est lui qui rattache à toi les parties que tu héberges.",
+  "account.uidLabel": "Identifiant",
+  "account.uidPending": "Aucun compte pour l’instant.",
+  "account.signOutTitle": "Se déconnecter",
+  "account.signOutBody":
+    "Un compte invité ne se retrouve pas : sans e-mail ni mot de passe, rien ne permet d’y revenir. À la prochaine partie, un nouveau compte invité sera créé, et l’historique de celui-ci deviendra définitivement illisible — sans être effacé pour autant. Pour effacer, utilise la suppression ci-dessous.",
+  "account.signOut": "Se déconnecter",
+  "account.signOutConfirm": "Se déconnecter de ce compte invité ?",
+  "account.signOutDone":
+    "Déconnecté. Un nouveau compte invité sera créé à ta prochaine partie.",
+  "account.dangerTitle": "Zone dangereuse",
+  "account.deleteTitle": "Supprimer mon compte",
+  "account.deleteBody": "Sont effacés, sans retour possible :",
+  "account.deleteItemResults":
+    "les parties que tu as hébergées, avec les pseudos et scores des joueurs qu’elles contiennent ;",
+  "account.deleteItemQuizzes": "les quiz dont tu es le propriétaire ;",
+  "account.deleteItemLocal":
+    "ce que cet appareil garde — bibliothèque de quiz, profil, clé d’API IA (la langue choisie, elle, est conservée) ;",
+  "account.deleteItemAccount": "le compte invité lui-même.",
+  "account.deleteLimit":
+    "Ce qui ne part pas : si tu as joué chez quelqu’un d’autre, ton pseudo et ton score figurent dans SA partie archivée. Elle lui appartient et lui seul peut l’effacer — l’effacer à sa place emporterait aussi le classement des autres joueurs.",
+  "account.typeToConfirm": "Pour confirmer, saisis « {word} » ci-dessous.",
+  "account.confirmWord": "SUPPRIMER",
+  "account.delete": "Supprimer définitivement",
+  "account.deleting": "Suppression en cours…",
+  "account.deleteDone":
+    "Compte supprimé. Tout ce qui t’appartenait a été effacé.",
+  "account.deleteDoneNoAccount":
+    "Tes données ont été effacées. Firebase refuse de retirer l’identifiant lui-même sans connexion récente, et un compte invité n’a aucun moyen de se reconnecter : il reste donc un identifiant vide, auquel plus aucune donnée n’est rattachée. Déconnecte-toi pour repartir sur un compte neuf.",
+
   // réactions / divers composants
   "reactions.sendAria": (v) => `Envoyer la réaction ${v.emoji}`,
   "countdown.aria": (v) => `${v.n} secondes restantes`,
@@ -291,6 +326,9 @@ export const fr = {
   "err.configTitle": "Service indisponible",
   "err.appCheckMissing":
     "La protection anti-robot (App Check) n’est pas configurée pour cette mise en ligne. Contacte l’organisateur.",
+  "err.accountDeleteFailed":
+    "La suppression n’a pas pu aller au bout. Réessaie ; si ça persiste, signale-le depuis le pied de page.",
+  "err.signOutFailed": "La déconnexion a échoué — réessaie.",
   // session / partie (api)
   "err.pinAllocFailed": "Impossible d’allouer un PIN.",
   "err.noMoreQuestions": "Plus de questions.",

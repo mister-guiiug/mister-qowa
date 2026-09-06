@@ -1,4 +1,7 @@
-# Tests des Security Rules RTDB sur l'émulateur Firebase (modèle anti-triche).
+# Tests des Security Rules sur l'émulateur Firebase : RTDB (modèle anti-triche)
+# ET Firestore (droit à l'effacement — chacun efface ses documents, et rien
+# d'autre). C'est le SEUL endroit où `firestore.rules` est exécuté : le reste de
+# la CI ne fait que le lire.
 name: Rules
 
 on:
@@ -13,7 +16,7 @@ permissions:
 
 jobs:
   rules:
-    name: Security Rules (émulateur RTDB)
+    name: Security Rules (émulateurs RTDB + Firestore)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -24,7 +27,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      # L'émulateur RTDB (firebase-tools ≥ 15) exige Java 21+.
+      # Les émulateurs RTDB et Firestore (firebase-tools ≥ 15) exigent Java 21+.
       - uses: actions/setup-java@v4
         with:
           distribution: temurin

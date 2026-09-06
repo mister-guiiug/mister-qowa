@@ -16,7 +16,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:rules": "npx --yes firebase-tools@15 emulators:exec --only database --project demo-mister-qowa \"vitest run --config vitest.rules.config.ts\"",
+    "test:rules": "npx --yes firebase-tools@15 emulators:exec --only database,firestore --project demo-mister-qowa \"vitest run --config vitest.rules.config.ts\"",
     "test:e2e": "playwright test",
     "test:e2e:critical": "playwright test --grep @critical",
     "test:e2e:ui": "playwright test --ui",

@@ -30,6 +30,7 @@ export const de = {
   "home.join": "Einem Spiel beitreten",
   "home.solo": "Solo spielen",
   "home.myGames": "Meine Spiele",
+  "home.myAccount": "Mein Konto",
 
   // Spielerprofil (lokal)
   "profile.summary": (v) =>
@@ -270,6 +271,40 @@ export const de = {
   "history.winnerLine": (v) => `${v.pseudo} · ${v.pts} Pkt`,
   "history.hardest": (v) => `Schwerste: „${v.prompt}“ — ${v.pct}% richtig`,
 
+  // mein Konto (abmelden + löschen)
+  "account.title": "Mein Konto",
+  "account.guestTitle": "Gastkonto",
+  "account.guestBody":
+    "Mister Qowa verlangt weder E-Mail noch Passwort: Beim ersten Spiel wird ein anonymes Gastkonto für dich angelegt. Es verknüpft die von dir gehosteten Spiele mit dir.",
+  "account.uidLabel": "Kennung",
+  "account.uidPending": "Noch kein Konto.",
+  "account.signOutTitle": "Abmelden",
+  "account.signOutBody":
+    "Ein Gastkonto lässt sich nicht wiederfinden: Ohne E-Mail und ohne Passwort führt nichts dorthin zurück. Beim nächsten Spiel wird ein neues Gastkonto angelegt, und der Verlauf dieses Kontos bleibt für immer unlesbar — ohne gelöscht zu sein. Zum Löschen dient die Löschung weiter unten.",
+  "account.signOut": "Abmelden",
+  "account.signOutConfirm": "Von diesem Gastkonto abmelden?",
+  "account.signOutDone":
+    "Abgemeldet. Beim nächsten Spiel wird ein neues Gastkonto angelegt.",
+  "account.dangerTitle": "Gefahrenzone",
+  "account.deleteTitle": "Mein Konto löschen",
+  "account.deleteBody": "Unwiderruflich gelöscht werden:",
+  "account.deleteItemResults":
+    "die von dir gehosteten Spiele samt der darin enthaltenen Spitznamen und Punktzahlen der Mitspielenden;",
+  "account.deleteItemQuizzes": "die Quiz, die dir gehören;",
+  "account.deleteItemLocal":
+    "was dieses Gerät speichert — Quizbibliothek, Profil, KI-API-Schlüssel (die gewählte Sprache bleibt erhalten);",
+  "account.deleteItemAccount": "das Gastkonto selbst.",
+  "account.deleteLimit":
+    "Was nicht verschwindet: Wenn du bei jemand anderem mitgespielt hast, stehen dein Spitzname und deine Punktzahl in DESSEN archiviertem Spiel. Es gehört dieser Person, und nur sie kann es löschen — an ihrer Stelle gelöscht, wäre auch die Platzierung der anderen Mitspielenden weg.",
+  "account.typeToConfirm": "Zur Bestätigung „{word}“ unten eingeben.",
+  "account.confirmWord": "LÖSCHEN",
+  "account.delete": "Endgültig löschen",
+  "account.deleting": "Wird gelöscht…",
+  "account.deleteDone":
+    "Konto gelöscht. Alles, was dir gehörte, wurde entfernt.",
+  "account.deleteDoneNoAccount":
+    "Deine Daten wurden gelöscht. Firebase verweigert das Entfernen der Kennung selbst ohne kürzliche Anmeldung, und ein Gastkonto kann sich nicht erneut anmelden: Es bleibt eine leere Kennung, an der keine Daten mehr hängen. Melde dich ab, um mit einem neuen Konto zu starten.",
+
   // Reaktionen / Sonstiges
   "reactions.sendAria": (v) => `Reaktion ${v.emoji} senden`,
   "countdown.aria": (v) => `${v.n} Sekunden übrig`,
@@ -292,6 +327,9 @@ export const de = {
   "err.configTitle": "Dienst nicht verfügbar",
   "err.appCheckMissing":
     "Der Bot-Schutz (App Check) ist für diese Bereitstellung nicht konfiguriert. Wende dich an den Organisator.",
+  "err.accountDeleteFailed":
+    "Die Löschung konnte nicht abgeschlossen werden. Versuche es erneut; wenn es bleibt, melde es über die Fußzeile.",
+  "err.signOutFailed": "Abmelden fehlgeschlagen — versuche es erneut.",
   "err.pinAllocFailed": "PIN konnte nicht vergeben werden.",
   "err.noMoreQuestions": "Keine weiteren Fragen.",
   "err.pinInvalid": "Ungültiger PIN.",

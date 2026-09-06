@@ -7,6 +7,8 @@ import { initializeApp, type FirebaseApp } from "firebase/app";
 import {
   getAuth,
   signInAnonymously,
+  signOut,
+  deleteUser,
   onAuthStateChanged,
   connectAuthEmulator,
   type Auth,
@@ -109,4 +111,57 @@ export function ensureAuth(): Promise<User> {
       },
     );
   });
+}
+
+/**
+ * L'uid courant SANS en créer un : `null` s'il n'y a pas de session.
+ *
+ * `ensureAuth` ouvre une session invité quand il n'en trouve pas — c'est ce
+ * qu'on veut pour rejoindre une partie, et exactement ce qu'on ne veut pas sur
+ * l'écran « Mon compte », où afficher son identifiant créerait le compte qu'on
+ * vient regarder (et où « supprimer » en fabriquerait un pour l'effacer).
+ * `onAuthStateChanged` répond une fois la persistance relue, sans réseau.
+ */
+export function peekAuthUid(): Promise<string | null> {
+  ensure();
+  return new Promise<string | null>((resolve) => {
+    const off = onAuthStateChanged(
+      auth!,
+      (user) => {
+        off();
+        resolve(user?.uid ?? null);
+      },
+      () => {
+        off();
+        resolve(null);
+      },
+    );
+  });
+}
+
+/**
+ * Ferme la session courante.
+ *
+ * SUR UN COMPTE ANONYME, CE N'EST PAS NEUTRE : le compte n'est pas supprimé,
+ * il devient INJOIGNABLE. Aucun identifiant ne permet d'y revenir — la
+ * prochaine visite appelle `signInAnonymously` et obtient un uid NEUF. Les
+ * parties archivées sous l'ancien uid restent chez Firebase et ne sont plus
+ * lisibles par personne. L'écran « Mon compte » le dit avant d'appeler ceci ;
+ * c'est aussi pourquoi la suppression de compte, elle, purge AVANT.
+ */
+export async function signOutCurrentUser(): Promise<void> {
+  ensure();
+  await signOut(auth!);
+}
+
+/**
+ * Supprime le compte Firebase courant. Peut échouer en
+ * `auth/requires-recent-login` : voir `lib/account.ts`, qui traite ce cas —
+ * et qui appelle donc TOUJOURS la purge des données avant cette fonction.
+ */
+export async function deleteCurrentUser(): Promise<void> {
+  ensure();
+  const user = auth!.currentUser;
+  if (!user) return;
+  await deleteUser(user);
 }
