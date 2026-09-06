@@ -24,7 +24,7 @@ export function FamilyLinks() {
   const t = useT();
   return (
     <AppFooter
-      className="justify-center px-4 pb-6 text-sm text-white/50"
+      className="justify-center px-4 pb-6 text-sm"
       repoUrl={repoUrl("mister-qowa")}
       sponsorUrl={SPONSOR_URL}
       sourceLabel={t("footer.source")}

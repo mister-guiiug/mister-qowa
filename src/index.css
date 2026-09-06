@@ -81,7 +81,15 @@ body {
   margin: 0;
   color: #f5f3ff;
   font-family: var(--font-sans);
-  background:
+  /* COULEUR DE FOND SOLIDE SOUS LE DÉGRADÉ. Elle n'est visible nulle part —
+     le dégradé la couvre — mais un dégradé est une IMAGE de fond, pas une
+     couleur : axe-core ne sait pas calculer un contraste contre lui et
+     retombe sur le blanc du canevas. Un texte clair posé directement sur le
+     `body` était alors compté à 2,56:1 et faisait échouer la spec a11y, alors
+     qu'il est lisible à l'écran. Les écrans de l'app ne le voyaient pas :
+     chacun peint son propre fond opaque. */
+  background-color: #0f0a1e;
+  background-image:
     radial-gradient(1200px 600px at 50% -10%, #3b1d72 0%, transparent 60%),
     linear-gradient(160deg, #160b2e 0%, #0f0a1e 100%);
   background-attachment: fixed;
