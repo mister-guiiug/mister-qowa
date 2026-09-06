@@ -34,6 +34,7 @@ export const en = {
   "home.join": "Join a game",
   "home.solo": "Play solo",
   "home.myGames": "My games",
+  "home.myAccount": "My account",
 
   // player profile (local)
   "profile.summary": (v) =>
@@ -62,6 +63,7 @@ export const en = {
   // footer
   "footer.source": "Source code",
   "footer.support": "Support",
+  "footer.issues": "Report a problem",
   "footer.reload": "Reload",
   "footer.soundOn": "Sound on",
   "footer.soundOff": "Sound off",
@@ -272,6 +274,40 @@ export const en = {
   "history.winnerLine": (v) => `${v.pseudo} · ${v.pts} pts`,
   "history.hardest": (v) => `Hardest: “${v.prompt}” — ${v.pct}% correct`,
 
+  // my account (sign out + deletion)
+  "account.title": "My account",
+  "account.guestTitle": "Guest account",
+  "account.guestBody":
+    "Mister Qowa asks for no email and no password: an anonymous guest account is created for you on your first game. It is what ties the games you host to you.",
+  "account.uidLabel": "Identifier",
+  "account.uidPending": "No account yet.",
+  "account.signOutTitle": "Sign out",
+  "account.signOutBody":
+    "A guest account cannot be found again: with no email and no password, nothing lets you return to it. On your next game a new guest account is created, and this one’s history becomes permanently unreadable — without being erased. To erase it, use the deletion below.",
+  "account.signOut": "Sign out",
+  "account.signOutConfirm": "Sign out of this guest account?",
+  "account.signOutDone":
+    "Signed out. A new guest account will be created on your next game.",
+  "account.dangerTitle": "Danger zone",
+  "account.deleteTitle": "Delete my account",
+  "account.deleteBody": "The following is erased, with no way back:",
+  "account.deleteItemResults":
+    "the games you hosted, along with the player nicknames and scores they contain;",
+  "account.deleteItemQuizzes": "the quizzes you own;",
+  "account.deleteItemLocal":
+    "what this device keeps — quiz library, profile, AI API key (your chosen language is kept);",
+  "account.deleteItemAccount": "the guest account itself.",
+  "account.deleteLimit":
+    "What does not go: if you played in someone else’s game, your nickname and score are part of THEIR archived game. It belongs to them and only they can erase it — erasing it on their behalf would also take the other players’ ranking with it.",
+  "account.typeToConfirm": "To confirm, type “{word}” below.",
+  "account.confirmWord": "DELETE",
+  "account.delete": "Delete permanently",
+  "account.deleting": "Deleting…",
+  "account.deleteDone":
+    "Account deleted. Everything that belonged to you has been erased.",
+  "account.deleteDoneNoAccount":
+    "Your data has been erased. Firebase refuses to remove the identifier itself without a recent sign-in, and a guest account has no way to sign in again: an empty identifier remains, with no data attached to it. Sign out to start on a fresh account.",
+
   // reactions / misc components
   "reactions.sendAria": (v) => `Send reaction ${v.emoji}`,
   "countdown.aria": (v) => `${v.n} seconds left`,
@@ -291,6 +327,9 @@ export const en = {
   "err.configTitle": "Service unavailable",
   "err.appCheckMissing":
     "Bot protection (App Check) isn’t configured for this deployment. Contact the organizer.",
+  "err.accountDeleteFailed":
+    "The deletion could not complete. Try again; if it persists, report it from the footer.",
+  "err.signOutFailed": "Sign-out failed — try again.",
   "err.pinAllocFailed": "Could not allocate a PIN.",
   "err.noMoreQuestions": "No more questions.",
   "err.pinInvalid": "Invalid PIN.",

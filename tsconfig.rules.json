@@ -1,0 +1,24 @@
+{
+  // Les tests des Security Rules — ET la config Vitest qui les lance — n'étaient
+  // dans AUCUN projet TypeScript : `tsconfig.app.json` ne prend que `src` et
+  // `shared`, `tsconfig.node.json` que les deux configs Vite. Vitest efface les
+  // types sans jamais les lire, donc rien ne vérifiait 700 lignes de suite de
+  // règles : une assertion écrite sur un chemin ou un champ qui n'existe plus
+  // passait le lint, passait le build, et ne se voyait qu'à l'exécution — ou
+  // jamais, si elle attendait déjà un échec (`assertFails` réussit aussi quand
+  // la requête est absurde).
+  //
+  // Projet SÉPARÉ plutôt qu'un `include` de plus dans `tsconfig.node.json` :
+  // ces fichiers ont besoin du chemin `@shared/*` (que la config Vitest déclare
+  // en alias) et donc de `shared` dans leur programme, ce qui n'a rien à faire
+  // dans le projet des configs de build.
+  "extends": "@mister-guiiug/dev-pwa-config/tsconfig-node",
+  "compilerOptions": {
+    "composite": true,
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.rules.tsbuildinfo",
+    "paths": {
+      "@shared/*": ["./shared/*"]
+    }
+  },
+  "include": ["rules-tests", "shared", "vitest.rules.config.ts"]
+}

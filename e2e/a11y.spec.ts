@@ -48,6 +48,15 @@ test("a11y : génération IA @critical", async ({ page }) => {
   await expectNoSeriousViolations(page, "Génération IA");
 });
 
+test("a11y : mon compte @critical", async ({ page }) => {
+  // L'écran le plus lourd en texte de l'app, et le seul dont un clic est
+  // irréversible : sa « zone dangereuse » pose ses propres couleurs (rose sur
+  // dégradé) hors des cartes `backdrop-blur` exclues plus haut.
+  await page.goto("/");
+  await page.getByRole("button", { name: /Mon compte/ }).click();
+  await expectNoSeriousViolations(page, "Mon compte");
+});
+
 test("a11y : solo en jeu @critical", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: /Jouer en solo/ }).click();

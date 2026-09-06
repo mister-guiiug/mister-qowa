@@ -46,6 +46,9 @@ const Solo = lazy(() =>
 const History = lazy(() =>
   import("./routes/History").then((m) => ({ default: m.History })),
 );
+const Account = lazy(() =>
+  import("./routes/Account").then((m) => ({ default: m.Account })),
+);
 
 /** Trace les changements de route dans le fil d'Ariane (diagnostic d'erreur). */
 function RouteBreadcrumbs() {
@@ -106,6 +109,7 @@ export function App() {
               <Route path="/play/:sessionId" element={<Play />} />
               <Route path="/solo" element={<Solo />} />
               <Route path="/history" element={<History />} />
+              <Route path="/account" element={<Account />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>
