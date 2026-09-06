@@ -87,6 +87,25 @@ export default defineConfig(({ command }) => {
           start_url: base,
           lang: "fr",
           categories: ["education", "games"],
+          // Les deux captures de la fiche d'installation, prises par
+          // `pwa-screenshots` du socle sur un build (06/09/2026) : sans elles,
+          // Chrome propose une ligne et un bouton au lieu d'une fiche.
+          screenshots: [
+            {
+              src: "screenshots/narrow.png",
+              sizes: "540x1170",
+              type: "image/png",
+              form_factor: "narrow",
+              label: "L’application, sur téléphone",
+            },
+            {
+              src: "screenshots/wide.png",
+              sizes: "1280x720",
+              type: "image/png",
+              form_factor: "wide",
+              label: "L’application, sur ordinateur",
+            },
+          ],
           icons: [
             {
               src: "icons/icon-192.png",
