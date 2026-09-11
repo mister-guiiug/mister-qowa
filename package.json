@@ -21,7 +21,8 @@
     "test:e2e:critical": "playwright test --grep @critical",
     "test:e2e:ui": "playwright test --ui",
     "type-check": "tsc -b",
-    "icons": "pwa-icons --source public/icons/icon.svg --out public/icons --sizes 192,512 --maskable --bg 15,10,30",
+    "icons": "pwa-icons --source public/icons/icon.svg --out public/icons --sizes 192,512",
+    "icons:maskable": "node scripts/generate-maskable.mjs",
     "emulators": "firebase emulators:start",
     "prepare": "husky || true"
   },
