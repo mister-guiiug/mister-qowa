@@ -9,7 +9,6 @@ import {
 import { LazyMotion, domMax, MotionConfig } from "framer-motion";
 import { Home } from "./routes/Home";
 import { UpdatePrompt } from "./components/UpdatePrompt";
-import { InstallPrompt } from "./components/InstallPrompt";
 import { ConnectionBanner } from "./components/ConnectionBanner";
 import { FamilyLinks } from "./components/FamilyLinks";
 import { Spinner } from "./lib/ui";
@@ -119,7 +118,11 @@ export function App() {
               cinq langues là où le socle en connaît deux. */}
           <FamilyLinks />
           <UpdatePrompt />
-          <InstallPrompt />
+          {/* L'INVITE D'INSTALLATION A QUITTÉ LA COQUILLE pour l'accueil. Le
+              bandeau maison était une barre flottante, celui du socle est un
+              élément de flux : le laisser ici le poserait au hasard du dernier
+              écran rendu. Et il paraîtrait par-dessus une partie en cours,
+              alors que sur l'accueil le joueur est au repos. */}
         </HashRouter>
       </MotionConfig>
     </LazyMotion>
