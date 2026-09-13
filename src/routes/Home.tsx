@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Zap, Users, Gamepad2, History, Play, UserCog } from "lucide-react";
 import { Screen, Button } from "../lib/ui";
 import { AppFooter } from "../components/AppFooter";
+import { PwaInstallPrompt } from "@mister-guiiug/dev-pwa-config/react/pwa-install-prompt";
 import { useGameStore } from "../store/gameStore";
 import { useProfile } from "../store/profileStore";
 import { BADGE_EMOJI } from "../lib/profile";
@@ -98,6 +99,10 @@ export function Home() {
           <UserCog className="size-4" /> {t("home.myAccount")}
         </button>
       </div>
+      {/* `dismissKey` REPREND LA CLÉ DU BANDEAU MAISON : le socle la lit comme
+          un refus d'avant sa cadence et le traduit en report d'un mois, au lieu
+          de reproposer l'installation à qui l'avait déjà écartée. */}
+      <PwaInstallPrompt dismissKey="mister-qowa:install-dismissed" />
       <AppFooter />
     </Screen>
   );
