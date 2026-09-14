@@ -2,11 +2,16 @@ import { useEffect, useState } from "react";
 import { qrToSvg } from "@mister-guiiug/dev-pwa-config/qr";
 
 /**
- * QR du lien d'invitation (lobby host) — `qrToSvg` du socle : la peer `qrcode`
+ * QR du lien d'invitation (lobby host) — `qrToSvg` du socle : la peer `uqr`
  * n'est téléchargée que lorsqu'un QR est réellement affiché, au lieu de peser
  * dans le chunk Host via le composant `qrcode.react`. Rendu équivalent : même
  * URL encodée, 148 px, encre #0f0a1e sur blanc, SVG net à toute échelle — la
  * zone calme est fournie par le cadre blanc `p-3` du parent.
+ *
+ * La peer était `qrcode` jusqu'au socle 4.16.0, qui l'a remplacée par `uqr` :
+ * 4,1 ko gzip au lieu de 9,5, et plus aucune dépendance transitive. Les options
+ * ci-dessous ne changent pas — le socle garde le vocabulaire de `qrcode` et
+ * traduit lui-même.
  */
 export function JoinQr({ url }: { url: string }) {
   const [svg, setSvg] = useState<string | null>(null);
@@ -17,7 +22,7 @@ export function JoinQr({ url }: { url: string }) {
       margin: 0,
       errorCorrectionLevel: "L", // le défaut de qrcode.react — même densité de motif
       color: { dark: "#0f0a1e", light: "#ffffff" },
-      loader: () => import("qrcode"), // import statiquement analysable par Vite (dev + build)
+      loader: () => import("uqr"), // import statiquement analysable par Vite (dev + build)
     })
       .then((s) => {
         if (!cancelled) setSvg(s);
