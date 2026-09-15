@@ -7,6 +7,8 @@ import {
   useLocation,
 } from "react-router-dom";
 import { LazyMotion, domMax, MotionConfig } from "framer-motion";
+import { ConsentBanner } from "@mister-guiiug/dev-pwa-config/react/consent-banner";
+import { usePageViews } from "@mister-guiiug/dev-pwa-config/react/use-page-views";
 import { Home } from "./routes/Home";
 import { UpdatePrompt } from "./components/UpdatePrompt";
 import { ConnectionBanner } from "./components/ConnectionBanner";
@@ -49,9 +51,22 @@ const Account = lazy(() =>
   import("./routes/Account").then((m) => ({ default: m.Account })),
 );
 
-/** Trace les changements de route dans le fil d'Ariane (diagnostic d'erreur). */
+/**
+ * Ce que le changement de route déclenche, et qui ne rend rien.
+ *
+ * Deux usages, un seul endroit : le fil d'Ariane du diagnostic d'erreur, et la
+ * vue de page GA4. Les séparer en deux composants ferait deux abonnements à la
+ * même valeur pour le même évènement.
+ *
+ * `usePageViews` ne fait rien tant que le consentement n'est pas accordé — il
+ * se monte donc sans condition. Sans lui, GA4 ne compterait qu'une vue par
+ * chargement de document : toute la navigation du quiz serait invisible, et
+ * `initAnalytics` pose en plus `send_page_view: false` pour que la première vue
+ * passe par ici comme les autres.
+ */
 function RouteBreadcrumbs() {
   const loc = useLocation();
+  usePageViews(loc.pathname);
   useEffect(() => {
     addBreadcrumb("route", loc.pathname);
   }, [loc.pathname]);
@@ -117,6 +132,13 @@ export function App() {
               famille. Les libellés viennent de l'i18n de l'app, qui connaît
               cinq langues là où le socle en connaît deux. */}
           <FamilyLinks />
+          {/* Une `region`, pas une boîte modale : elle ne recouvre rien et ne
+              piège pas le focus — un bandeau qui bloquerait une partie en cours
+              serait exactement le « dark pattern » que le RGPD nomme. Ne rend
+              RIEN tant que `VITE_GA_MEASUREMENT_ID` n'est pas posée. */}
+          <ConsentBanner
+            gaMeasurementId={import.meta.env.VITE_GA_MEASUREMENT_ID}
+          />
           <UpdatePrompt />
           {/* L'INVITE D'INSTALLATION A QUITTÉ LA COQUILLE pour l'accueil. Le
               bandeau maison était une barre flottante, celui du socle est un
