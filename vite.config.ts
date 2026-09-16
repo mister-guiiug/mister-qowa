@@ -23,7 +23,33 @@ export default defineConfig(({ command }) => {
         "@shared": fileURLToPath(new URL("./shared", import.meta.url)),
       },
     },
-    build: { sourcemap: true, chunkSizeWarningLimit: 900 },
+    build: {
+      sourcemap: true,
+      chunkSizeWarningLimit: 900,
+      /*
+       * NOMMER N'EST PAS PRÉCHARGER, et il faut les deux options pour les
+       * séparer. `manualChunks` donne au morceau Sentry un NOM stable —
+       * sans règle, Rollup le nomme d'après le module (`esm-*`), instable
+       * d'une version à l'autre : le `globIgnores` du service worker
+       * n'aurait pas de cible fiable. Mais nommer un morceau le fait
+       * entrer dans la liste de `modulepreload` de l'entrée — mesuré le
+       * 16/09/2026 sur miss-ticket-pwa, 435,4 kB préchargés au lieu de
+       * 280,1. `resolveDependencies` l'en retire.
+       */
+      modulePreload: {
+        resolveDependencies: (_fichier: string, deps: string[]) =>
+          deps.filter((d) => !/sentry-/.test(d)),
+      },
+      rollupOptions: {
+        output: {
+          manualChunks(id: string) {
+            return id.replace(/\\/g, "/").includes("/@sentry/")
+              ? "sentry"
+              : undefined;
+          },
+        },
+      },
+    },
     plugins: [
       // AVANT cspPlugin : il pose un script inline dans le <head>, que la
       // CSP doit hacher après coup ; et il écrit version.json au build.
@@ -64,6 +90,16 @@ export default defineConfig(({ command }) => {
         includeAssets: ["icons/icon.svg", "icons/apple-touch-icon.png"],
         workbox: {
           globPatterns: ["**/*.{js,css,html,svg,png,woff2,webmanifest}"],
+          /*
+           * LE MORCEAU SENTRY HORS DU PRÉCACHE, sans quoi le découpage ne servirait
+           * à rien : Workbox ramasse TOUT le JS émis, `import()` ou pas. Mesuré le
+           * 16/09/2026 sur la production de deux apps du parc, 345 et 463 KiB de SDK
+           * téléchargés par chaque visiteur, sans qu'aucun DSN soit posé.
+           *
+           * Hors précache, il part au premier `initSentry` réussi, et jamais si
+           * l'observabilité reste éteinte : rapporter une erreur demande le réseau.
+           */
+          globIgnores: ["**/sentry-*.js"],
           navigateFallback: "index.html",
           cleanupOutdatedCaches: true,
           runtimeCaching: [
