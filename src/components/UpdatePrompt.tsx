@@ -31,13 +31,14 @@ import { useT } from "../i18n";
  * l'i18n de l'app (5 langues, le socle n'en connaît que 2) et le placement
  * flottant en bas d'écran, que le socle laisse à l'app.
  *
- * `snoozeHours` reste à 0 (défaut) : « Plus tard » écarte le bandeau pour la
+ * `snoozeHours` est à 0, et ÉCRIT : « Plus tard » écarte le bandeau pour la
  * session, exactement comme la bannière locale qu'elle remplace.
  */
 export function UpdatePrompt() {
   const t = useT();
   return (
     <AppUpdates
+      snoozeHours={0}
       registerSW={registerSW}
       checkEvery="1h"
       bannerProps={{
