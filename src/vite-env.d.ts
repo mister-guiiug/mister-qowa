@@ -10,6 +10,8 @@ interface ImportMetaEnv {
    * indépendant.
    */
   readonly VITE_GA_MEASUREMENT_ID?: string;
+  /** DSN Sentry (optionnel) : vide = observabilité muette, sans bruit. */
+  readonly VITE_SENTRY_DSN?: string;
   readonly VITE_FIREBASE_API_KEY: string;
   readonly VITE_FIREBASE_AUTH_DOMAIN: string;
   readonly VITE_FIREBASE_PROJECT_ID: string;
