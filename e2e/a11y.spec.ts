@@ -1,5 +1,5 @@
-import { test, expect, type Page } from "@playwright/test";
-import AxeBuilder from "@axe-core/playwright";
+import { test, expect, type Page } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 
 /**
  * Audit d'accessibilité automatisé (axe-core) sur les écrans 100 % locaux.
@@ -11,58 +11,58 @@ async function expectNoSeriousViolations(page: Page, screen: string) {
     // Cartes `backdrop-blur` (fonds translucides sur dégradé body) : axe ne sait
     // pas résoudre le fond → contraste non déterministe (faux positifs flaky en CI).
     // Les fonds OPAQUES (boutons de réponse…) restent couverts par le scan.
-    .exclude(".backdrop-blur")
+    .exclude('.backdrop-blur')
     .analyze();
   const blocking = results.violations.filter(
-    (v) => v.impact === "serious" || v.impact === "critical",
+    v => v.impact === 'serious' || v.impact === 'critical'
   );
   expect(
     blocking,
-    `${screen} : ${blocking.map((v) => `${v.id} (${v.impact})`).join(", ")}`,
+    `${screen} : ${blocking.map(v => `${v.id} (${v.impact})`).join(', ')}`
   ).toEqual([]);
 }
 
-test("a11y : accueil @critical", async ({ page }) => {
-  await page.goto("/");
-  await expectNoSeriousViolations(page, "Accueil");
+test('a11y : accueil @critical', async ({ page }) => {
+  await page.goto('/');
+  await expectNoSeriousViolations(page, 'Accueil');
 });
 
-test("a11y : rejoindre @critical", async ({ page }) => {
-  await page.goto("/");
-  await page.getByRole("button", { name: /Rejoindre une partie/ }).click();
-  await expectNoSeriousViolations(page, "Rejoindre");
+test('a11y : rejoindre @critical', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: /Rejoindre une partie/ }).click();
+  await expectNoSeriousViolations(page, 'Rejoindre');
 });
 
-test("a11y : bibliothèque + éditeur @critical", async ({ page }) => {
-  await page.goto("/");
-  await page.getByRole("button", { name: /Héberger un quiz/ }).click();
-  await expectNoSeriousViolations(page, "Bibliothèque");
-  await page.getByRole("button", { name: /Nouveau/ }).click();
-  await expectNoSeriousViolations(page, "Éditeur");
+test('a11y : bibliothèque + éditeur @critical', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: /Héberger un quiz/ }).click();
+  await expectNoSeriousViolations(page, 'Bibliothèque');
+  await page.getByRole('button', { name: /Nouveau/ }).click();
+  await expectNoSeriousViolations(page, 'Éditeur');
 });
 
-test("a11y : génération IA @critical", async ({ page }) => {
-  await page.goto("/");
-  await page.getByRole("button", { name: /Héberger un quiz/ }).click();
-  await page.getByRole("button", { name: /Générer un quiz par IA/ }).click();
-  await expectNoSeriousViolations(page, "Génération IA");
+test('a11y : génération IA @critical', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: /Héberger un quiz/ }).click();
+  await page.getByRole('button', { name: /Générer un quiz par IA/ }).click();
+  await expectNoSeriousViolations(page, 'Génération IA');
 });
 
-test("a11y : mon compte @critical", async ({ page }) => {
+test('a11y : mon compte @critical', async ({ page }) => {
   // L'écran le plus lourd en texte de l'app, et le seul dont un clic est
   // irréversible : sa « zone dangereuse » pose ses propres couleurs (rose sur
   // dégradé) hors des cartes `backdrop-blur` exclues plus haut.
-  await page.goto("/");
-  await page.getByRole("button", { name: /Mon compte/ }).click();
-  await expectNoSeriousViolations(page, "Mon compte");
+  await page.goto('/');
+  await page.getByRole('button', { name: /Mon compte/ }).click();
+  await expectNoSeriousViolations(page, 'Mon compte');
 });
 
-test("a11y : solo en jeu @critical", async ({ page }) => {
-  await page.goto("/");
-  await page.getByRole("button", { name: /Jouer en solo/ }).click();
+test('a11y : solo en jeu @critical', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: /Jouer en solo/ }).click();
   await page
-    .getByRole("button", { name: /^Jouer$/ })
+    .getByRole('button', { name: /^Jouer$/ })
     .first()
     .click();
-  await expectNoSeriousViolations(page, "Solo (question)");
+  await expectNoSeriousViolations(page, 'Solo (question)');
 });

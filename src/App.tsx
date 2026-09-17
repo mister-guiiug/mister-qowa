@@ -1,54 +1,54 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect } from 'react';
 import {
   HashRouter,
   Routes,
   Route,
   Navigate,
   useLocation,
-} from "react-router-dom";
-import { LazyMotion, domMax, MotionConfig } from "framer-motion";
-import { ConsentBanner } from "@mister-guiiug/dev-pwa-config/react/consent-banner";
-import { usePageViews } from "@mister-guiiug/dev-pwa-config/react/use-page-views";
-import { Home } from "./routes/Home";
-import { UpdatePrompt } from "./components/UpdatePrompt";
-import { ConnectionBanner } from "./components/ConnectionBanner";
-import { FamilyLinks } from "./components/FamilyLinks";
-import { Spinner } from "./lib/ui";
-import { useLang, tStatic } from "./i18n";
-import { isConfigOk } from "./firebase/env";
-import { addBreadcrumb } from "./lib/breadcrumbs";
+} from 'react-router-dom';
+import { LazyMotion, domMax, MotionConfig } from 'framer-motion';
+import { ConsentBanner } from '@mister-guiiug/dev-pwa-config/react/consent-banner';
+import { usePageViews } from '@mister-guiiug/dev-pwa-config/react/use-page-views';
+import { Home } from './routes/Home';
+import { UpdatePrompt } from './components/UpdatePrompt';
+import { ConnectionBanner } from './components/ConnectionBanner';
+import { FamilyLinks } from './components/FamilyLinks';
+import { Spinner } from './lib/ui';
+import { useLang, tStatic } from './i18n';
+import { isConfigOk } from './firebase/env';
+import { addBreadcrumb } from './lib/breadcrumbs';
 
 // Code-splitting : seul l'accueil est chargé d'emblée ; les écrans qui tirent
 // Firebase (host/join/play/historique) sont en chunks séparés, chargés à la demande.
 const Create = lazy(() =>
-  import("./routes/Create").then((m) => ({ default: m.Create })),
+  import('./routes/Create').then(m => ({ default: m.Create }))
 );
 const QuizEditor = lazy(() =>
-  import("./routes/QuizEditor").then((m) => ({ default: m.QuizEditor })),
+  import('./routes/QuizEditor').then(m => ({ default: m.QuizEditor }))
 );
 const AiGenerate = lazy(() =>
-  import("./routes/AiGenerate").then((m) => ({ default: m.AiGenerate })),
+  import('./routes/AiGenerate').then(m => ({ default: m.AiGenerate }))
 );
 const TextImport = lazy(() =>
-  import("./routes/TextImport").then((m) => ({ default: m.TextImport })),
+  import('./routes/TextImport').then(m => ({ default: m.TextImport }))
 );
 const Host = lazy(() =>
-  import("./routes/Host").then((m) => ({ default: m.Host })),
+  import('./routes/Host').then(m => ({ default: m.Host }))
 );
 const Join = lazy(() =>
-  import("./routes/Join").then((m) => ({ default: m.Join })),
+  import('./routes/Join').then(m => ({ default: m.Join }))
 );
 const Play = lazy(() =>
-  import("./routes/Play").then((m) => ({ default: m.Play })),
+  import('./routes/Play').then(m => ({ default: m.Play }))
 );
 const Solo = lazy(() =>
-  import("./routes/Solo").then((m) => ({ default: m.Solo })),
+  import('./routes/Solo').then(m => ({ default: m.Solo }))
 );
 const History = lazy(() =>
-  import("./routes/History").then((m) => ({ default: m.History })),
+  import('./routes/History').then(m => ({ default: m.History }))
 );
 const Account = lazy(() =>
-  import("./routes/Account").then((m) => ({ default: m.Account })),
+  import('./routes/Account').then(m => ({ default: m.Account }))
 );
 
 /**
@@ -68,7 +68,7 @@ function RouteBreadcrumbs() {
   const loc = useLocation();
   usePageViews(loc.pathname);
   useEffect(() => {
-    addBreadcrumb("route", loc.pathname);
+    addBreadcrumb('route', loc.pathname);
   }, [loc.pathname]);
   return null;
 }
@@ -77,14 +77,14 @@ function RouteBreadcrumbs() {
 function ConfigError() {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-4 p-6 text-center">
-      <p className="font-display text-2xl">{tStatic("err.configTitle")}</p>
-      <p className="max-w-sm text-white/60">{tStatic("err.appCheckMissing")}</p>
+      <p className="font-display text-2xl">{tStatic('err.configTitle')}</p>
+      <p className="max-w-sm text-white/60">{tStatic('err.appCheckMissing')}</p>
     </div>
   );
 }
 
 export function App() {
-  const lang = useLang((s) => s.lang);
+  const lang = useLang(s => s.lang);
   useEffect(() => {
     document.documentElement.lang = lang;
   }, [lang]);

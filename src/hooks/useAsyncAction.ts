@@ -1,5 +1,5 @@
-import { useCallback, useState } from "react";
-import { useErr } from "../i18n";
+import { useCallback, useState } from 'react';
+import { useErr } from '../i18n';
 
 /**
  * Gestion factorisée d'une action asynchrone : drapeau `busy` + message
@@ -22,7 +22,7 @@ export function useAsyncAction() {
         setBusy(false);
       }
     },
-    [err],
+    [err]
   );
 
   return { busy, error, setError, run };

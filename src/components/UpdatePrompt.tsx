@@ -1,6 +1,6 @@
-import { registerSW } from "virtual:pwa-register";
-import { AppUpdates } from "@mister-guiiug/dev-pwa-config/react/app-updates";
-import { useT } from "../i18n";
+import { registerSW } from 'virtual:pwa-register';
+import { AppUpdates } from '@mister-guiiug/dev-pwa-config/react/app-updates';
+import { useT } from '../i18n';
 
 /**
  * Bannière de mise à jour PWA. Le SW est en `prompt` (pas d'auto-reload pendant
@@ -42,11 +42,11 @@ export function UpdatePrompt() {
       registerSW={registerSW}
       checkEvery="1h"
       bannerProps={{
-        title: t("update.available"),
-        updateLabel: t("common.reload"),
-        updatingLabel: t("update.updating"),
-        dismissLabel: t("update.later"),
-        className: "fixed inset-x-3 bottom-3 z-50 mx-auto max-w-md",
+        title: t('update.available'),
+        updateLabel: t('common.reload'),
+        updatingLabel: t('update.updating'),
+        dismissLabel: t('update.later'),
+        className: 'fixed inset-x-3 bottom-3 z-50 mx-auto max-w-md',
       }}
     />
   );

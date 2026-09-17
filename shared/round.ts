@@ -4,9 +4,9 @@
  * nouveaux scores, le reveal par joueur et la bonne réponse. Aucune dépendance
  * Firebase : c'est le cœur métier, exercé directement par les tests.
  */
-import type { Question, Score, PlayerReveal } from "./contracts";
-import { isCorrect, correctChoiceOf, basePointsOf } from "./game";
-import { computeScore } from "./scoring";
+import type { Question, Score, PlayerReveal } from './contracts';
+import { isCorrect, correctChoiceOf, basePointsOf } from './game';
+import { computeScore } from './scoring';
 
 export interface RoundAnswer {
   choice: string;
@@ -27,19 +27,19 @@ export function scoreRound(
   answers: Record<string, RoundAnswer>,
   prevScores: Record<string, Score>,
   activatedAt: number,
-  streakBonusPct: number,
+  streakBonusPct: number
 ): RoundResult {
   const scores: Record<string, Score> = {};
   const reveals: Record<string, PlayerReveal> = {};
 
   // Sondage : ni score, ni série, ni reveal.
-  if (q.type === "poll") return { scores, reveals, correctChoice: null };
+  if (q.type === 'poll') return { scores, reveals, correctChoice: null };
 
   for (const [pid, ans] of Object.entries(answers)) {
     const correct = isCorrect(q, ans.choice);
     const responseTimeMs = Math.max(
       0,
-      (ans.serverTs ?? activatedAt) - activatedAt,
+      (ans.serverTs ?? activatedAt) - activatedAt
     );
     const prev = prevScores[pid] ?? { total: 0, streak: 0 };
     const awarded = computeScore({
@@ -70,10 +70,10 @@ export function eliminateAfterRound(
   q: Question,
   answers: Record<string, RoundAnswer>,
   playerIds: string[],
-  prevScores: Record<string, Score>,
+  prevScores: Record<string, Score>
 ): string[] {
-  if (q.type === "poll") return [];
-  return playerIds.filter((pid) => {
+  if (q.type === 'poll') return [];
+  return playerIds.filter(pid => {
     if (prevScores[pid]?.eliminated) return false; // déjà hors course
     const a = answers[pid];
     return !a || !isCorrect(q, a.choice);
@@ -83,7 +83,7 @@ export function eliminateAfterRound(
 /** Compte réponses & bonnes réponses d'une question (pour les stats post-partie). */
 export function tallyAnswers(
   q: Question,
-  answers: Record<string, RoundAnswer>,
+  answers: Record<string, RoundAnswer>
 ): { answered: number; correct: number } {
   let correct = 0;
   for (const a of Object.values(answers)) {

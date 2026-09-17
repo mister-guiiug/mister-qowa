@@ -24,18 +24,18 @@ export interface ScoreInput {
 
 export function speedFactor(
   responseTimeMs: number,
-  timeLimitMs: number,
+  timeLimitMs: number
 ): number {
   const ratio = Math.min(
     Math.max(responseTimeMs, 0) / Math.max(timeLimitMs, 1),
-    1,
+    1
   );
   return 1 - 0.5 * ratio;
 }
 
 export function streakMultiplier(
   streakBefore: number,
-  streakBonusPct: number,
+  streakBonusPct: number
 ): number {
   const capped = Math.min(Math.max(streakBefore, 0), STREAK_CAP);
   return 1 + (streakBonusPct / 100) * capped;
@@ -44,7 +44,7 @@ export function streakMultiplier(
 export function computeScore(p: ScoreInput): number {
   if (!p.correct) return 0;
   const base = Math.round(
-    p.basePoints * speedFactor(p.responseTimeMs, p.timeLimitMs),
+    p.basePoints * speedFactor(p.responseTimeMs, p.timeLimitMs)
   );
   return Math.round(base * streakMultiplier(p.streakBefore, p.streakBonusPct));
 }

@@ -1,15 +1,15 @@
-import { useEffect, useState } from "react";
-import { onValue, ref } from "firebase/database";
-import { getDb } from "../firebase/app";
-import { useConnectivity } from "../store/connectivityStore";
+import { useEffect, useState } from 'react';
+import { onValue, ref } from 'firebase/database';
+import { getDb } from '../firebase/app';
+import { useConnectivity } from '../store/connectivityStore';
 
 /** Décalage horloge locale ↔ serveur RTDB (ms). Pour un compte à rebours juste. */
 export function useServerOffset(): number {
   const [offset, setOffset] = useState(0);
   useEffect(() => {
-    const off = onValue(ref(getDb(), ".info/serverTimeOffset"), (snap) => {
+    const off = onValue(ref(getDb(), '.info/serverTimeOffset'), snap => {
       const v = snap.val();
-      if (typeof v === "number") setOffset(v);
+      if (typeof v === 'number') setOffset(v);
     });
     return () => off();
   }, []);
@@ -30,9 +30,9 @@ export function useServerOffset(): number {
  * — la précaution que prenait déjà l'état local `true` d'avant.
  */
 export function useRtdbPresence(): void {
-  const setRtdb = useConnectivity((s) => s.setRtdb);
+  const setRtdb = useConnectivity(s => s.setRtdb);
   useEffect(() => {
-    const off = onValue(ref(getDb(), ".info/connected"), (snap) => {
+    const off = onValue(ref(getDb(), '.info/connected'), snap => {
       setRtdb(snap.val() === true);
     });
     return () => {

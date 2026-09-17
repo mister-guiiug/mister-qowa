@@ -3,9 +3,9 @@
  * son score, son reveal et le top du leaderboard — JAMAIS l'arbre complet
  * (`players` à 1000 entrées). L'arbre joueurs est réservé au host.
  */
-import { useEffect, useState } from "react";
-import { onValue, onChildAdded, onChildChanged, ref } from "firebase/database";
-import { getDb } from "../firebase/app";
+import { useEffect, useState } from 'react';
+import { onValue, onChildAdded, onChildChanged, ref } from 'firebase/database';
+import { getDb } from '../firebase/app';
 import {
   statePath,
   currentPath,
@@ -19,17 +19,17 @@ import {
   answersQuestionPath,
   reactionsPath,
   teamLeaderboardPath,
-} from "@shared/paths";
-import type { GameState } from "@shared/gameState";
-import type { TeamStanding } from "@shared/teams";
+} from '@shared/paths';
+import type { GameState } from '@shared/gameState';
+import type { TeamStanding } from '@shared/teams';
 import type {
   PublicQuestion,
   Score,
   LeaderboardEntry,
   Player,
   PlayerReveal,
-} from "@shared/contracts";
-import { reportError } from "../lib/report";
+} from '@shared/contracts';
+import { reportError } from '../lib/report';
 
 function useRtdbValue<T>(path: string | null): T | undefined {
   const [value, setValue] = useState<T | undefined>(undefined);
@@ -46,13 +46,13 @@ function useRtdbValue<T>(path: string | null): T | undefined {
     if (!path) return;
     const off = onValue(
       ref(getDb(), path),
-      (snap) => {
+      snap => {
         setValue((snap.val() ?? undefined) as T | undefined);
       },
-      (err) => {
+      err => {
         // Permission/réseau : on route vers le reporter (console + breadcrumbs).
-        reportError(err, { type: "rtdb", path });
-      },
+        reportError(err, { type: 'rtdb', path });
+      }
     );
     return () => off();
   }, [path]);
@@ -61,7 +61,7 @@ function useRtdbValue<T>(path: string | null): T | undefined {
 
 function asArray<T>(v: unknown): T[] {
   if (Array.isArray(v)) return v.filter(Boolean) as T[];
-  if (v && typeof v === "object") return Object.values(v as Record<string, T>);
+  if (v && typeof v === 'object') return Object.values(v as Record<string, T>);
   return [];
 }
 
@@ -83,40 +83,40 @@ export interface PlayerView {
 
 export function usePlayerView(
   sessionId: string | null,
-  uid: string | null,
+  uid: string | null
 ): PlayerView {
   const state = useRtdbValue<GameState>(
-    sessionId ? statePath(sessionId) : null,
+    sessionId ? statePath(sessionId) : null
   );
   const current = useRtdbValue<PublicQuestion>(
-    sessionId ? currentPath(sessionId) : null,
+    sessionId ? currentPath(sessionId) : null
   );
   const score = useRtdbValue<Score>(
-    sessionId && uid ? scorePath(sessionId, uid) : null,
+    sessionId && uid ? scorePath(sessionId, uid) : null
   );
   const leaderboardRaw = useRtdbValue<unknown>(
-    sessionId ? leaderboardPath(sessionId) : null,
+    sessionId ? leaderboardPath(sessionId) : null
   );
   const reveal = useRtdbValue<PlayerReveal>(
     sessionId && uid && current
       ? playerRevealPath(sessionId, current.questionId, uid)
-      : null,
+      : null
   );
   const correctChoice = useRtdbValue<string>(
     sessionId && current
       ? `${revealPath(sessionId, current.questionId)}/correct`
-      : null,
+      : null
   );
   const explanation = useRtdbValue<string>(
     sessionId && current
       ? `${revealPath(sessionId, current.questionId)}/explanation`
-      : null,
+      : null
   );
   const kicked = useRtdbValue<boolean>(
-    sessionId && uid ? `${metaPath(sessionId)}/banned/${uid}` : null,
+    sessionId && uid ? `${metaPath(sessionId)}/banned/${uid}` : null
   );
   const paused = useRtdbValue<boolean>(
-    sessionId ? `${metaPath(sessionId)}/paused` : null,
+    sessionId ? `${metaPath(sessionId)}/paused` : null
   );
   return {
     state,
@@ -147,25 +147,25 @@ export interface HostView {
 
 export function useHostView(sessionId: string | null): HostView {
   const state = useRtdbValue<GameState>(
-    sessionId ? statePath(sessionId) : null,
+    sessionId ? statePath(sessionId) : null
   );
   const current = useRtdbValue<PublicQuestion>(
-    sessionId ? currentPath(sessionId) : null,
+    sessionId ? currentPath(sessionId) : null
   );
   const players = useRtdbValue<Record<string, Player>>(
-    sessionId ? playersPath(sessionId) : null,
+    sessionId ? playersPath(sessionId) : null
   );
   const scores = useRtdbValue<Record<string, Score>>(
-    sessionId ? scoresPath(sessionId) : null,
+    sessionId ? scoresPath(sessionId) : null
   );
   const paused = useRtdbValue<boolean>(
-    sessionId ? `${metaPath(sessionId)}/paused` : null,
+    sessionId ? `${metaPath(sessionId)}/paused` : null
   );
   const eliminationMode = useRtdbValue<boolean>(
-    sessionId ? `${metaPath(sessionId)}/eliminationMode` : null,
+    sessionId ? `${metaPath(sessionId)}/eliminationMode` : null
   );
   const leaderboardRaw = useRtdbValue<unknown>(
-    sessionId ? leaderboardPath(sessionId) : null,
+    sessionId ? leaderboardPath(sessionId) : null
   );
   return {
     state,
@@ -189,10 +189,10 @@ export function useSessionMeta(sessionId: string | null): {
   pin: string | undefined;
 } {
   const quizId = useRtdbValue<string>(
-    sessionId ? `${metaPath(sessionId)}/quizId` : null,
+    sessionId ? `${metaPath(sessionId)}/quizId` : null
   );
   const pin = useRtdbValue<string>(
-    sessionId ? `${metaPath(sessionId)}/pin` : null,
+    sessionId ? `${metaPath(sessionId)}/pin` : null
   );
   return { quizId, pin };
 }
@@ -205,11 +205,11 @@ export interface AnswerStats {
 /** Stats de réponses de la question courante (HOST uniquement — lit /answers). */
 export function useAnswerStats(
   sessionId: string | null,
-  questionId: string | null,
+  questionId: string | null
 ): AnswerStats {
   const [stats, setStats] = useState<AnswerStats>({ count: 0, byChoice: {} });
   // Remise à zéro pendant le rendu au changement de question (cf. useRtdbValue).
-  const statsKey = `${sessionId ?? ""}#${questionId ?? ""}`;
+  const statsKey = `${sessionId ?? ''}#${questionId ?? ''}`;
   const [lastStatsKey, setLastStatsKey] = useState(statsKey);
   if (statsKey !== lastStatsKey) {
     setLastStatsKey(statsKey);
@@ -219,7 +219,7 @@ export function useAnswerStats(
     if (!sessionId || !questionId) return;
     const off = onValue(
       ref(getDb(), answersQuestionPath(sessionId, questionId)),
-      (snap) => {
+      snap => {
         const shards = (snap.val() ?? {}) as Record<
           string,
           Record<string, { choice: string }>
@@ -235,7 +235,7 @@ export function useAnswerStats(
         }
         setStats({ count: seen.size, byChoice });
       },
-      (err) => reportError(err, { type: "rtdb", path: "answers" }),
+      err => reportError(err, { type: 'rtdb', path: 'answers' })
     );
     return () => off();
   }, [sessionId, questionId]);
@@ -245,14 +245,14 @@ export function useAnswerStats(
 /** Classement par équipe (mode équipe ; vide en mode individuel). */
 export function useTeamLeaderboard(sessionId: string | null): TeamStanding[] {
   const raw = useRtdbValue<unknown>(
-    sessionId ? teamLeaderboardPath(sessionId) : null,
+    sessionId ? teamLeaderboardPath(sessionId) : null
   );
   return asArray<TeamStanding>(raw);
 }
 
 /** Flux de réactions emoji éphémères (live). */
 export function useReactions(
-  sessionId: string | null,
+  sessionId: string | null
 ): { id: number; emoji: string }[] {
   const [items, setItems] = useState<{ id: number; emoji: string }[]>([]);
   // Remise à zéro pendant le rendu au changement de session (cf. useRtdbValue).
@@ -272,12 +272,9 @@ export function useReactions(
       if (!v?.emoji) return;
       if (v.ts && Date.now() - v.ts > 6000) return; // ignore les anciennes au montage
       const id = ++counter;
-      setItems((cur) => [...cur, { id, emoji: v.emoji as string }]);
+      setItems(cur => [...cur, { id, emoji: v.emoji as string }]);
       timers.push(
-        setTimeout(
-          () => setItems((cur) => cur.filter((x) => x.id !== id)),
-          3500,
-        ),
+        setTimeout(() => setItems(cur => cur.filter(x => x.id !== id)), 3500)
       );
     };
     const node = ref(getDb(), reactionsPath(sessionId));

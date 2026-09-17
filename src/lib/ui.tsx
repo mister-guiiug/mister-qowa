@@ -1,9 +1,9 @@
 /** Primitives UI partagées (Tailwind v4). Mobile-first, contrastées, tactiles. */
-import type { ComponentProps, ReactNode } from "react";
+import type { ComponentProps, ReactNode } from 'react';
 
 export function Screen({
   children,
-  className = "",
+  className = '',
 }: {
   children: ReactNode;
   className?: string;
@@ -19,7 +19,7 @@ export function Screen({
 
 export function Card({
   children,
-  className = "",
+  className = '',
 }: {
   children: ReactNode;
   className?: string;
@@ -35,21 +35,21 @@ export function Card({
 
 // `ComponentProps<'button'>` plutôt que `ButtonHTMLAttributes` : inclut `ref`,
 // que React 19 passe comme une prop ordinaire.
-type ButtonProps = ComponentProps<"button"> & {
-  variant?: "primary" | "ghost" | "danger";
+type ButtonProps = ComponentProps<'button'> & {
+  variant?: 'primary' | 'ghost' | 'danger';
   full?: boolean;
 };
 
 export function Button({
-  variant = "primary",
+  variant = 'primary',
   full = false,
-  className = "",
+  className = '',
   ...props
 }: ButtonProps) {
   const styles: Record<string, string> = {
-    primary: "bg-brand text-white hover:brightness-110 active:scale-[.98]",
-    ghost: "bg-white/10 text-white hover:bg-white/15",
-    danger: "bg-rose-600 text-white hover:bg-rose-500",
+    primary: 'bg-brand text-white hover:brightness-110 active:scale-[.98]',
+    ghost: 'bg-white/10 text-white hover:bg-white/15',
+    danger: 'bg-rose-600 text-white hover:bg-rose-500',
   };
   return (
     <button
@@ -60,7 +60,7 @@ export function Button({
       // et donnerait envie de cliquer.
       className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl px-5 py-3 text-base font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 ${
         styles[variant]
-      } ${full ? "w-full" : ""} ${className}`}
+      } ${full ? 'w-full' : ''} ${className}`}
       {...props}
     />
   );

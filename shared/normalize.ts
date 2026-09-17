@@ -8,18 +8,18 @@ const DIACRITICS = /[̀-ͯ]/g;
 
 export function normalizeFreeText(
   input: string,
-  caseSensitive = false,
+  caseSensitive = false
 ): string {
-  let out = input.trim().normalize("NFKD").replace(DIACRITICS, "");
+  let out = input.trim().normalize('NFKD').replace(DIACRITICS, '');
   if (!caseSensitive) out = out.toLowerCase();
-  return out.replace(/\s+/g, " ");
+  return out.replace(/\s+/g, ' ');
 }
 
 export function freeTextMatches(
   answer: string,
   accepted: readonly string[],
-  caseSensitive = false,
+  caseSensitive = false
 ): boolean {
   const a = normalizeFreeText(answer, caseSensitive);
-  return accepted.some((x) => normalizeFreeText(x, caseSensitive) === a);
+  return accepted.some(x => normalizeFreeText(x, caseSensitive) === a);
 }

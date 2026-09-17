@@ -1,7 +1,7 @@
-import type { ShareResult } from "@mister-guiiug/dev-pwa-config/share";
+import type { ShareResult } from '@mister-guiiug/dev-pwa-config/share';
 
 /** Clés i18n que l'hôte peut afficher après un partage. */
-export type ShareInfoKey = "host.linkCopied" | "host.shareUnavailable";
+export type ShareInfoKey = 'host.linkCopied' | 'host.shareUnavailable';
 
 /**
  * Ce que l'app DIT selon l'issue d'un partage — la politique d'affichage, la
@@ -21,7 +21,7 @@ export type ShareInfoKey = "host.linkCopied" | "host.shareUnavailable";
  *  - `failed` : ni le partage ni la copie n'ont abouti, il faut le dire.
  */
 export function shareInfoKey(result: ShareResult): ShareInfoKey | null {
-  if (result === "copied") return "host.linkCopied";
-  if (result === "failed") return "host.shareUnavailable";
+  if (result === 'copied') return 'host.linkCopied';
+  if (result === 'failed') return 'host.shareUnavailable';
   return null;
 }

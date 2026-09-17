@@ -12,11 +12,11 @@
  * tourne pour toujours, l'échec le plus muet qui soit. Le garde évite d'entrer
  * dans cette file ; on ne rejoue rien, on refuse d'écrire.
  */
-import { useMemo } from "react";
-import { useActionGuard } from "@mister-guiiug/dev-pwa-config/react/use-action-guard";
-import { useOnline } from "@mister-guiiug/dev-pwa-config/react/use-online";
-import { useConnectivity } from "../store/connectivityStore";
-import { useT } from "../i18n";
+import { useMemo } from 'react';
+import { useActionGuard } from '@mister-guiiug/dev-pwa-config/react/use-action-guard';
+import { useOnline } from '@mister-guiiug/dev-pwa-config/react/use-online';
+import { useConnectivity } from '../store/connectivityStore';
+import { useT } from '../i18n';
 
 /**
  * Connectivité de l'app : l'OS ET, quand quelqu'un l'observe, le socket RTDB.
@@ -28,7 +28,7 @@ import { useT } from "../i18n";
  */
 export function useAppOnline(): boolean {
   const navigatorOnline = useOnline();
-  const rtdb = useConnectivity((s) => s.rtdb);
+  const rtdb = useConnectivity(s => s.rtdb);
   return navigatorOnline && (rtdb ?? true);
 }
 
@@ -47,10 +47,10 @@ export function useNetworkGuard(): Guard {
   const t = useT();
   const online = useAppOnline();
   const guard = useActionGuard({
-    checks: useMemo(() => [{ code: "offline", blocked: !online }], [online]),
+    checks: useMemo(() => [{ code: 'offline', blocked: !online }], [online]),
   });
   return {
     ...guard,
-    reason: guard.reasonCode === "offline" ? t("guard.offline") : guard.reason,
+    reason: guard.reasonCode === 'offline' ? t('guard.offline') : guard.reason,
   };
 }

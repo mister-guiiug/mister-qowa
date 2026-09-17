@@ -13,8 +13,8 @@ import {
   runTransaction,
   serverTimestamp,
   onDisconnect,
-} from "firebase/database";
-import { getDb, ensureAuth } from "./app";
+} from 'firebase/database';
+import { getDb, ensureAuth } from './app';
 import {
   pinIndexPath,
   sessionPath,
@@ -32,34 +32,34 @@ import {
   playerRevealPath,
   reactionsPath,
   teamLeaderboardPath,
-} from "@shared/paths";
-import type { Team } from "@shared/teams";
+} from '@shared/paths';
+import type { Team } from '@shared/teams';
 import {
   PIN_LENGTH,
   MAX_PLAYERS,
   STREAK_BONUS_PCT,
   LEADERBOARD_TOP,
-} from "@shared/gameState";
+} from '@shared/gameState';
 import {
   scoreRound,
   tallyAnswers,
   eliminateAfterRound,
   type RoundAnswer,
-} from "@shared/round";
-import { publicQuestionFields } from "@shared/game";
-import type { Quiz, Score } from "@shared/contracts";
-import { generateCode } from "@mister-guiiug/dev-pwa-config/pairing";
-import { AppError } from "../lib/appError";
-import { reportError } from "../lib/report";
-import { addBreadcrumb } from "../lib/breadcrumbs";
-import { createLogger } from "@mister-guiiug/dev-pwa-config/logger";
+} from '@shared/round';
+import { publicQuestionFields } from '@shared/game';
+import type { Quiz, Score } from '@shared/contracts';
+import { generateCode } from '@mister-guiiug/dev-pwa-config/pairing';
+import { AppError } from '../lib/appError';
+import { reportError } from '../lib/report';
+import { addBreadcrumb } from '../lib/breadcrumbs';
+import { createLogger } from '@mister-guiiug/dev-pwa-config/logger';
 
-const log = createLogger("firebase");
+const log = createLogger('firebase');
 
 type AnswerNode = { choice: string; serverTs: number };
 
 const sleep = (ms: number) =>
-  new Promise<void>((resolve) => setTimeout(resolve, ms));
+  new Promise<void>(resolve => setTimeout(resolve, ms));
 
 /**
  * Écriture host CRITIQUE (transition d'état, scoring) : une re-tentative après
@@ -84,7 +84,7 @@ async function hostWrite<T>(label: string, fn: () => Promise<T>): Promise<T> {
 function teamStandings(
   teams: Team[],
   scores: Record<string, Score>,
-  players: Record<string, { teamId?: string }>,
+  players: Record<string, { teamId?: string }>
 ) {
   const totals: Record<string, number> = {};
   for (const [pid, s] of Object.entries(scores)) {
@@ -92,7 +92,7 @@ function teamStandings(
     if (tid) totals[tid] = (totals[tid] ?? 0) + s.total;
   }
   return teams
-    .map((t) => ({
+    .map(t => ({
       teamId: t.id,
       name: t.name,
       color: t.color,
@@ -106,14 +106,14 @@ type PlayerLite = { pseudo: string; teamId?: string; avatar?: string };
 /** Classement tronqué (avec avatar quand présent) à partir des scores. */
 function buildRanking(
   scores: Record<string, Score>,
-  players: Record<string, PlayerLite>,
+  players: Record<string, PlayerLite>
 ) {
   return Object.entries(scores)
     .map(([pid, s]) => {
       const av = players[pid]?.avatar;
       return {
         uid: pid,
-        pseudo: players[pid]?.pseudo ?? "?",
+        pseudo: players[pid]?.pseudo ?? '?',
         total: s.total,
         ...(av ? { avatar: av } : {}),
       };
@@ -127,11 +127,11 @@ function buildRanking(
 export async function createSession(
   quiz: Quiz,
   teams?: Team[],
-  opts?: { elimination?: boolean },
+  opts?: { elimination?: boolean }
 ): Promise<{ sessionId: string; pin: string }> {
   const user = await ensureAuth();
   const db = getDb();
-  const sessionId = push(ref(db, "sessions")).key as string;
+  const sessionId = push(ref(db, 'sessions')).key as string;
 
   // meta EN PREMIER, SANS pin : la Rule d'allocation d'un PIN vérifie désormais
   // que l'alias pointe vers une session dont meta/hostUid est bien l'auteur
@@ -145,12 +145,12 @@ export async function createSession(
     ...(opts?.elimination ? { eliminationMode: true } : {}),
   });
 
-  let pin = "";
+  let pin = '';
   for (let i = 0; i < 12; i += 1) {
     // PIN numérique via le socle : aléa crypto, équiprobable (sans biais `%`).
-    const cand = generateCode(PIN_LENGTH, { alphabet: "numeric" });
-    const res = await runTransaction(ref(db, pinIndexPath(cand)), (cur) =>
-      cur === null ? sessionId : undefined,
+    const cand = generateCode(PIN_LENGTH, { alphabet: 'numeric' });
+    const res = await runTransaction(ref(db, pinIndexPath(cand)), cur =>
+      cur === null ? sessionId : undefined
     );
     if (res.committed) {
       pin = cand;
@@ -160,43 +160,43 @@ export async function createSession(
   if (!pin) {
     // Aucun PIN libre en 12 essais : on retire la meta orpheline avant d'échouer.
     await set(ref(db, sessionPath(sessionId)), null).catch(() => undefined);
-    throw new AppError("err.pinAllocFailed");
+    throw new AppError('err.pinAllocFailed');
   }
 
   await update(ref(db, metaPath(sessionId)), { pin });
-  await set(ref(db, statePath(sessionId)), "LOBBY");
+  await set(ref(db, statePath(sessionId)), 'LOBBY');
   return { sessionId, pin };
 }
 
 export async function nextQuestion(
   sessionId: string,
   quiz: Quiz,
-  index: number,
+  index: number
 ): Promise<void> {
-  if (index >= quiz.questions.length) throw new AppError("err.noMoreQuestions");
-  addBreadcrumb("host", `nextQuestion#${index}`);
+  if (index >= quiz.questions.length) throw new AppError('err.noMoreQuestions');
+  addBreadcrumb('host', `nextQuestion#${index}`);
   const db = getDb();
   const q = quiz.questions[index];
-  if (!q) throw new AppError("err.noMoreQuestions");
-  await hostWrite("nextQuestion", async () => {
+  if (!q) throw new AppError('err.noMoreQuestions');
+  await hostWrite('nextQuestion', async () => {
     await set(ref(db, currentPath(sessionId)), {
       ...publicQuestionFields(q, index, quiz.questions.length),
       activatedAt: serverTimestamp(),
     });
-    await set(ref(db, statePath(sessionId)), "QUESTION_ACTIVE");
+    await set(ref(db, statePath(sessionId)), 'QUESTION_ACTIVE');
   });
 }
 
 export async function closeQuestion(
   sessionId: string,
   quiz: Quiz,
-  index: number,
+  index: number
 ): Promise<void> {
   const db = getDb();
   // Idempotence : on ne score qu'une fois (clôture manuelle + auto-clôture).
-  if ((await get(ref(db, statePath(sessionId)))).val() !== "QUESTION_ACTIVE")
+  if ((await get(ref(db, statePath(sessionId)))).val() !== 'QUESTION_ACTIVE')
     return;
-  addBreadcrumb("host", `closeQuestion#${index}`);
+  addBreadcrumb('host', `closeQuestion#${index}`);
   const q = quiz.questions[index];
   if (!q) return;
   const [curSnap, ansSnap, scoresSnap, playersSnap, metaSnap] =
@@ -229,7 +229,7 @@ export async function closeQuestion(
   const elimination = meta?.eliminationMode === true;
   // Mode élimination : les joueurs hors course ne marquent plus de points.
   const answers = Object.fromEntries(
-    [...flat].filter(([pid]) => !(elimination && scores[pid]?.eliminated)),
+    [...flat].filter(([pid]) => !(elimination && scores[pid]?.eliminated))
   );
 
   // Cœur métier PUR (testé dans shared/round.test.ts).
@@ -245,7 +245,7 @@ export async function closeQuestion(
       q,
       answers,
       Object.keys(players),
-      scores,
+      scores
     );
     for (const pid of fallen) {
       const prev = scores[pid] ?? { total: 0, streak: 0 };
@@ -256,7 +256,7 @@ export async function closeQuestion(
   }
   if (round.correctChoice !== null) {
     updates[`${revealPath(sessionId, q.id)}/correct`] = round.correctChoice;
-    if (q.type !== "poll" && q.explanation?.trim()) {
+    if (q.type !== 'poll' && q.explanation?.trim()) {
       updates[`${revealPath(sessionId, q.id)}/explanation`] =
         q.explanation.trim();
     }
@@ -267,15 +267,15 @@ export async function closeQuestion(
     updates[teamLeaderboardPath(sessionId)] = teamStandings(
       teams,
       scores,
-      players,
+      players
     );
   }
-  updates[statePath(sessionId)] = "LEADERBOARD";
-  await hostWrite("closeQuestion", () => update(ref(db), updates));
+  updates[statePath(sessionId)] = 'LEADERBOARD';
+  await hostWrite('closeQuestion', () => update(ref(db), updates));
 }
 
 export async function endGame(sessionId: string, quiz?: Quiz): Promise<void> {
-  addBreadcrumb("host", "endGame");
+  addBreadcrumb('host', 'endGame');
   const user = await ensureAuth();
   const db = getDb();
   const [scoresSnap, playersSnap, metaSnap, answersSnap] = await Promise.all([
@@ -292,40 +292,40 @@ export async function endGame(sessionId: string, quiz?: Quiz): Promise<void> {
     : [];
   const finalUpdate: Record<string, unknown> = {
     [leaderboardPath(sessionId)]: ranking,
-    [statePath(sessionId)]: "PODIUM",
+    [statePath(sessionId)]: 'PODIUM',
   };
   const teams = (metaSnap.val() as { teams?: Team[] } | null)?.teams;
   if (teams?.length) {
     finalUpdate[teamLeaderboardPath(sessionId)] = teamStandings(
       teams,
       scores,
-      players,
+      players
     );
   }
-  await hostWrite("endGame", () => update(ref(db), finalUpdate));
+  await hostWrite('endGame', () => update(ref(db), finalUpdate));
 
   // Archive durable (best-effort) — Firestore chargé à la demande (chunk séparé).
   try {
-    const { saveResult } = await import("./fs");
+    const { saveResult } = await import('./fs');
     await saveResult(sessionId, {
       sessionId,
       hostUid: user.uid,
       quizId: quiz?.id ?? null,
-      quizTitle: quiz?.title ?? "Quiz",
+      quizTitle: quiz?.title ?? 'Quiz',
       finishedAt: Date.now(),
       playerCount: ranking.length,
       ranking,
       ...(questionStats.length ? { questionStats } : {}),
     });
   } catch (e) {
-    log.error("[endGame] archivage Firestore échoué", { error: e });
+    log.error('[endGame] archivage Firestore échoué', { error: e });
   }
 }
 
 /** Stats par question (taux de réussite) à partir du nœud answers RTDB. */
 function computeQuestionStats(
   quiz: Quiz,
-  answersRaw: unknown,
+  answersRaw: unknown
 ): { index: number; prompt: string; answered: number; correct: number }[] {
   const all = (answersRaw ?? {}) as Record<
     string,
@@ -348,14 +348,14 @@ function computeQuestionStats(
 
 /** Résout un PIN -> session + équipes (si mode équipe), avant de rejoindre. */
 export async function lookupSession(
-  pin: string,
+  pin: string
 ): Promise<{ sessionId: string; teams: Team[] | null }> {
   await ensureAuth(); // la lecture de pins/ exige désormais une session Auth (anti-bot)
   const db = getDb();
   const sid = (await get(ref(db, pinIndexPath(pin)))).val();
-  if (!sid || typeof sid !== "string") throw new AppError("err.pinInvalid");
-  if ((await get(ref(db, statePath(sid)))).val() !== "LOBBY")
-    throw new AppError("err.gameStarted");
+  if (!sid || typeof sid !== 'string') throw new AppError('err.pinInvalid');
+  if ((await get(ref(db, statePath(sid)))).val() !== 'LOBBY')
+    throw new AppError('err.gameStarted');
   const meta = (await get(ref(db, metaPath(sid)))).val() as {
     teams?: Team[];
   } | null;
@@ -366,21 +366,21 @@ export async function joinSession(
   pin: string,
   pseudo: string,
   teamId?: string,
-  avatar?: string,
+  avatar?: string
 ): Promise<{ sessionId: string }> {
   const user = await ensureAuth();
   const db = getDb();
   const sid = (await get(ref(db, pinIndexPath(pin)))).val();
-  if (!sid || typeof sid !== "string") throw new AppError("err.pinInvalid");
+  if (!sid || typeof sid !== 'string') throw new AppError('err.pinInvalid');
   const state = (await get(ref(db, statePath(sid)))).val();
-  if (state !== "LOBBY") throw new AppError("err.gameStarted");
+  if (state !== 'LOBBY') throw new AppError('err.gameStarted');
   const bannedSnap = await get(ref(db, `${metaPath(sid)}/banned/${user.uid}`));
-  if (bannedSnap.exists()) throw new AppError("err.youAreBanned");
+  if (bannedSnap.exists()) throw new AppError('err.youAreBanned');
   const playersSnap = await get(ref(db, playersPath(sid)));
   const count = playersSnap.exists()
     ? Object.keys(playersSnap.val() as object).length
     : 0;
-  if (count >= MAX_PLAYERS) throw new AppError("err.gameFull");
+  if (count >= MAX_PLAYERS) throw new AppError('err.gameFull');
   const playerRef = ref(db, playerPath(sid, user.uid));
   await set(playerRef, {
     pseudo,
@@ -400,7 +400,7 @@ export async function joinSession(
  */
 export async function pauseQuestion(
   sessionId: string,
-  paused: boolean,
+  paused: boolean
 ): Promise<void> {
   const db = getDb();
   if (paused) {
@@ -428,7 +428,7 @@ export async function pauseQuestion(
     // longue ne doit pas faire rejeter la reprise par la validation.
     updates[`${currentPath(sessionId)}/timeLimitMs`] = Math.min(
       timeLimitMs + pauseMs,
-      3_600_000,
+      3_600_000
     );
   }
   await update(ref(db), updates);
@@ -438,12 +438,12 @@ export async function pauseQuestion(
 export async function replayQuestion(
   sessionId: string,
   quiz: Quiz,
-  index: number,
+  index: number
 ): Promise<void> {
   const db = getDb();
   const q = quiz.questions[index];
-  if (!q) throw new AppError("err.noMoreQuestions");
-  await hostWrite("replayQuestion", () =>
+  if (!q) throw new AppError('err.noMoreQuestions');
+  await hostWrite('replayQuestion', () =>
     update(ref(db), {
       [answersQuestionPath(sessionId, q.id)]: null,
       [revealPath(sessionId, q.id)]: null,
@@ -453,8 +453,8 @@ export async function replayQuestion(
         ...publicQuestionFields(q, index, quiz.questions.length),
         activatedAt: serverTimestamp(),
       },
-      [statePath(sessionId)]: "QUESTION_ACTIVE",
-    }),
+      [statePath(sessionId)]: 'QUESTION_ACTIVE',
+    })
   );
 }
 
@@ -464,7 +464,7 @@ export async function replayQuestion(
  */
 export async function closeSession(
   sessionId: string,
-  pin: string | null,
+  pin: string | null
 ): Promise<void> {
   const updates: Record<string, unknown> = { [sessionPath(sessionId)]: null };
   if (pin) updates[pinIndexPath(pin)] = null;
@@ -474,7 +474,7 @@ export async function closeSession(
 /** Exclut un joueur (host) : retire son nœud et le bannit (anti re-join). */
 export async function kickPlayer(
   sessionId: string,
-  uid: string,
+  uid: string
 ): Promise<void> {
   await update(ref(getDb()), {
     [playerPath(sessionId, uid)]: null,
@@ -486,7 +486,7 @@ export async function kickPlayer(
 export async function skipQuestion(
   sessionId: string,
   quiz: Quiz,
-  index: number,
+  index: number
 ): Promise<void> {
   if (index + 1 < quiz.questions.length)
     await nextQuestion(sessionId, quiz, index + 1);
@@ -496,11 +496,11 @@ export async function skipQuestion(
 /** Revanche : remet la session en LOBBY, purge la partie, conserve joueurs + PIN. */
 export async function restartSession(
   sessionId: string,
-  quiz: Quiz,
+  quiz: Quiz
 ): Promise<void> {
   const db = getDb();
   const updates: Record<string, unknown> = {
-    [statePath(sessionId)]: "LOBBY",
+    [statePath(sessionId)]: 'LOBBY',
     [currentPath(sessionId)]: null,
     [scoresPath(sessionId)]: null,
     [leaderboardPath(sessionId)]: null,
@@ -511,7 +511,7 @@ export async function restartSession(
     updates[answersQuestionPath(sessionId, q.id)] = null;
     updates[revealPath(sessionId, q.id)] = null;
   }
-  await hostWrite("restartSession", () => update(ref(db), updates));
+  await hostWrite('restartSession', () => update(ref(db), updates));
 }
 
 /**
@@ -521,7 +521,7 @@ export async function restartSession(
  */
 export async function sendReaction(
   sessionId: string,
-  emoji: string,
+  emoji: string
 ): Promise<void> {
   const user = await ensureAuth();
   await set(ref(getDb(), `${reactionsPath(sessionId)}/${user.uid}`), {
@@ -534,9 +534,9 @@ export async function sendReaction(
 export async function submitAnswer(
   sessionId: string,
   questionId: string,
-  choice: string,
+  choice: string
 ): Promise<void> {
-  addBreadcrumb("answer", questionId);
+  addBreadcrumb('answer', questionId);
   const user = await ensureAuth();
   await set(ref(getDb(), answerPath(sessionId, questionId, user.uid)), {
     choice,

@@ -16,12 +16,12 @@ import {
   type DraftQuestion,
   blankQuestion,
   blankOption,
-} from "./quizDraft";
+} from './quizDraft';
 
 /** Découpe une ligne en champs (séparateur « ; », guillemets CSV). */
 export function splitFields(line: string): string[] {
   const out: string[] = [];
-  let cur = "";
+  let cur = '';
   let inQuotes = false;
   for (let i = 0; i < line.length; i += 1) {
     const c = line[i];
@@ -38,15 +38,15 @@ export function splitFields(line: string): string[] {
       }
     } else if (c === '"') {
       inQuotes = true;
-    } else if (c === ";") {
+    } else if (c === ';') {
       out.push(cur);
-      cur = "";
+      cur = '';
     } else {
       cur += c;
     }
   }
   out.push(cur);
-  return out.map((f) => f.trim());
+  return out.map(f => f.trim());
 }
 
 /** Valeurs vrai/faux reconnues (multilingue de base). */
@@ -68,15 +68,15 @@ const TRUE_FALSE: Record<string, boolean> = {
 /** Construit une question de brouillon à partir d'un énoncé + ses champs. */
 function buildQuestion(
   prompt: string,
-  answers: string[],
+  answers: string[]
 ): DraftQuestion | null {
   // free_text : au moins un champ préfixé « = ».
   const accepted = answers
-    .filter((a) => a.startsWith("="))
-    .map((a) => a.slice(1).trim())
+    .filter(a => a.startsWith('='))
+    .map(a => a.slice(1).trim())
     .filter(Boolean);
   if (accepted.length) {
-    const q = blankQuestion("free_text");
+    const q = blankQuestion('free_text');
     q.prompt = prompt;
     q.acceptedAnswers = accepted;
     return q;
@@ -85,19 +85,19 @@ function buildQuestion(
   // true_false : un seul champ vrai/faux.
   const only = answers.length === 1 ? answers[0]?.toLowerCase() : undefined;
   if (only && only in TRUE_FALSE) {
-    const q = blankQuestion("true_false");
+    const q = blankQuestion('true_false');
     q.prompt = prompt;
     q.correct = TRUE_FALSE[only] ?? false;
     return q;
   }
 
   // multiple_choice : un champ préfixé « * » marque la bonne réponse.
-  const starred = answers.findIndex((a) => a.startsWith("*"));
+  const starred = answers.findIndex(a => a.startsWith('*'));
   if (starred >= 0) {
-    const opts = answers.map((a) =>
-      blankOption((a.startsWith("*") ? a.slice(1) : a).trim()),
+    const opts = answers.map(a =>
+      blankOption((a.startsWith('*') ? a.slice(1) : a).trim())
     );
-    const q = blankQuestion("multiple_choice");
+    const q = blankQuestion('multiple_choice');
     q.prompt = prompt;
     q.options = opts;
     q.correctOptionId = opts[starred]!.id;
@@ -106,9 +106,9 @@ function buildQuestion(
 
   // sinon : ≥ 2 options sans marqueur = sondage.
   if (answers.length >= 2) {
-    const q = blankQuestion("poll");
+    const q = blankQuestion('poll');
     q.prompt = prompt;
-    q.options = answers.map((a) => blankOption(a));
+    q.options = answers.map(a => blankOption(a));
     return q;
   }
 
@@ -120,18 +120,18 @@ export function parseQuizText(raw: string, title: string): DraftQuiz {
   const questions: DraftQuestion[] = [];
   for (const line of raw.split(/\r?\n/)) {
     const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
+    if (!trimmed || trimmed.startsWith('#')) continue;
     const fields = splitFields(trimmed);
-    const prompt = fields[0] ?? "";
-    const answers = fields.slice(1).filter((f) => f.length > 0);
+    const prompt = fields[0] ?? '';
+    const answers = fields.slice(1).filter(f => f.length > 0);
     if (!prompt || answers.length === 0) continue;
     const q = buildQuestion(prompt, answers);
     if (q) questions.push(q);
   }
   return {
     id: crypto.randomUUID(),
-    title: title.trim() || "Quiz",
-    description: "",
+    title: title.trim() || 'Quiz',
+    description: '',
     questions,
   };
 }

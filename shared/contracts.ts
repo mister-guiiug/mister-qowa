@@ -3,13 +3,13 @@
  * Importés à l'identique par le frontend ET les Cloud Functions. Aucune
  * redéfinition locale ailleurs. Littéraux de type figés.
  */
-import { z } from "zod";
+import { z } from 'zod';
 import {
   GAME_STATES,
   QUESTION_TYPES,
   PIN_LENGTH,
   MAX_PSEUDO_LEN,
-} from "./gameState";
+} from './gameState';
 
 /* ---------- primitives ---------- */
 
@@ -34,30 +34,30 @@ const baseQuestion = {
   timeLimitMs: z.number().int().positive(),
 };
 
-export const questionSchema = z.discriminatedUnion("type", [
+export const questionSchema = z.discriminatedUnion('type', [
   z.object({
     ...baseQuestion,
-    type: z.literal("multiple_choice"),
+    type: z.literal('multiple_choice'),
     basePoints: z.number().int().nonnegative(),
     options: z.array(optionSchema).min(2).max(4),
     correctOptionId: z.string().min(1),
   }),
   z.object({
     ...baseQuestion,
-    type: z.literal("true_false"),
+    type: z.literal('true_false'),
     basePoints: z.number().int().nonnegative(),
     correct: z.boolean(),
   }),
   z.object({
     ...baseQuestion,
-    type: z.literal("free_text"),
+    type: z.literal('free_text'),
     basePoints: z.number().int().nonnegative(),
     acceptedAnswers: z.array(z.string().min(1)).min(1),
     caseSensitive: z.boolean().default(false),
   }),
   z.object({
     ...baseQuestion,
-    type: z.literal("poll"),
+    type: z.literal('poll'),
     options: z.array(optionSchema).min(2).max(4),
   }),
 ]);

@@ -4,10 +4,10 @@
  * l'envoie en best-effort via `navigator.sendBeacon`. Sans endpoint = console
  * seule. Branche un collecteur (Sentry/own) en fournissant simplement l'URL.
  */
-import { dumpBreadcrumbs } from "./breadcrumbs";
-import { createLogger } from "@mister-guiiug/dev-pwa-config/logger";
+import { dumpBreadcrumbs } from './breadcrumbs';
+import { createLogger } from '@mister-guiiug/dev-pwa-config/logger';
 
-const log = createLogger("report");
+const log = createLogger('report');
 
 type Ctx = Record<string, unknown>;
 
@@ -17,17 +17,17 @@ export function reportError(error: unknown, context?: Ctx): void {
     name: err.name,
     message: err.message,
     stack: err.stack,
-    url: typeof location !== "undefined" ? location.href : "",
-    ua: typeof navigator !== "undefined" ? navigator.userAgent : "",
+    url: typeof location !== 'undefined' ? location.href : '',
+    ua: typeof navigator !== 'undefined' ? navigator.userAgent : '',
     ts: Date.now(),
     // Fil d'Ariane des dernières actions (contexte « avant l'erreur »).
     breadcrumbs: dumpBreadcrumbs(),
     ...context,
   };
-  log.error("[report]", { error: payload });
+  log.error('[report]', { error: payload });
 
   const endpoint = import.meta.env.VITE_ERROR_ENDPOINT;
-  if (endpoint && typeof navigator !== "undefined" && navigator.sendBeacon) {
+  if (endpoint && typeof navigator !== 'undefined' && navigator.sendBeacon) {
     try {
       navigator.sendBeacon(endpoint, JSON.stringify(payload));
     } catch {
@@ -38,11 +38,11 @@ export function reportError(error: unknown, context?: Ctx): void {
 
 /** Capture les erreurs non gérées (à appeler une fois au démarrage). */
 export function installGlobalErrorHandlers(): void {
-  if (typeof window === "undefined") return;
-  window.addEventListener("error", (e) =>
-    reportError(e.error ?? e.message, { type: "window.error" }),
+  if (typeof window === 'undefined') return;
+  window.addEventListener('error', e =>
+    reportError(e.error ?? e.message, { type: 'window.error' })
   );
-  window.addEventListener("unhandledrejection", (e) =>
-    reportError(e.reason, { type: "unhandledrejection" }),
+  window.addEventListener('unhandledrejection', e =>
+    reportError(e.reason, { type: 'unhandledrejection' })
   );
 }

@@ -1,5 +1,5 @@
 /** Lecture de l'historique des parties (Firestore lazy) + export CSV. */
-import { toCsv } from "@mister-guiiug/dev-pwa-config/csv";
+import { toCsv } from '@mister-guiiug/dev-pwa-config/csv';
 
 export interface RankRow {
   uid: string;
@@ -73,45 +73,45 @@ export function aggregateByQuiz(results: GameResult[]): QuizAggregate[] {
 
 /** Question la plus ratée (plus faible taux de réussite, au moins 1 réponse). */
 export function hardestQuestion(r: GameResult): QuestionStat | null {
-  const stats = (r.questionStats ?? []).filter((q) => q.answered > 0);
+  const stats = (r.questionStats ?? []).filter(q => q.answered > 0);
   if (stats.length === 0) return null;
   return stats.reduce((worst, q) =>
-    q.correct / q.answered < worst.correct / worst.answered ? q : worst,
+    q.correct / q.answered < worst.correct / worst.answered ? q : worst
   );
 }
 
 export async function fetchMyResults(): Promise<GameResult[]> {
   // Firestore importé à la demande : ne pèse pas sur le démarrage de l'app.
-  const { fetchResults } = await import("../firebase/fs");
-  const rows = await fetchResults<Omit<GameResult, "id">>();
+  const { fetchResults } = await import('../firebase/fs');
+  const rows = await fetchResults<Omit<GameResult, 'id'>>();
   return rows.sort((a, b) => b.finishedAt - a.finishedAt);
 }
 
 // Dialecte `unix` : virgule + `\n` sans BOM, comme l'export historique de
 // l'app. Seule différence avec l'ancien `csvCell` maison : les guillemets ne
 // sont posés que là où RFC 4180 l'exige (contenu des cellules inchangé).
-const CSV = { dialect: "unix" } as const;
+const CSV = { dialect: 'unix' } as const;
 
 export function resultsCsv(r: GameResult): string {
   const ranking = toCsv(
     r.ranking.map((row, i) => ({
       rang: i + 1,
       pseudo: row.pseudo,
-      avatar: row.avatar ?? "",
+      avatar: row.avatar ?? '',
       score: row.total,
     })),
-    { ...CSV, columns: ["rang", "pseudo", "avatar", "score"] },
+    { ...CSV, columns: ['rang', 'pseudo', 'avatar', 'score'] }
   );
   // Bloc optionnel : taux de réussite par question.
   const stats = r.questionStats ?? [];
   if (stats.length === 0) return ranking;
   const statBlock = toCsv(
-    stats.map((q) => ({
+    stats.map(q => ({
       question: q.index + 1,
       enonce: q.prompt,
       reussite: `${q.answered ? Math.round((100 * q.correct) / q.answered) : 0}%`,
     })),
-    { ...CSV, columns: ["question", "enonce", "reussite"] },
+    { ...CSV, columns: ['question', 'enonce', 'reussite'] }
   );
-  return [ranking, "", statBlock].join("\n");
+  return [ranking, '', statBlock].join('\n');
 }

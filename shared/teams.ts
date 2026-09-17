@@ -14,10 +14,10 @@ export interface TeamStanding {
 }
 
 export const TEAM_PRESETS: Team[] = [
-  { id: "red", name: "Rouge", color: "#e21b3c" },
-  { id: "blue", name: "Bleu", color: "#1368ce" },
-  { id: "yellow", name: "Jaune", color: "#d89e00" },
-  { id: "green", name: "Vert", color: "#26890c" },
+  { id: 'red', name: 'Rouge', color: '#e21b3c' },
+  { id: 'blue', name: 'Bleu', color: '#1368ce' },
+  { id: 'yellow', name: 'Jaune', color: '#d89e00' },
+  { id: 'green', name: 'Vert', color: '#26890c' },
 ];
 
 /** Renvoie les `count` premières équipes (borné 2..4). */

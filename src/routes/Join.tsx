@@ -1,30 +1,30 @@
-import { useState, type FormEvent } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
-import { Screen, Button } from "../lib/ui";
-import { lookupSession, joinSession } from "../firebase/api";
-import { useGameStore } from "../store/gameStore";
-import { useProfile } from "../store/profileStore";
-import { PIN_LENGTH, MAX_PSEUDO_LEN } from "@shared/gameState";
-import { AVATARS } from "@shared/avatars";
-import type { Team } from "@shared/teams";
-import { normalizeCode } from "@mister-guiiug/dev-pwa-config/pairing";
-import { useNetworkGuard } from "../hooks/useNetworkGuard";
-import { useErr, useT } from "../i18n";
+import { useState, type FormEvent } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
+import { Screen, Button } from '../lib/ui';
+import { lookupSession, joinSession } from '../firebase/api';
+import { useGameStore } from '../store/gameStore';
+import { useProfile } from '../store/profileStore';
+import { PIN_LENGTH, MAX_PSEUDO_LEN } from '@shared/gameState';
+import { AVATARS } from '@shared/avatars';
+import type { Team } from '@shared/teams';
+import { normalizeCode } from '@mister-guiiug/dev-pwa-config/pairing';
+import { useNetworkGuard } from '../hooks/useNetworkGuard';
+import { useErr, useT } from '../i18n';
 
 /** Saisie ou deep-link `?pin=` → chiffres seuls, bornés à PIN_LENGTH. */
 const toPin = (raw: string) =>
-  normalizeCode(raw, { alphabet: "numeric", maxLength: PIN_LENGTH });
+  normalizeCode(raw, { alphabet: 'numeric', maxLength: PIN_LENGTH });
 
 export function Join() {
   const t = useT();
   const err = useErr();
   const nav = useNavigate();
-  const setPlayer = useGameStore((s) => s.setPlayer);
-  const profile = useProfile((s) => s.profile);
-  const setIdentity = useProfile((s) => s.setIdentity);
+  const setPlayer = useGameStore(s => s.setPlayer);
+  const profile = useProfile(s => s.profile);
+  const setIdentity = useProfile(s => s.setIdentity);
   const [searchParams] = useSearchParams();
-  const [pin, setPin] = useState(() => toPin(searchParams.get("pin") ?? ""));
+  const [pin, setPin] = useState(() => toPin(searchParams.get('pin') ?? ''));
   // Pré-remplissage depuis le profil local (rejoindre en 1 tap au retour).
   const [pseudo, setPseudo] = useState(profile.pseudo);
   const [avatar, setAvatar] = useState<string>(profile.avatar || AVATARS[0]);
@@ -44,7 +44,7 @@ export function Join() {
         pin,
         pseudo.trim(),
         teamId,
-        avatar,
+        avatar
       );
       setPlayer({ sessionId, pin, pseudo: pseudo.trim() });
       setIdentity(pseudo.trim(), avatar); // mémorise pour la prochaine fois
@@ -80,18 +80,18 @@ export function Join() {
     <Screen>
       <button
         type="button"
-        onClick={() => (teams ? setTeams(null) : nav("/"))}
+        onClick={() => (teams ? setTeams(null) : nav('/'))}
         className="mb-4 inline-flex items-center gap-1 self-start text-sm text-white/60 hover:text-white"
       >
-        <ArrowLeft className="size-4" />{" "}
-        {teams ? t("common.back") : t("common.home")}
+        <ArrowLeft className="size-4" />{' '}
+        {teams ? t('common.back') : t('common.home')}
       </button>
-      <h1 className="font-display text-3xl">{t("join.title")}</h1>
+      <h1 className="font-display text-3xl">{t('join.title')}</h1>
 
       {teams ? (
         <div className="mt-6 flex flex-col gap-3">
-          <p className="text-white/60">{t("join.pickTeam", { pseudo })}</p>
-          {teams.map((t) => (
+          <p className="text-white/60">{t('join.pickTeam', { pseudo })}</p>
+          {teams.map(t => (
             <button
               key={t.id}
               type="button"
@@ -121,7 +121,7 @@ export function Join() {
       ) : (
         <form onSubmit={submit} className="mt-6 flex flex-col gap-4">
           <div className="flex flex-col gap-1">
-            <span className="text-sm text-white/60">{t("join.pinLabel")}</span>
+            <span className="text-sm text-white/60">{t('join.pinLabel')}</span>
             {/* Un seul input réel (transparent, au-dessus) pilote 8 cases visuelles :
                 préserve collage, autofill et lecteurs d'écran. */}
             <div className="relative">
@@ -129,8 +129,8 @@ export function Join() {
                 inputMode="numeric"
                 autoComplete="off"
                 value={pin}
-                onChange={(e) => setPin(toPin(e.target.value))}
-                aria-label={t("join.pinAria", {
+                onChange={e => setPin(toPin(e.target.value))}
+                aria-label={t('join.pinAria', {
                   n: pin.length,
                   total: PIN_LENGTH,
                 })}
@@ -142,13 +142,13 @@ export function Join() {
                     key={i}
                     className={`flex h-12 flex-1 items-center justify-center rounded-xl font-display text-xl tabular-nums ring-1 transition ${
                       pin.length === PIN_LENGTH
-                        ? "bg-answer-green/15 ring-answer-green"
+                        ? 'bg-answer-green/15 ring-answer-green'
                         : i < pin.length
-                          ? "bg-white/10 ring-brand"
-                          : "bg-white/5 ring-white/15"
+                          ? 'bg-white/10 ring-brand'
+                          : 'bg-white/5 ring-white/15'
                     }`}
                   >
-                    {pin[i] ?? ""}
+                    {pin[i] ?? ''}
                   </div>
                 ))}
               </div>
@@ -156,33 +156,33 @@ export function Join() {
           </div>
           <label className="flex flex-col gap-1">
             <span className="text-sm text-white/60">
-              {t("join.pseudoLabel")}
+              {t('join.pseudoLabel')}
             </span>
             <input
               value={pseudo}
               maxLength={MAX_PSEUDO_LEN}
-              onChange={(e) => setPseudo(e.target.value)}
-              placeholder={t("join.pseudoPlaceholder")}
+              onChange={e => setPseudo(e.target.value)}
+              placeholder={t('join.pseudoPlaceholder')}
               className="rounded-2xl bg-white/10 px-4 py-3 text-lg outline-none ring-1 ring-white/15 focus:ring-brand"
             />
           </label>
 
           <div className="flex flex-col gap-1">
             <span className="text-sm text-white/60">
-              {t("join.avatarLabel")}
+              {t('join.avatarLabel')}
             </span>
             <div className="flex flex-wrap gap-2">
-              {AVATARS.map((a) => (
+              {AVATARS.map(a => (
                 <button
                   key={a}
                   type="button"
                   onClick={() => setAvatar(a)}
                   aria-pressed={avatar === a}
-                  aria-label={t("join.avatarAria", { a })}
+                  aria-label={t('join.avatarAria', { a })}
                   className={`flex size-10 items-center justify-center rounded-xl text-xl ring-1 transition ${
                     avatar === a
-                      ? "bg-brand/30 ring-brand"
-                      : "bg-white/5 ring-white/15 hover:bg-white/10"
+                      ? 'bg-brand/30 ring-brand'
+                      : 'bg-white/5 ring-white/15 hover:bg-white/10'
                   }`}
                 >
                   {a}
@@ -211,7 +211,7 @@ export function Join() {
             disabled={!ready || busy}
             {...guard.disabledProps}
           >
-            {busy ? t("common.connecting") : t("join.submit")}
+            {busy ? t('common.connecting') : t('join.submit')}
           </Button>
         </form>
       )}

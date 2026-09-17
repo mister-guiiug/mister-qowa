@@ -3,7 +3,7 @@
  * Firestore ne sert qu'à l'historique (archive endGame + lecture History),
  * il sort donc du chemin critique de démarrage et du chunk Firebase commun.
  */
-import { getApp } from "firebase/app";
+import { getApp } from 'firebase/app';
 import {
   initializeFirestore,
   persistentLocalCache,
@@ -16,8 +16,8 @@ import {
   query,
   where,
   type Firestore,
-} from "firebase/firestore";
-import { ensureAuth } from "./app";
+} from 'firebase/firestore';
+import { ensureAuth } from './app';
 
 let fs: Firestore | undefined;
 
@@ -25,8 +25,8 @@ function getFs(): Firestore {
   if (!fs) {
     // Cache offline (IndexedDB) : historique consultable hors-ligne.
     fs = initializeFirestore(getApp(), { localCache: persistentLocalCache() });
-    if (import.meta.env.VITE_USE_EMULATOR === "1") {
-      connectFirestoreEmulator(fs, "127.0.0.1", 8080);
+    if (import.meta.env.VITE_USE_EMULATOR === '1') {
+      connectFirestoreEmulator(fs, '127.0.0.1', 8080);
     }
   }
   return fs;
@@ -35,19 +35,19 @@ function getFs(): Firestore {
 /** Archive un résultat de partie (best-effort, appelé par endGame). */
 export async function saveResult(
   sessionId: string,
-  data: Record<string, unknown>,
+  data: Record<string, unknown>
 ): Promise<void> {
-  await setDoc(doc(getFs(), "results", sessionId), data);
+  await setDoc(doc(getFs(), 'results', sessionId), data);
 }
 
 /** Résultats des parties hébergées par l'utilisateur courant. */
 export async function fetchResults<T>(): Promise<(T & { id: string })[]> {
   const user = await ensureAuth();
   const snap = await getDocs(
-    query(collection(getFs(), "results"), where("hostUid", "==", user.uid)),
+    query(collection(getFs(), 'results'), where('hostUid', '==', user.uid))
   );
   const rows: (T & { id: string })[] = [];
-  snap.forEach((d) => rows.push({ id: d.id, ...(d.data() as T) }));
+  snap.forEach(d => rows.push({ id: d.id, ...(d.data() as T) }));
   return rows;
 }
 
@@ -89,10 +89,10 @@ export async function fetchResults<T>(): Promise<(T & { id: string })[]> {
 export async function deleteMyDocuments(uid: string): Promise<number> {
   const db = getFs();
   const owned = await Promise.all([
-    getDocs(query(collection(db, "results"), where("hostUid", "==", uid))),
-    getDocs(query(collection(db, "quizzes"), where("ownerUid", "==", uid))),
+    getDocs(query(collection(db, 'results'), where('hostUid', '==', uid))),
+    getDocs(query(collection(db, 'quizzes'), where('ownerUid', '==', uid))),
   ]);
-  const refs = owned.flatMap((snap) => snap.docs.map((d) => d.ref));
-  await Promise.all(refs.map((ref) => deleteDoc(ref)));
+  const refs = owned.flatMap(snap => snap.docs.map(d => d.ref));
+  await Promise.all(refs.map(ref => deleteDoc(ref)));
   return refs.length;
 }

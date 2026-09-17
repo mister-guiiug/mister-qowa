@@ -1,7 +1,7 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { act, render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { act, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 
 /**
  * CE QUE CE TEST TIENT — l'USAGE du garde sur un ÉCRAN RÉEL.
@@ -18,17 +18,17 @@ import { MemoryRouter } from "react-router-dom";
 
 const joinSession = vi.fn();
 const lookupSession = vi.fn();
-vi.mock("../firebase/api", () => ({
+vi.mock('../firebase/api', () => ({
   joinSession: (...a: unknown[]) => joinSession(...a),
   lookupSession: (...a: unknown[]) => lookupSession(...a),
 }));
 
-const { Join } = await import("./Join");
+const { Join } = await import('./Join');
 
 function setNavigatorOnline(value: boolean) {
-  Object.defineProperty(navigator, "onLine", { configurable: true, value });
+  Object.defineProperty(navigator, 'onLine', { configurable: true, value });
   act(() => {
-    window.dispatchEvent(new Event(value ? "online" : "offline"));
+    window.dispatchEvent(new Event(value ? 'online' : 'offline'));
   });
 }
 
@@ -38,27 +38,27 @@ afterEach(() => {
   lookupSession.mockReset();
 });
 
-const PIN = "12345678"; // PIN_LENGTH = 8
+const PIN = '12345678'; // PIN_LENGTH = 8
 
 async function fillForm(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText(/^Code PIN/), PIN);
-  await user.type(screen.getByLabelText("Ton pseudo"), "Zoé");
+  await user.type(screen.getByLabelText('Ton pseudo'), 'Zoé');
 }
 
 function renderJoin() {
   return render(
     <MemoryRouter>
       <Join />
-    </MemoryRouter>,
+    </MemoryRouter>
   );
 }
 
-describe("rejoindre une partie hors connexion", () => {
-  it("laisse le formulaire actif tant que le réseau est là", () => {
+describe('rejoindre une partie hors connexion', () => {
+  it('laisse le formulaire actif tant que le réseau est là', () => {
     renderJoin();
     expect(
-      screen.getByRole("button", { name: "Entrer dans la partie" }),
-    ).not.toHaveAttribute("aria-disabled");
+      screen.getByRole('button', { name: 'Entrer dans la partie' })
+    ).not.toHaveAttribute('aria-disabled');
     expect(screen.queryByText(/Indisponible hors ligne/)).toBeNull();
   });
 
@@ -67,8 +67,8 @@ describe("rejoindre une partie hors connexion", () => {
     renderJoin();
     // Formulaire VALIDE : ce qui bloque ensuite ne peut être que le réseau.
     await fillForm(user);
-    const submit = screen.getByRole("button", {
-      name: "Entrer dans la partie",
+    const submit = screen.getByRole('button', {
+      name: 'Entrer dans la partie',
     });
     expect(submit).toBeEnabled();
 
@@ -77,11 +77,11 @@ describe("rejoindre une partie hors connexion", () => {
     // Bloqué, mais toujours atteignable au clavier : pas de `disabled` natif,
     // sinon le bouton sort du parcours de focus et le motif devient
     // indécouvrable.
-    expect(submit).toHaveAttribute("aria-disabled", "true");
+    expect(submit).toHaveAttribute('aria-disabled', 'true');
     expect(submit).not.toBeDisabled();
     // Et le motif est à l'écran, pas seulement dans un attribut.
     expect(
-      screen.getByText("Indisponible hors ligne — il faut du réseau pour ça."),
+      screen.getByText('Indisponible hors ligne — il faut du réseau pour ça.')
     ).toBeInTheDocument();
 
     await user.click(submit);
@@ -90,10 +90,10 @@ describe("rejoindre une partie hors connexion", () => {
     expect(joinSession).not.toHaveBeenCalled();
   });
 
-  it("rend la main dès le retour du réseau", async () => {
+  it('rend la main dès le retour du réseau', async () => {
     const user = userEvent.setup();
     lookupSession.mockResolvedValue({ teams: null });
-    joinSession.mockResolvedValue({ sessionId: "s1" });
+    joinSession.mockResolvedValue({ sessionId: 's1' });
     renderJoin();
 
     setNavigatorOnline(false);
@@ -101,7 +101,7 @@ describe("rejoindre une partie hors connexion", () => {
 
     await fillForm(user);
     await user.click(
-      screen.getByRole("button", { name: "Entrer dans la partie" }),
+      screen.getByRole('button', { name: 'Entrer dans la partie' })
     );
     expect(lookupSession).toHaveBeenCalledWith(PIN);
   });

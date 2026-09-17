@@ -1,5 +1,5 @@
-import { m } from "framer-motion";
-import type { TeamStanding } from "@shared/teams";
+import { m } from 'framer-motion';
+import type { TeamStanding } from '@shared/teams';
 
 export function TeamLeaderboard({ standings }: { standings: TeamStanding[] }) {
   return (

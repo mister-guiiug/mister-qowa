@@ -3,7 +3,7 @@
  * Realtime Database (jeu live), Firestore (historique des parties). Branche les
  * émulateurs si VITE_USE_EMULATOR=1.
  */
-import { initializeApp, type FirebaseApp } from "firebase/app";
+import { initializeApp, type FirebaseApp } from 'firebase/app';
 import {
   getAuth,
   signInAnonymously,
@@ -13,20 +13,20 @@ import {
   connectAuthEmulator,
   type Auth,
   type User,
-} from "firebase/auth";
+} from 'firebase/auth';
 import {
   getDatabase,
   connectDatabaseEmulator,
   type Database,
-} from "firebase/database";
+} from 'firebase/database';
 import {
   initializeAppCheck,
   ReCaptchaEnterpriseProvider,
-} from "firebase/app-check";
-import { useEmulator } from "./env";
-import { createLogger } from "@mister-guiiug/dev-pwa-config/logger";
+} from 'firebase/app-check';
+import { useEmulator } from './env';
+import { createLogger } from '@mister-guiiug/dev-pwa-config/logger';
 
-const log = createLogger("firebase");
+const log = createLogger('firebase');
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -53,9 +53,9 @@ function initAppCheck(application: FirebaseApp): void {
   if (!appCheckKey) {
     if (import.meta.env.PROD) {
       log.error(
-        "[Mister Qowa] App Check non configuré (VITE_FIREBASE_APPCHECK_KEY absente) : " +
+        '[Mister Qowa] App Check non configuré (VITE_FIREBASE_APPCHECK_KEY absente) : ' +
           "la production n'est PAS protégée contre les bots. Activez App Check dans la " +
-          "console Firebase (RTDB + Firestore → Enforce) et fournissez la clé reCAPTCHA Enterprise.",
+          'console Firebase (RTDB + Firestore → Enforce) et fournissez la clé reCAPTCHA Enterprise.'
       );
     }
     return;
@@ -75,10 +75,10 @@ function ensure(): void {
   // Firestore (historique) vit dans ./fs.ts, importé à la demande.
 
   if (useEmulator) {
-    connectAuthEmulator(auth, "http://127.0.0.1:9099", {
+    connectAuthEmulator(auth, 'http://127.0.0.1:9099', {
       disableWarnings: true,
     });
-    connectDatabaseEmulator(db, "127.0.0.1", 9000);
+    connectDatabaseEmulator(db, '127.0.0.1', 9000);
   }
 }
 
@@ -94,21 +94,21 @@ export function ensureAuth(): Promise<User> {
   return new Promise<User>((resolve, reject) => {
     const off = onAuthStateChanged(
       a,
-      (user) => {
+      user => {
         if (user) {
           off();
           resolve(user);
         } else {
-          signInAnonymously(a).catch((err) => {
+          signInAnonymously(a).catch(err => {
             off();
             reject(err instanceof Error ? err : new Error(String(err)));
           });
         }
       },
-      (err) => {
+      err => {
         off();
         reject(err);
-      },
+      }
     );
   });
 }
@@ -124,17 +124,17 @@ export function ensureAuth(): Promise<User> {
  */
 export function peekAuthUid(): Promise<string | null> {
   ensure();
-  return new Promise<string | null>((resolve) => {
+  return new Promise<string | null>(resolve => {
     const off = onAuthStateChanged(
       auth!,
-      (user) => {
+      user => {
         off();
         resolve(user?.uid ?? null);
       },
       () => {
         off();
         resolve(null);
-      },
+      }
     );
   });
 }

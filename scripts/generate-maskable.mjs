@@ -32,25 +32,25 @@
  *
  * Exécuter : npm run icons:maskable
  */
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-import sharp from "sharp";
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import sharp from 'sharp';
 
-const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
+const racine = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 // `density` : sans elle, sharp pixellise le SVG à 72 ppp AVANT de
 // redimensionner, et le dégradé en ressort bandé.
 const rend = (taille, nom) =>
-  sharp(join(racine, "public", "icons", "icon-maskable.svg"), {
+  sharp(join(racine, 'public', 'icons', 'icon-maskable.svg'), {
     density: 384,
   })
     .resize(taille, taille)
     .png()
-    .toFile(join(racine, "public", "icons", nom));
+    .toFile(join(racine, 'public', 'icons', nom));
 
-await rend(512, "icon-maskable.png");
-await rend(180, "apple-touch-icon.png");
+await rend(512, 'icon-maskable.png');
+await rend(180, 'apple-touch-icon.png');
 
 console.log(
-  "public/icons/icon-maskable.png (512×512) et public/icons/apple-touch-icon.png (180×180) écrits, à fond perdu.",
+  'public/icons/icon-maskable.png (512×512) et public/icons/apple-touch-icon.png (180×180) écrits, à fond perdu.'
 );
