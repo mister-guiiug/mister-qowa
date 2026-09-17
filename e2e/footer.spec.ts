@@ -37,13 +37,13 @@ test("« Signaler un problème » est présent hors de l'accueil @critical", asy
   await expect(page.locator('[data-dwc="footer-source"]')).toBeVisible();
 });
 
-test("le numéro de version est lisible dans le pied de page @critical", async ({
+test("le pied de page n'affiche AUCUN numéro de version @critical", async ({
   page,
 }) => {
-  // Un rapport d'anomalie sans version ne sert à rien, et l'utilisateur ne le
-  // trouve nulle part ailleurs.
+  // Il en affichait un, lié vers `…/releases/tag/vX.Y.Z` : aucune app du parc
+  // ne crée de tag git, et ce lien répondait 404. Le numéro n'a pas disparu du
+  // canal qui en a besoin — `issue-report` le préremplit dans le rapport de
+  // bug, ce que le test ci-dessus vérifie par `environnement=`.
   await page.goto("/");
-  await expect(page.locator('[data-dwc="app-version-value"]')).toContainText(
-    /\d+\.\d+\.\d+/,
-  );
+  await expect(page.locator('[data-dwc="app-version-value"]')).toHaveCount(0);
 });

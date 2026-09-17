@@ -31,19 +31,17 @@ import { useT, useLang } from "../i18n";
  * navigateur, RECALCULÉS AU CLIC (la route change sans re-rendre ce pied de
  * page).
  *
- * `version` : le numéro sous les liens — l'endroit où on le cherche pour
- * écrire un rapport de bug — et « Version X disponible » quand `version.json`
- * (posé au build par `versionPlugin`) en annonce une plus récente que celle du
- * bundle servi par le service worker.
+ * PAS DE NUMÉRO DE VERSION. La prop `version` en posait un, lié vers
+ * `…/releases/tag/vX.Y.Z` — or aucune app du parc ne crée de tag git, et le
+ * lien répondait 404 partout. Le numéro n'a pas disparu du canal qui en a
+ * besoin : `issue-report` le préremplit toujours dans le rapport de bug.
  *
- * `LabelsProvider` : le socle connaît SEPT langues depuis la 4.2.0 (le
- * commentaire d'origine, « le socle en connaît deux », a vieilli), dont les
- * cinq de cette app. Les libellés que l'app possède déjà lui restent (props
- * `sourceLabel`, `sponsorLabel`, `issues.label` — mêmes clés, même ton que le
- * reste de l'écran) ; ceux du numéro de version — « Version », « Compilée le »,
- * « Version X disponible », « Notes de version » — n'ont pas de clé ici et
- * viennent du socle, dans la langue de l'utilisateur plutôt qu'en français
- * pour tout le monde.
+ * `LabelsProvider` : le socle connaît SEPT langues depuis la 4.2.0, dont les
+ * cinq de cette app. Les trois libellés que ce pied de page affiche lui sont
+ * passés explicitement (`sourceLabel`, `sponsorLabel`, `issues.label` — mêmes
+ * clés, même ton que le reste de l'écran) ; le fournisseur reste pour ce que
+ * le socle ajouterait demain, dans la langue de l'utilisateur plutôt qu'en
+ * français pour tout le monde.
  */
 export function FamilyLinks() {
   const t = useT();
@@ -57,7 +55,6 @@ export function FamilyLinks() {
         sourceLabel={t("footer.source")}
         sponsorLabel={t("footer.support")}
         issues={{ label: t("footer.issues") }}
-        version
       />
     </LabelsProvider>
   );
