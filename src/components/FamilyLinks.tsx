@@ -1,10 +1,10 @@
-import { AppFooter } from "@mister-guiiug/dev-pwa-config/react/app-footer";
-import { LabelsProvider } from "@mister-guiiug/dev-pwa-config/react/labels";
+import { AppFooter } from '@mister-guiiug/dev-pwa-config/react/app-footer';
+import { LabelsProvider } from '@mister-guiiug/dev-pwa-config/react/labels';
 import {
   SPONSOR_URL,
   repoUrl,
-} from "@mister-guiiug/dev-pwa-config/apps-catalog";
-import { useT, useLang } from "../i18n";
+} from '@mister-guiiug/dev-pwa-config/apps-catalog';
+import { useT, useLang } from '../i18n';
 
 /**
  * Les liens de la règle famille — code source, soutien, SIGNALEMENT — et le
@@ -45,16 +45,16 @@ import { useT, useLang } from "../i18n";
  */
 export function FamilyLinks() {
   const t = useT();
-  const lang = useLang((s) => s.lang);
+  const lang = useLang(s => s.lang);
   return (
     <LabelsProvider locale={lang}>
       <AppFooter
         className="justify-center px-4 pb-6 text-sm"
-        repoUrl={repoUrl("mister-qowa")}
+        repoUrl={repoUrl('mister-qowa')}
         sponsorUrl={SPONSOR_URL}
-        sourceLabel={t("footer.source")}
-        sponsorLabel={t("footer.support")}
-        issues={{ label: t("footer.issues") }}
+        sourceLabel={t('footer.source')}
+        sponsorLabel={t('footer.support')}
+        issues={{ label: t('footer.issues') }}
       />
     </LabelsProvider>
   );

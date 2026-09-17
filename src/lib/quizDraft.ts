@@ -3,10 +3,10 @@
  * pratique pour les formulaires, convertie en `Quiz` validé (union discriminée)
  * au moment d'enregistrer.
  */
-import type { Question, Quiz, QuizOption } from "@shared/contracts";
-import type { QuestionType } from "@shared/gameState";
-import { DEFAULT_TIME_LIMIT_MS, DEFAULT_BASE_POINTS } from "@shared/gameState";
-import type { Key, Vars } from "../i18n";
+import type { Question, Quiz, QuizOption } from '@shared/contracts';
+import type { QuestionType } from '@shared/gameState';
+import { DEFAULT_TIME_LIMIT_MS, DEFAULT_BASE_POINTS } from '@shared/gameState';
+import type { Key, Vars } from '../i18n';
 
 export interface DraftQuestion {
   id: string;
@@ -33,24 +33,24 @@ export interface DraftQuiz {
 
 const uid = () => crypto.randomUUID();
 
-export function blankOption(label = ""): QuizOption {
+export function blankOption(label = ''): QuizOption {
   return { id: uid().slice(0, 8), label };
 }
 
 export function blankQuestion(
-  type: QuestionType = "multiple_choice",
+  type: QuestionType = 'multiple_choice'
 ): DraftQuestion {
-  const withOptions = type === "multiple_choice" || type === "poll";
+  const withOptions = type === 'multiple_choice' || type === 'poll';
   return {
     id: uid(),
     type,
-    prompt: "",
+    prompt: '',
     timeLimitMs: DEFAULT_TIME_LIMIT_MS,
     basePoints: DEFAULT_BASE_POINTS,
     options: withOptions ? [blankOption(), blankOption()] : [],
-    correctOptionId: "",
+    correctOptionId: '',
     correct: true,
-    acceptedAnswers: type === "free_text" ? [""] : [],
+    acceptedAnswers: type === 'free_text' ? [''] : [],
     caseSensitive: false,
   };
 }
@@ -58,8 +58,8 @@ export function blankQuestion(
 export function blankQuiz(): DraftQuiz {
   return {
     id: uid(),
-    title: "",
-    description: "",
+    title: '',
+    description: '',
     questions: [blankQuestion()],
   };
 }
@@ -67,12 +67,12 @@ export function blankQuiz(): DraftQuiz {
 /** Change le type d'une question en (ré)initialisant les champs spécifiques. */
 export function retypeQuestion(
   d: DraftQuestion,
-  type: QuestionType,
+  type: QuestionType
 ): DraftQuestion {
   const fresh = blankQuestion(type);
   // conserve les options si on reste/revient sur un type à options
   const options =
-    (type === "multiple_choice" || type === "poll") && d.options.length >= 2
+    (type === 'multiple_choice' || type === 'poll') && d.options.length >= 2
       ? d.options
       : fresh.options;
   return {
@@ -84,9 +84,9 @@ export function retypeQuestion(
     options,
     // préserve la bonne réponse tant qu'elle pointe une option conservée
     // (survit à un aller-retour multiple_choice <-> sondage)
-    correctOptionId: options.some((o) => o.id === d.correctOptionId)
+    correctOptionId: options.some(o => o.id === d.correctOptionId)
       ? d.correctOptionId
-      : "",
+      : '',
   };
 }
 
@@ -94,22 +94,22 @@ export function toDraft(quiz: Quiz): DraftQuiz {
   return {
     id: quiz.id,
     title: quiz.title,
-    description: quiz.description ?? "",
-    questions: quiz.questions.map((q) => {
+    description: quiz.description ?? '',
+    questions: quiz.questions.map(q => {
       const base = blankQuestion(q.type);
       base.id = q.id;
       base.prompt = q.prompt;
       base.timeLimitMs = q.timeLimitMs;
-      base.basePoints = q.type === "poll" ? DEFAULT_BASE_POINTS : q.basePoints;
+      base.basePoints = q.type === 'poll' ? DEFAULT_BASE_POINTS : q.basePoints;
       base.mediaUrl = q.mediaUrl;
       base.mediaAlt = q.mediaAlt;
       base.explanation = q.explanation;
-      if (q.type === "multiple_choice") {
+      if (q.type === 'multiple_choice') {
         base.options = q.options;
         base.correctOptionId = q.correctOptionId;
-      } else if (q.type === "poll") {
+      } else if (q.type === 'poll') {
         base.options = q.options;
-      } else if (q.type === "true_false") {
+      } else if (q.type === 'true_false') {
         base.correct = q.correct;
       } else {
         base.acceptedAnswers = q.acceptedAnswers;
@@ -122,7 +122,7 @@ export function toDraft(quiz: Quiz): DraftQuiz {
 
 function toQuestion(d: DraftQuestion): Question {
   const prompt = d.prompt.trim();
-  const opts = d.options.filter((o) => o.label.trim());
+  const opts = d.options.filter(o => o.label.trim());
   const media = {
     ...(d.mediaUrl?.trim()
       ? {
@@ -133,10 +133,10 @@ function toQuestion(d: DraftQuestion): Question {
     ...(d.explanation?.trim() ? { explanation: d.explanation.trim() } : {}),
   };
   switch (d.type) {
-    case "multiple_choice":
+    case 'multiple_choice':
       return {
         id: d.id,
-        type: "multiple_choice",
+        type: 'multiple_choice',
         prompt,
         timeLimitMs: d.timeLimitMs,
         basePoints: d.basePoints,
@@ -144,31 +144,31 @@ function toQuestion(d: DraftQuestion): Question {
         correctOptionId: d.correctOptionId,
         ...media,
       };
-    case "true_false":
+    case 'true_false':
       return {
         id: d.id,
-        type: "true_false",
+        type: 'true_false',
         prompt,
         timeLimitMs: d.timeLimitMs,
         basePoints: d.basePoints,
         correct: d.correct,
         ...media,
       };
-    case "free_text":
+    case 'free_text':
       return {
         id: d.id,
-        type: "free_text",
+        type: 'free_text',
         prompt,
         timeLimitMs: d.timeLimitMs,
         basePoints: d.basePoints,
-        acceptedAnswers: d.acceptedAnswers.map((a) => a.trim()).filter(Boolean),
+        acceptedAnswers: d.acceptedAnswers.map(a => a.trim()).filter(Boolean),
         caseSensitive: d.caseSensitive,
         ...media,
       };
-    case "poll":
+    case 'poll':
       return {
         id: d.id,
-        type: "poll",
+        type: 'poll',
         prompt,
         timeLimitMs: d.timeLimitMs,
         options: opts,
@@ -195,41 +195,41 @@ export interface DraftError {
 /** Erreurs de validation d'un brouillon (tableau vide = valide). */
 export function validateDraft(d: DraftQuiz): DraftError[] {
   const errs: DraftError[] = [];
-  if (!d.title.trim()) errs.push({ key: "err.vTitle" });
-  if (d.questions.length === 0) errs.push({ key: "err.vAtLeastOneQuestion" });
+  if (!d.title.trim()) errs.push({ key: 'err.vTitle' });
+  if (d.questions.length === 0) errs.push({ key: 'err.vAtLeastOneQuestion' });
   d.questions.forEach((q, i) => {
     const n = i + 1;
-    if (!q.prompt.trim()) errs.push({ key: "err.vEmptyPrompt", vars: { n } });
-    if (q.type === "multiple_choice" || q.type === "poll") {
-      const opts = q.options.filter((o) => o.label.trim());
+    if (!q.prompt.trim()) errs.push({ key: 'err.vEmptyPrompt', vars: { n } });
+    if (q.type === 'multiple_choice' || q.type === 'poll') {
+      const opts = q.options.filter(o => o.label.trim());
       if (opts.length < 2) {
         errs.push({
           key:
             q.options.length >= 2
-              ? "err.vFillTwoOptions"
-              : "err.vAtLeastTwoOptions",
+              ? 'err.vFillTwoOptions'
+              : 'err.vAtLeastTwoOptions',
           vars: { n },
         });
       }
-      const labels = opts.map((o) => o.label.trim().toLowerCase());
+      const labels = opts.map(o => o.label.trim().toLowerCase());
       if (new Set(labels).size !== labels.length) {
-        errs.push({ key: "err.vDuplicateOptions", vars: { n } });
+        errs.push({ key: 'err.vDuplicateOptions', vars: { n } });
       }
-      if (new Set(opts.map((o) => o.id)).size !== opts.length) {
-        errs.push({ key: "err.vDuplicateOptionIds", vars: { n } });
+      if (new Set(opts.map(o => o.id)).size !== opts.length) {
+        errs.push({ key: 'err.vDuplicateOptionIds', vars: { n } });
       }
       if (
-        q.type === "multiple_choice" &&
-        !opts.some((o) => o.id === q.correctOptionId)
+        q.type === 'multiple_choice' &&
+        !opts.some(o => o.id === q.correctOptionId)
       ) {
-        errs.push({ key: "err.vSelectCorrect", vars: { n } });
+        errs.push({ key: 'err.vSelectCorrect', vars: { n } });
       }
     }
     if (
-      q.type === "free_text" &&
-      q.acceptedAnswers.filter((a) => a.trim()).length === 0
+      q.type === 'free_text' &&
+      q.acceptedAnswers.filter(a => a.trim()).length === 0
     ) {
-      errs.push({ key: "err.vAtLeastOneAccepted", vars: { n } });
+      errs.push({ key: 'err.vAtLeastOneAccepted', vars: { n } });
     }
   });
   return errs;

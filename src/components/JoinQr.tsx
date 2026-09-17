@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { qrToSvg } from "@mister-guiiug/dev-pwa-config/qr";
+import { useEffect, useState } from 'react';
+import { qrToSvg } from '@mister-guiiug/dev-pwa-config/qr';
 
 /**
  * QR du lien d'invitation (lobby host) — `qrToSvg` du socle : la peer `uqr`
@@ -20,11 +20,11 @@ export function JoinQr({ url }: { url: string }) {
     qrToSvg(url, {
       width: 148,
       margin: 0,
-      errorCorrectionLevel: "L", // le défaut de qrcode.react — même densité de motif
-      color: { dark: "#0f0a1e", light: "#ffffff" },
-      loader: () => import("uqr"), // import statiquement analysable par Vite (dev + build)
+      errorCorrectionLevel: 'L', // le défaut de qrcode.react — même densité de motif
+      color: { dark: '#0f0a1e', light: '#ffffff' },
+      loader: () => import('uqr'), // import statiquement analysable par Vite (dev + build)
     })
-      .then((s) => {
+      .then(s => {
         if (!cancelled) setSvg(s);
       })
       // Best-effort : sans QR, le PIN et le bouton d'invitation restent là.

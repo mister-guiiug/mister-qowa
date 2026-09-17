@@ -1,9 +1,9 @@
 /** Identité de session locale (persistée pour survivre à un refresh). */
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import type { Quiz } from "@shared/contracts";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import type { Quiz } from '@shared/contracts';
 
-export type Role = "host" | "player";
+export type Role = 'host' | 'player';
 
 interface SessionState {
   role: Role | null;
@@ -20,7 +20,7 @@ interface SessionState {
 
 export const useGameStore = create<SessionState>()(
   persist(
-    (set) => ({
+    set => ({
       role: null,
       sessionId: null,
       pin: null,
@@ -28,9 +28,9 @@ export const useGameStore = create<SessionState>()(
       quizId: null,
       hostQuiz: null,
       setHost: ({ sessionId, pin, quiz }) =>
-        set({ role: "host", sessionId, pin, quizId: quiz.id, hostQuiz: quiz }),
+        set({ role: 'host', sessionId, pin, quizId: quiz.id, hostQuiz: quiz }),
       setPlayer: ({ sessionId, pin, pseudo }) =>
-        set({ role: "player", sessionId, pin, pseudo }),
+        set({ role: 'player', sessionId, pin, pseudo }),
       reset: () =>
         set({
           role: null,
@@ -42,10 +42,10 @@ export const useGameStore = create<SessionState>()(
         }),
     }),
     {
-      name: "mister-qowa:session",
+      name: 'mister-qowa:session',
       version: 1,
       // v0 (sans numéro) → v1 : pas de changement de forme, on tolère l'ancien état.
-      migrate: (persisted) => persisted as SessionState,
-    },
-  ),
+      migrate: persisted => persisted as SessionState,
+    }
+  )
 );

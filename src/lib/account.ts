@@ -34,12 +34,12 @@
  * vide : c'est ce que dit `"data-erased-only"`, et l'écran l'annonce tel quel
  * plutôt que d'afficher un code d'erreur brut.
  */
-import type { Key } from "../i18n";
-import { useGameStore } from "../store/gameStore";
-import { useQuizLibrary } from "../store/quizStore";
-import { useProfile } from "../store/profileStore";
-import { useAiSettings } from "../store/settingsStore";
-import { emptyProfile } from "./profile";
+import type { Key } from '../i18n';
+import { useGameStore } from '../store/gameStore';
+import { useQuizLibrary } from '../store/quizStore';
+import { useProfile } from '../store/profileStore';
+import { useAiSettings } from '../store/settingsStore';
+import { emptyProfile } from './profile';
 
 /**
  * Le préfixe de TOUTES les clés locales de l'app (`mister-qowa:quizzes`,
@@ -48,7 +48,7 @@ import { emptyProfile } from "./profile";
  * première clé ajoutée ailleurs, et c'est précisément le genre d'oubli qui
  * laisse traîner une clé d'API ou un pseudo.
  */
-export const LOCAL_PREFIX = "mister-qowa:";
+export const LOCAL_PREFIX = 'mister-qowa:';
 
 /**
  * La seule clé conservée : la langue choisie. Ce n'est pas une donnée du
@@ -91,7 +91,7 @@ export function resetLocalStores(): void {
   useGameStore.getState().reset();
   useQuizLibrary.setState({ quizzes: [] });
   useProfile.setState({ profile: emptyProfile() });
-  useAiSettings.setState({ provider: "gemini", keys: {}, models: {} });
+  useAiSettings.setState({ provider: 'gemini', keys: {}, models: {} });
 }
 
 /**
@@ -100,13 +100,13 @@ export function resetLocalStores(): void {
  * code, et on tolère aussi le message pour les doubles de test.
  */
 export function isRecentLoginRequired(e: unknown): boolean {
-  if (typeof e !== "object" || e === null) return false;
+  if (typeof e !== 'object' || e === null) return false;
   const code = (e as { code?: unknown }).code;
-  if (typeof code === "string") return code === "auth/requires-recent-login";
+  if (typeof code === 'string') return code === 'auth/requires-recent-login';
   const message = (e as { message?: unknown }).message;
   return (
-    typeof message === "string" &&
-    message.includes("auth/requires-recent-login")
+    typeof message === 'string' &&
+    message.includes('auth/requires-recent-login')
   );
 }
 
@@ -117,7 +117,7 @@ export interface DeletionReport {
    * `"data-erased-only"` : les données sont parties, le compte reste — Firebase
    * a exigé une connexion récente, qu'un invité ne peut pas fournir.
    */
-  outcome: "deleted" | "data-erased-only";
+  outcome: 'deleted' | 'data-erased-only';
   /** Documents Firestore supprimés (résultats + quiz). */
   remoteDocs: number;
   /** Clés locales retirées. */
@@ -142,7 +142,7 @@ export interface AccountDeps {
  * ne doit surtout pas passer pour une réussite.
  */
 export async function runAccountDeletion(
-  deps: AccountDeps,
+  deps: AccountDeps
 ): Promise<DeletionReport> {
   const remoteDocs = await deps.purgeRemote();
   const localKeys = deps.purgeLocal().length;
@@ -150,16 +150,16 @@ export async function runAccountDeletion(
     await deps.deleteAccount();
   } catch (e) {
     if (!isRecentLoginRequired(e)) throw e;
-    return { outcome: "data-erased-only", remoteDocs, localKeys };
+    return { outcome: 'data-erased-only', remoteDocs, localKeys };
   }
-  return { outcome: "deleted", remoteDocs, localKeys };
+  return { outcome: 'deleted', remoteDocs, localKeys };
 }
 
 /** La clé i18n du message final, selon l'issue. */
-export function outcomeMessageKey(outcome: DeletionReport["outcome"]): Key {
-  return outcome === "deleted"
-    ? "account.deleteDone"
-    : "account.deleteDoneNoAccount";
+export function outcomeMessageKey(outcome: DeletionReport['outcome']): Key {
+  return outcome === 'deleted'
+    ? 'account.deleteDone'
+    : 'account.deleteDoneNoAccount';
 }
 
 /** Remise à zéro mémoire PUIS stockage — l'ordre compte, voir plus haut. */
@@ -179,16 +179,16 @@ function purgeLocal(): string[] {
  * la foulée.
  */
 export async function deleteMyAccount(): Promise<DeletionReport> {
-  const { peekAuthUid, deleteCurrentUser } = await import("../firebase/app");
+  const { peekAuthUid, deleteCurrentUser } = await import('../firebase/app');
   const uid = await peekAuthUid();
   if (!uid) {
     return {
-      outcome: "deleted",
+      outcome: 'deleted',
       remoteDocs: 0,
       localKeys: purgeLocal().length,
     };
   }
-  const { deleteMyDocuments } = await import("../firebase/fs");
+  const { deleteMyDocuments } = await import('../firebase/fs');
   return runAccountDeletion({
     purgeRemote: () => deleteMyDocuments(uid),
     purgeLocal,

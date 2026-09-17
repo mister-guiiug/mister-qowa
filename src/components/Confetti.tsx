@@ -1,6 +1,6 @@
-import { m, useReducedMotion } from "framer-motion";
+import { m, useReducedMotion } from 'framer-motion';
 
-const COLORS = ["#e21b3c", "#1368ce", "#d89e00", "#26890c", "#7c3aed"];
+const COLORS = ['#e21b3c', '#1368ce', '#d89e00', '#26890c', '#7c3aed'];
 
 /**
  * Dispersion pseudo-aléatoire déterministe (hash à base de sinus, valeur 0..1).
@@ -30,11 +30,11 @@ export function Confetti({ count = 28 }: { count?: number }) {
         return (
           <m.span
             key={i}
-            initial={{ top: "-5%", opacity: 1, rotate: 0 }}
-            animate={{ top: "105%", rotate: 540, opacity: 0 }}
-            transition={{ duration, delay, ease: "easeIn" }}
+            initial={{ top: '-5%', opacity: 1, rotate: 0 }}
+            animate={{ top: '105%', rotate: 540, opacity: 0 }}
+            transition={{ duration, delay, ease: 'easeIn' }}
             style={{
-              position: "absolute",
+              position: 'absolute',
               left: `${left}%`,
               width: 8,
               height: 14,

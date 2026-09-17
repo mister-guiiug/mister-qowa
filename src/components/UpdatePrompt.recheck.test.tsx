@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { render } from '@testing-library/react';
 
 /**
  * LA CAPACITÉ, ET SEULEMENT ELLE. `UpdatePromptBanner` sait afficher un bandeau
@@ -23,23 +23,23 @@ import { render } from "@testing-library/react";
  * graphe de modules neuf, donc un enregistrement neuf à observer.
  */
 
-vi.mock("virtual:pwa-register", () => ({
+vi.mock('virtual:pwa-register', () => ({
   registerSW: () => vi.fn(),
 }));
 
 const update = vi.fn().mockResolvedValue(undefined);
 const getRegistration = vi.fn().mockResolvedValue({ update });
 
-const { UpdatePrompt } = await import("./UpdatePrompt");
+const { UpdatePrompt } = await import('./UpdatePrompt');
 
 const HOUR = 60 * 60 * 1000;
 
-describe("revérification horaire", () => {
+describe('revérification horaire', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     update.mockClear();
     getRegistration.mockClear();
-    Object.defineProperty(navigator, "serviceWorker", {
+    Object.defineProperty(navigator, 'serviceWorker', {
       configurable: true,
       value: { getRegistration },
     });
@@ -47,10 +47,10 @@ describe("revérification horaire", () => {
 
   afterEach(() => {
     vi.useRealTimers();
-    Reflect.deleteProperty(navigator, "serviceWorker");
+    Reflect.deleteProperty(navigator, 'serviceWorker');
   });
 
-  it("demande une vérification au navigateur toutes les heures", async () => {
+  it('demande une vérification au navigateur toutes les heures', async () => {
     render(<UpdatePrompt />);
     expect(update).not.toHaveBeenCalled();
 

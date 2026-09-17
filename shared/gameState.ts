@@ -4,28 +4,28 @@
  */
 
 export const GAME_STATES = [
-  "LOBBY",
-  "QUESTION_COUNTDOWN",
-  "QUESTION_ACTIVE",
-  "QUESTION_REVEAL",
-  "LEADERBOARD",
-  "PODIUM",
-  "ENDED",
+  'LOBBY',
+  'QUESTION_COUNTDOWN',
+  'QUESTION_ACTIVE',
+  'QUESTION_REVEAL',
+  'LEADERBOARD',
+  'PODIUM',
+  'ENDED',
 ] as const;
 export type GameState = (typeof GAME_STATES)[number];
 
 export const QUESTION_TYPES = [
-  "multiple_choice",
-  "true_false",
-  "free_text",
-  "poll",
+  'multiple_choice',
+  'true_false',
+  'free_text',
+  'poll',
 ] as const;
 export type QuestionType = (typeof QUESTION_TYPES)[number];
 
 /** Types réellement jouables au MVP (les autres sont V1). */
 export const MVP_QUESTION_TYPES: readonly QuestionType[] = [
-  "multiple_choice",
-  "true_false",
+  'multiple_choice',
+  'true_false',
 ];
 
 export const PIN_LENGTH = 8; // D7 : 10^8, densité de collision faible à l'échelle

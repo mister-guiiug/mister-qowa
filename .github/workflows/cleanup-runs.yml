@@ -12,11 +12,11 @@ on:
   workflow_dispatch:
     inputs:
       keep:
-        description: "Nombre de runs à conserver par workflow"
+        description: 'Nombre de runs à conserver par workflow'
         type: string
-        default: "3"
+        default: '3'
       dry-run:
-        description: "Lister sans supprimer"
+        description: 'Lister sans supprimer'
         type: boolean
         default: false
 

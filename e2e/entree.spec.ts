@@ -1,5 +1,5 @@
-import { test, expect } from "@playwright/test";
-import { expectEcranEntreeCable } from "@mister-guiiug/dev-pwa-config/playwright-entree";
+import { test, expect } from '@playwright/test';
+import { expectEcranEntreeCable } from '@mister-guiiug/dev-pwa-config/playwright-entree';
 
 /*
  * L'ÉCRAN D'ENTRÉE, VÉRIFIÉ LÀ OÙ IL CASSE.
@@ -15,10 +15,10 @@ import { expectEcranEntreeCable } from "@mister-guiiug/dev-pwa-config/playwright
  * worker. Le vérifier échouerait pour une raison qui n'a rien à voir avec le
  * montage des composants.
  */
-test.describe("@critical écran d’entrée", () => {
-  test("la question est posée et une vue de page part", async ({ page }) => {
+test.describe('@critical écran d’entrée', () => {
+  test('la question est posée et une vue de page part', async ({ page }) => {
     await expectEcranEntreeCable(page, expect, {
-      url: "/",
+      url: '/',
       serviceWorker: false,
     });
   });

@@ -1,7 +1,7 @@
-import type { ReactNode } from "react";
-import { ErrorBoundary as DwcErrorBoundary } from "@mister-guiiug/dev-pwa-config/react/error-boundary";
-import { tStatic } from "../i18n";
-import { reportError } from "../lib/report";
+import type { ReactNode } from 'react';
+import { ErrorBoundary as DwcErrorBoundary } from '@mister-guiiug/dev-pwa-config/react/error-boundary';
+import { tStatic } from '../i18n';
+import { reportError } from '../lib/report';
 
 /**
  * Garde-fou anti écran blanc, sur la mécanique du socle (`react/error-boundary`).
@@ -14,14 +14,14 @@ import { reportError } from "../lib/report";
 function CrashScreen() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
-      <h1 className="font-display text-3xl">{tStatic("err.crashTitle")}</h1>
-      <p className="text-white/70">{tStatic("err.crashBody")}</p>
+      <h1 className="font-display text-3xl">{tStatic('err.crashTitle')}</h1>
+      <p className="text-white/70">{tStatic('err.crashBody')}</p>
       <button
         type="button"
         onClick={() => window.location.reload()}
         className="rounded-2xl bg-brand px-5 py-3 font-semibold text-white"
       >
-        {tStatic("common.reload")}
+        {tStatic('common.reload')}
       </button>
     </main>
   );

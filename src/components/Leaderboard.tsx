@@ -1,6 +1,6 @@
-import { m } from "framer-motion";
-import type { LeaderboardEntry } from "@shared/contracts";
-import { useT } from "../i18n";
+import { m } from 'framer-motion';
+import type { LeaderboardEntry } from '@shared/contracts';
+import { useT } from '../i18n';
 
 export function Leaderboard({
   entries,
@@ -14,7 +14,7 @@ export function Leaderboard({
   const t = useT();
   if (entries.length === 0)
     return (
-      <p className="text-center text-white/60">{t("leaderboard.empty")}</p>
+      <p className="text-center text-white/60">{t('leaderboard.empty')}</p>
     );
   return (
     <ol className="flex flex-col gap-2">
@@ -26,7 +26,7 @@ export function Leaderboard({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25 }}
           className={`flex items-center justify-between rounded-2xl px-4 py-3 ${
-            e.uid === highlightUid ? "bg-brand text-white" : "bg-white/5"
+            e.uid === highlightUid ? 'bg-brand text-white' : 'bg-white/5'
           }`}
         >
           <span className="flex items-center gap-3">

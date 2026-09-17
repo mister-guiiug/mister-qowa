@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
-import { useServerOffset } from "../hooks/useServerTime";
-import { feedback } from "../lib/feedback";
-import { useT } from "../i18n";
+import { useEffect, useState } from 'react';
+import { useServerOffset } from '../hooks/useServerTime';
+import { feedback } from '../lib/feedback';
+import { useT } from '../i18n';
 
 /** Compte à rebours basé sur l'instant serveur `endsAt` (ms epoch), horloge alignée. */
 export function Countdown({ endsAt }: { endsAt: number }) {
@@ -22,7 +22,7 @@ export function Countdown({ endsAt }: { endsAt: number }) {
     <div
       className="font-display text-4xl tabular-nums"
       aria-live="polite"
-      aria-label={t("countdown.aria", { n: remaining })}
+      aria-label={t('countdown.aria', { n: remaining })}
     >
       {remaining}
     </div>

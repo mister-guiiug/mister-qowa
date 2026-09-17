@@ -1,6 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 /**
  * CE QUE CE TEST TIENT. Le bandeau du socle ne s'affiche QUE si on lui injecte
@@ -22,38 +22,38 @@ const registerSW = vi.fn((options?: { onNeedRefresh?: () => void }) => {
   options?.onNeedRefresh?.();
   return vi.fn();
 });
-vi.mock("virtual:pwa-register", () => ({
+vi.mock('virtual:pwa-register', () => ({
   registerSW: (options?: { onNeedRefresh?: () => void }) => registerSW(options),
 }));
 
-const { UpdatePrompt } = await import("./UpdatePrompt");
+const { UpdatePrompt } = await import('./UpdatePrompt');
 
-describe("bannière de mise à jour", () => {
-  it("apparaît quand un service worker attend", () => {
+describe('bannière de mise à jour', () => {
+  it('apparaît quand un service worker attend', () => {
     render(<UpdatePrompt />);
 
     // L'injection a bien eu lieu : sans cet appel, rien ne peut s'afficher.
     expect(registerSW).toHaveBeenCalled();
 
-    const banner = screen.getByRole("status");
-    expect(banner).toHaveAttribute("data-dwc", "update-banner");
+    const banner = screen.getByRole('status');
+    expect(banner).toHaveAttribute('data-dwc', 'update-banner');
     // Le titre est celui de l'app (i18n maison), pas le défaut du socle.
-    expect(banner).toHaveTextContent("Nouvelle version disponible");
+    expect(banner).toHaveTextContent('Nouvelle version disponible');
     // Et il offre une sortie : un bandeau sans échappatoire est un piège.
     expect(
-      screen.getByRole("button", { name: "Recharger" }),
+      screen.getByRole('button', { name: 'Recharger' })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Plus tard" }),
+      screen.getByRole('button', { name: 'Plus tard' })
     ).toBeInTheDocument();
   });
 
   it("« Plus tard » l'écarte", async () => {
     render(<UpdatePrompt />);
-    expect(screen.getByRole("status")).toBeInTheDocument();
+    expect(screen.getByRole('status')).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: "Plus tard" }));
+    await userEvent.click(screen.getByRole('button', { name: 'Plus tard' }));
 
-    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 });

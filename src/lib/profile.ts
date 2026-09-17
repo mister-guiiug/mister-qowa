@@ -18,8 +18,8 @@ export interface Profile {
 }
 
 export const emptyProfile = (): Profile => ({
-  pseudo: "",
-  avatar: "",
+  pseudo: '',
+  avatar: '',
   gamesPlayed: 0,
   totalPoints: 0,
   bestRank: null,
@@ -36,17 +36,17 @@ export interface GameResult {
 
 /** Badges débloquables (ids stables ; libellés traduits côté i18n). */
 export const BADGES = {
-  firstGame: "firstGame",
-  podium: "podium",
-  win: "win",
-  veteran: "veteran",
+  firstGame: 'firstGame',
+  podium: 'podium',
+  win: 'win',
+  veteran: 'veteran',
 } as const;
 
 export const BADGE_EMOJI: Record<string, string> = {
-  firstGame: "🎮",
-  podium: "🏅",
-  win: "🏆",
-  veteran: "🎖️",
+  firstGame: '🎮',
+  podium: '🏅',
+  win: '🏆',
+  veteran: '🎖️',
 };
 
 const MAX_COUNTED = 50;

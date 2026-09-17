@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from '@playwright/test';
 
 /**
  * Le canal de retour, et le numéro qu'il faut pour s'en servir.
@@ -16,21 +16,21 @@ import { test, expect } from "@playwright/test";
 test("« Signaler un problème » est présent hors de l'accueil @critical", async ({
   page,
 }) => {
-  await page.goto("/");
-  await page.getByRole("button", { name: /Mes parties/ }).click();
+  await page.goto('/');
+  await page.getByRole('button', { name: /Mes parties/ }).click();
 
   const signaler = page.locator('[data-dwc="footer-issues"]');
   await expect(signaler).toBeVisible();
-  await expect(signaler).toContainText("Signaler un problème");
+  await expect(signaler).toContainText('Signaler un problème');
 
-  const href = await signaler.getAttribute("href");
+  const href = await signaler.getAttribute('href');
   expect(href).toContain(
-    "https://github.com/mister-guiiug/mister-qowa/issues/new",
+    'https://github.com/mister-guiiug/mister-qowa/issues/new'
   );
   // Le gabarit du dépôt `.github` du compte, et l'écran d'où l'on part : c'est
   // ce qui distingue ce lien d'un « ouvrir une issue » nu.
-  expect(href).toContain("template=bug.yml");
-  expect(href).toContain("environnement=");
+  expect(href).toContain('template=bug.yml');
+  expect(href).toContain('environnement=');
 
   // Le code source aussi, sur le même écran : lui non plus n'était nulle part
   // ailleurs que sur l'accueil.
@@ -44,6 +44,6 @@ test("le pied de page n'affiche AUCUN numéro de version @critical", async ({
   // ne crée de tag git, et ce lien répondait 404. Le numéro n'a pas disparu du
   // canal qui en a besoin — `issue-report` le préremplit dans le rapport de
   // bug, ce que le test ci-dessus vérifie par `environnement=`.
-  await page.goto("/");
+  await page.goto('/');
   await expect(page.locator('[data-dwc="app-version-value"]')).toHaveCount(0);
 });

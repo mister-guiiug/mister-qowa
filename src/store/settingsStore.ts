@@ -3,26 +3,26 @@
  * La clé API reste dans le navigateur (localStorage) : aucun serveur Mister Qowa
  * ne la voit, les appels partent en direct vers le fournisseur choisi.
  */
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
-export type AiProvider = "gemini" | "anthropic";
+export type AiProvider = 'gemini' | 'anthropic';
 
 /** Modèle par défaut par fournisseur (surchageable). */
 export const DEFAULT_MODELS: Record<AiProvider, string> = {
-  gemini: "gemini-2.0-flash",
-  anthropic: "claude-3-5-haiku-latest",
+  gemini: 'gemini-2.0-flash',
+  anthropic: 'claude-3-5-haiku-latest',
 };
 
 /** Lien « où récupérer une clé » par fournisseur (affiché dans l'UI). */
 export const KEY_HELP: Record<AiProvider, { label: string; url: string }> = {
   gemini: {
-    label: "Google AI Studio",
-    url: "https://aistudio.google.com/apikey",
+    label: 'Google AI Studio',
+    url: 'https://aistudio.google.com/apikey',
   },
   anthropic: {
-    label: "Console Anthropic",
-    url: "https://console.anthropic.com/settings/keys",
+    label: 'Console Anthropic',
+    url: 'https://console.anthropic.com/settings/keys',
   },
 };
 
@@ -42,29 +42,29 @@ interface AiSettings {
 
 export const useAiSettings = create<AiSettings>()(
   persist(
-    (set) => ({
-      provider: "gemini",
+    set => ({
+      provider: 'gemini',
       keys: {},
       models: {},
       soundOn: true,
-      setProvider: (provider) => set({ provider }),
-      setKey: (p, key) => set((s) => ({ keys: { ...s.keys, [p]: key } })),
+      setProvider: provider => set({ provider }),
+      setKey: (p, key) => set(s => ({ keys: { ...s.keys, [p]: key } })),
       setModel: (p, model) =>
-        set((s) => ({ models: { ...s.models, [p]: model } })),
-      setSoundOn: (soundOn) => set({ soundOn }),
+        set(s => ({ models: { ...s.models, [p]: model } })),
+      setSoundOn: soundOn => set({ soundOn }),
     }),
     {
-      name: "mister-qowa:ai-settings",
+      name: 'mister-qowa:ai-settings',
       version: 1,
-      migrate: (persisted) => persisted as AiSettings,
-    },
-  ),
+      migrate: persisted => persisted as AiSettings,
+    }
+  )
 );
 
 /** Modèle effectif pour un fournisseur (réglage utilisateur ou défaut). */
 export function effectiveModel(
   provider: AiProvider,
-  models: Partial<Record<AiProvider, string>>,
+  models: Partial<Record<AiProvider, string>>
 ): string {
   return models[provider]?.trim() || DEFAULT_MODELS[provider];
 }

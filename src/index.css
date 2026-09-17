@@ -1,8 +1,8 @@
-@import "tailwindcss";
-@import "@mister-guiiug/dev-pwa-config/tailwind-preset.css";
+@import 'tailwindcss';
+@import '@mister-guiiug/dev-pwa-config/tailwind-preset.css';
 /* Habillage partagé des composants [data-dwc] (AppFooter, ConfirmDialog). En
    `@layer components` : tout CSS non layered de ce fichier l'emporte. */
-@import "@mister-guiiug/dev-pwa-config/components.css";
+@import '@mister-guiiug/dev-pwa-config/components.css';
 
 /*
  * Univers « Mister Qowa » : énergie de plateau de quiz télévisé. Fond violet
@@ -17,8 +17,8 @@
   --color-answer-yellow: #d89e00;
   --color-answer-green: #26890c;
 
-  --font-display: "Fredoka", system-ui, sans-serif;
-  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-display: 'Fredoka', system-ui, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
 
   --radius-card: 1.5rem;
 }
@@ -108,7 +108,7 @@ h3,
    à l'ouverture, et la règle lui imposerait 0,75 rem au lieu de ses 1,4 rem
    (piège relevé chez miss-uwh). */
 :where(a, button, input, select, textarea, [tabindex]):not(
-    [data-dwc="confirm-panel"]
+    [data-dwc='confirm-panel']
   ):focus-visible {
   outline: 3px solid var(--color-brand-soft);
   outline-offset: 2px;
@@ -120,9 +120,9 @@ h3,
 
 /* Pied de page : l'app survole en blanc depuis l'origine (`hover:text-white`),
    et le violet de marque ne tient pas 4,5:1 en texte sur fond sombre. */
-[data-dwc="footer-source"]:hover,
-[data-dwc="footer-sponsor"]:hover,
-[data-dwc="footer-issues"]:hover {
+[data-dwc='footer-source']:hover,
+[data-dwc='footer-sponsor']:hover,
+[data-dwc='footer-issues']:hover {
   color: #ffffff;
 }
 

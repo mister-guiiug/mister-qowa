@@ -1,6 +1,6 @@
-import { RotateCw, Volume2, VolumeX } from "lucide-react";
-import { useAiSettings } from "../store/settingsStore";
-import { useT, useLang, LANGS } from "../i18n";
+import { RotateCw, Volume2, VolumeX } from 'lucide-react';
+import { useAiSettings } from '../store/settingsStore';
+import { useT, useLang, LANGS } from '../i18n';
 
 /**
  * Pied de page de l'ACCUEIL : les commandes propres à l'app — langue, son,
@@ -14,17 +14,17 @@ import { useT, useLang, LANGS } from "../i18n";
  */
 export function AppFooter() {
   const t = useT();
-  const soundOn = useAiSettings((s) => s.soundOn);
-  const setSoundOn = useAiSettings((s) => s.setSoundOn);
-  const lang = useLang((s) => s.lang);
-  const setLang = useLang((s) => s.setLang);
+  const soundOn = useAiSettings(s => s.soundOn);
+  const setSoundOn = useAiSettings(s => s.setSoundOn);
+  const lang = useLang(s => s.lang);
+  const setLang = useLang(s => s.setLang);
   return (
     <div className="mt-auto flex flex-col items-center gap-3 pt-8 text-sm text-white/50">
       <div
         className="flex items-center gap-1"
-        aria-label={t("footer.langAria")}
+        aria-label={t('footer.langAria')}
       >
-        {LANGS.map((l) => (
+        {LANGS.map(l => (
           <button
             key={l.code}
             type="button"
@@ -32,7 +32,7 @@ export function AppFooter() {
             aria-pressed={lang === l.code}
             aria-label={l.label}
             className={`rounded-lg px-2 py-1 transition ${
-              lang === l.code ? "bg-white/10 text-white" : "hover:text-white"
+              lang === l.code ? 'bg-white/10 text-white' : 'hover:text-white'
             }`}
           >
             {l.flag} {l.code.toUpperCase()}
@@ -44,7 +44,7 @@ export function AppFooter() {
           type="button"
           onClick={() => setSoundOn(!soundOn)}
           aria-pressed={soundOn}
-          aria-label={soundOn ? t("footer.muteAria") : t("footer.unmuteAria")}
+          aria-label={soundOn ? t('footer.muteAria') : t('footer.unmuteAria')}
           className="inline-flex items-center gap-1.5 hover:text-white"
         >
           {soundOn ? (
@@ -52,14 +52,14 @@ export function AppFooter() {
           ) : (
             <VolumeX className="size-4" />
           )}
-          {soundOn ? t("footer.soundOn") : t("footer.soundOff")}
+          {soundOn ? t('footer.soundOn') : t('footer.soundOff')}
         </button>
         <button
           type="button"
           onClick={() => window.location.reload()}
           className="inline-flex items-center gap-1.5 hover:text-white"
         >
-          <RotateCw className="size-4" /> {t("footer.reload")}
+          <RotateCw className="size-4" /> {t('footer.reload')}
         </button>
       </div>
       {/* Les liens famille ne sont plus ici : ils sont rendus par la coquille

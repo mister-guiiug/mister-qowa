@@ -1,19 +1,19 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect } from 'vitest';
 import {
   parseJsonLoose,
   aiQuizToDraft,
   buildPrompt,
   demoDraft,
   type AiQuiz,
-} from "./ai";
-import { validateDraft } from "./quizDraft";
+} from './ai';
+import { validateDraft } from './quizDraft';
 
-describe("parseJsonLoose", () => {
-  it("parse du JSON nu", () => {
+describe('parseJsonLoose', () => {
+  it('parse du JSON nu', () => {
     expect(parseJsonLoose('{"a":1}')).toEqual({ a: 1 });
   });
 
-  it("retire les fences ```json", () => {
+  it('retire les fences ```json', () => {
     expect(parseJsonLoose('```json\n{"a":1}\n```')).toEqual({ a: 1 });
   });
 
@@ -21,94 +21,94 @@ describe("parseJsonLoose", () => {
     expect(parseJsonLoose('Voici le quiz : {"a":1} merci !')).toEqual({ a: 1 });
   });
 
-  it("lève si aucun JSON", () => {
-    expect(() => parseJsonLoose("désolé")).toThrow();
+  it('lève si aucun JSON', () => {
+    expect(() => parseJsonLoose('désolé')).toThrow();
   });
 });
 
-describe("aiQuizToDraft", () => {
+describe('aiQuizToDraft', () => {
   const ai: AiQuiz = {
-    title: "Capitales",
-    description: "Géo express",
+    title: 'Capitales',
+    description: 'Géo express',
     questions: [
       {
-        type: "multiple_choice",
-        prompt: "Capitale de la France ?",
-        options: ["Paris", "Lyon", "Marseille", "Nice"],
+        type: 'multiple_choice',
+        prompt: 'Capitale de la France ?',
+        options: ['Paris', 'Lyon', 'Marseille', 'Nice'],
         correctIndex: 0,
       },
-      { type: "true_false", prompt: "Berlin est en Allemagne.", answer: true },
+      { type: 'true_false', prompt: 'Berlin est en Allemagne.', answer: true },
     ],
   };
 
-  it("produit un brouillon valide", () => {
+  it('produit un brouillon valide', () => {
     const draft = aiQuizToDraft(ai);
     expect(validateDraft(draft)).toEqual([]);
-    expect(draft.title).toBe("Capitales");
+    expect(draft.title).toBe('Capitales');
     expect(draft.questions).toHaveLength(2);
   });
 
   it("relie correctOptionId à l'option d'index correctIndex", () => {
     const draft = aiQuizToDraft(ai);
     const q0 = draft.questions[0]!;
-    expect(q0.type).toBe("multiple_choice");
+    expect(q0.type).toBe('multiple_choice');
     expect(q0.correctOptionId).toBe(q0.options[0]!.id);
-    expect(q0.options.map((o) => o.label)).toEqual([
-      "Paris",
-      "Lyon",
-      "Marseille",
-      "Nice",
+    expect(q0.options.map(o => o.label)).toEqual([
+      'Paris',
+      'Lyon',
+      'Marseille',
+      'Nice',
     ]);
   });
 
-  it("mappe le Vrai/Faux", () => {
+  it('mappe le Vrai/Faux', () => {
     const draft = aiQuizToDraft(ai);
-    expect(draft.questions[1]!.type).toBe("true_false");
+    expect(draft.questions[1]!.type).toBe('true_false');
     expect(draft.questions[1]!.correct).toBe(true);
   });
 
   it("conserve l'explication (tronquée à 300)", () => {
     const draft = aiQuizToDraft({
-      title: "T",
+      title: 'T',
       questions: [
         {
-          type: "true_false",
-          prompt: "Q ?",
+          type: 'true_false',
+          prompt: 'Q ?',
           answer: false,
-          explanation: "e".repeat(400),
+          explanation: 'e'.repeat(400),
         },
       ],
     });
     expect(draft.questions[0]!.explanation?.length).toBe(300);
   });
 
-  it("borne un correctIndex hors limites à 0", () => {
+  it('borne un correctIndex hors limites à 0', () => {
     const draft = aiQuizToDraft({
-      title: "T",
+      title: 'T',
       questions: [
         {
-          type: "multiple_choice",
-          prompt: "Q ?",
-          options: ["a", "b"],
+          type: 'multiple_choice',
+          prompt: 'Q ?',
+          options: ['a', 'b'],
           correctIndex: 9,
         },
       ],
     });
     expect(draft.questions[0]!.correctOptionId).toBe(
-      draft.questions[0]!.options[0]!.id,
+      draft.questions[0]!.options[0]!.id
     );
     expect(validateDraft(draft)).toEqual([]);
   });
 
-  it("tronque les options trop longues à 120 caractères", () => {
-    const long = "x".repeat(200);
+  it('tronque les options trop longues à 120 caractères', () => {
+    const long = 'x'.repeat(200);
     const draft = aiQuizToDraft({
-      title: "T",
+      title: 'T',
       questions: [
         {
-          type: "multiple_choice",
-          prompt: "Q ?",
-          options: [long, "b"],
+          type: 'multiple_choice',
+          prompt: 'Q ?',
+          options: [long, 'b'],
           correctIndex: 0,
         },
       ],
@@ -118,48 +118,48 @@ describe("aiQuizToDraft", () => {
   });
 });
 
-describe("buildPrompt", () => {
-  it("intègre sujet, nombre et difficulté", () => {
+describe('buildPrompt', () => {
+  it('intègre sujet, nombre et difficulté', () => {
     const p = buildPrompt({
-      topic: "Le jazz",
+      topic: 'Le jazz',
       count: 7,
-      difficulty: "difficile",
+      difficulty: 'difficile',
     });
-    expect(p).toContain("Le jazz");
-    expect(p).toContain("7 questions");
-    expect(p).toContain("difficile");
-    expect(p).toContain("JSON");
+    expect(p).toContain('Le jazz');
+    expect(p).toContain('7 questions');
+    expect(p).toContain('difficile');
+    expect(p).toContain('JSON');
   });
 
-  it("utilise le texte source quand fourni (plutôt que le sujet)", () => {
+  it('utilise le texte source quand fourni (plutôt que le sujet)', () => {
     const p = buildPrompt({
-      topic: "ignoré",
+      topic: 'ignoré',
       count: 3,
-      difficulty: "facile",
-      sourceText: "La photosynthèse transforme la lumière en énergie.",
+      difficulty: 'facile',
+      sourceText: 'La photosynthèse transforme la lumière en énergie.',
     });
-    expect(p).toContain("photosynthèse");
-    expect(p).toContain("Base EXCLUSIVEMENT");
-    expect(p).not.toContain("« ignoré »");
+    expect(p).toContain('photosynthèse');
+    expect(p).toContain('Base EXCLUSIVEMENT');
+    expect(p).not.toContain('« ignoré »');
   });
 
-  it("intègre la langue demandée", () => {
+  it('intègre la langue demandée', () => {
     const p = buildPrompt({
-      topic: "x",
+      topic: 'x',
       count: 3,
-      difficulty: "moyen",
-      language: "anglais",
+      difficulty: 'moyen',
+      language: 'anglais',
     });
-    expect(p).toContain("anglais");
+    expect(p).toContain('anglais');
   });
 });
 
-describe("demoDraft", () => {
-  it("produit un brouillon valide au titre honnête", () => {
-    const d = demoDraft("Volcans");
+describe('demoDraft', () => {
+  it('produit un brouillon valide au titre honnête', () => {
+    const d = demoDraft('Volcans');
     expect(validateDraft(d)).toEqual([]);
-    expect(d.title).toContain("Démo —");
-    expect(d.title).toContain("Volcans");
+    expect(d.title).toContain('Démo —');
+    expect(d.title).toContain('Volcans');
     expect(d.questions.length).toBeGreaterThan(0);
   });
 });

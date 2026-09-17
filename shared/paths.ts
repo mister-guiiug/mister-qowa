@@ -2,7 +2,7 @@
  * Chemins canoniques RTDB (D1) — clé = `sessionId` STABLE, jamais le PIN.
  * Le PIN n'est qu'un alias de jointure : `pins/{pin} -> sessionId`.
  */
-import { shardOf } from "./gameState";
+import { shardOf } from './gameState';
 
 export const pinIndexPath = (pin: string) => `pins/${pin}`;
 

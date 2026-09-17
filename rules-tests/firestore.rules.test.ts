@@ -20,14 +20,14 @@
  *    autre host non — c'est la première opération de `deleteMyDocuments`, et
  *    elle s'autorise autrement qu'une lecture de document.
  */
-import { readFileSync } from "node:fs";
-import { beforeAll, afterAll, beforeEach, describe, it } from "vitest";
+import { readFileSync } from 'node:fs';
+import { beforeAll, afterAll, beforeEach, describe, it } from 'vitest';
 import {
   initializeTestEnvironment,
   assertSucceeds,
   assertFails,
   type RulesTestEnvironment,
-} from "@firebase/rules-unit-testing";
+} from '@firebase/rules-unit-testing';
 import {
   doc,
   setDoc,
@@ -39,10 +39,10 @@ import {
   query,
   where,
   type Firestore,
-} from "firebase/firestore";
+} from 'firebase/firestore';
 
-const ALICE = "alice-uid";
-const BOB = "bob-uid";
+const ALICE = 'alice-uid';
+const BOB = 'bob-uid';
 
 let env: RulesTestEnvironment;
 
@@ -69,24 +69,24 @@ const fs = (uid: string | null): Firestore =>
 
 /** Sème sans règles : un quiz d'ALICE et une partie hébergée par ALICE. */
 async function seed() {
-  await env.withSecurityRulesDisabled(async (ctx) => {
+  await env.withSecurityRulesDisabled(async ctx => {
     const db = ctx.firestore() as unknown as Firestore;
-    await setDoc(doc(db, "quizzes", "quiz-alice"), {
+    await setDoc(doc(db, 'quizzes', 'quiz-alice'), {
       ownerUid: ALICE,
-      title: "Culture générale",
+      title: 'Culture générale',
     });
-    await setDoc(doc(db, "quizzes", "quiz-bob"), {
+    await setDoc(doc(db, 'quizzes', 'quiz-bob'), {
       ownerUid: BOB,
-      title: "Le quiz de Bob",
+      title: 'Le quiz de Bob',
     });
-    await setDoc(doc(db, "results", "game-alice"), {
+    await setDoc(doc(db, 'results', 'game-alice'), {
       hostUid: ALICE,
-      quizTitle: "Culture générale",
-      ranking: [{ uid: BOB, pseudo: "Bob", total: 1200 }],
+      quizTitle: 'Culture générale',
+      ranking: [{ uid: BOB, pseudo: 'Bob', total: 1200 }],
     });
-    await setDoc(doc(db, "results", "game-bob"), {
+    await setDoc(doc(db, 'results', 'game-bob'), {
       hostUid: BOB,
-      quizTitle: "Le quiz de Bob",
+      quizTitle: 'Le quiz de Bob',
       ranking: [],
     });
   });
@@ -94,14 +94,14 @@ async function seed() {
 
 beforeAll(async () => {
   const hostPort = (
-    process.env.FIRESTORE_EMULATOR_HOST ?? "127.0.0.1:8080"
-  ).split(":");
+    process.env.FIRESTORE_EMULATOR_HOST ?? '127.0.0.1:8080'
+  ).split(':');
   env = await initializeTestEnvironment({
-    projectId: "demo-mister-qowa",
+    projectId: 'demo-mister-qowa',
     firestore: {
       host: hostPort[0],
       port: Number(hostPort[1]),
-      rules: readFileSync("firestore.rules", "utf8"),
+      rules: readFileSync('firestore.rules', 'utf8'),
     },
   });
 });
@@ -116,51 +116,51 @@ afterAll(async () => {
 });
 
 describe("quizzes (droit à l'effacement)", () => {
-  it("un utilisateur efface SES quiz", async () => {
-    await assertSucceeds(deleteDoc(doc(fs(ALICE), "quizzes", "quiz-alice")));
+  it('un utilisateur efface SES quiz', async () => {
+    await assertSucceeds(deleteDoc(doc(fs(ALICE), 'quizzes', 'quiz-alice')));
   });
 
   it("il n'efface PAS ceux d'un autre", async () => {
-    await assertFails(deleteDoc(doc(fs(ALICE), "quizzes", "quiz-bob")));
+    await assertFails(deleteDoc(doc(fs(ALICE), 'quizzes', 'quiz-bob')));
     // Et le document de Bob est toujours là pour Bob.
-    await assertSucceeds(getDoc(doc(fs(BOB), "quizzes", "quiz-bob")));
+    await assertSucceeds(getDoc(doc(fs(BOB), 'quizzes', 'quiz-bob')));
   });
 
   it("un visiteur non connecté n'efface rien", async () => {
-    await assertFails(deleteDoc(doc(fs(null), "quizzes", "quiz-alice")));
+    await assertFails(deleteDoc(doc(fs(null), 'quizzes', 'quiz-alice')));
   });
 });
 
 describe("results (droit à l'effacement)", () => {
-  it("le host efface SES parties archivées", async () => {
-    await assertSucceeds(deleteDoc(doc(fs(ALICE), "results", "game-alice")));
+  it('le host efface SES parties archivées', async () => {
+    await assertSucceeds(deleteDoc(doc(fs(ALICE), 'results', 'game-alice')));
   });
 
   it("il n'efface PAS celles d'un autre host", async () => {
-    await assertFails(deleteDoc(doc(fs(ALICE), "results", "game-bob")));
+    await assertFails(deleteDoc(doc(fs(ALICE), 'results', 'game-bob')));
   });
 
   it("un visiteur non connecté n'efface rien", async () => {
-    await assertFails(deleteDoc(doc(fs(null), "results", "game-alice")));
+    await assertFails(deleteDoc(doc(fs(null), 'results', 'game-alice')));
   });
 
-  it("une archive reste NON modifiable, même par son host", async () => {
+  it('une archive reste NON modifiable, même par son host', async () => {
     // `delete` s'est ouvert, `update` non : un classement qu'on réécrit après
     // coup n'est plus une archive.
     await assertFails(
-      updateDoc(doc(fs(ALICE), "results", "game-alice"), { ranking: [] }),
+      updateDoc(doc(fs(ALICE), 'results', 'game-alice'), { ranking: [] })
     );
   });
 
-  it("la lecture reste réservée au host (cloisonnement RGPD)", async () => {
-    await assertSucceeds(getDoc(doc(fs(ALICE), "results", "game-alice")));
+  it('la lecture reste réservée au host (cloisonnement RGPD)', async () => {
+    await assertSucceeds(getDoc(doc(fs(ALICE), 'results', 'game-alice')));
     // BOB figure au classement de la partie d'ALICE, et ne peut pas la lire.
-    await assertFails(getDoc(doc(fs(BOB), "results", "game-alice")));
-    await assertFails(getDoc(doc(fs(null), "results", "game-alice")));
+    await assertFails(getDoc(doc(fs(BOB), 'results', 'game-alice')));
+    await assertFails(getDoc(doc(fs(null), 'results', 'game-alice')));
   });
 });
 
-describe("les REQUÊTES de la purge (deleteMyDocuments)", () => {
+describe('les REQUÊTES de la purge (deleteMyDocuments)', () => {
   // Une suppression commence par une LISTE, et une liste s'autorise autrement
   // qu'une lecture de document : Firestore n'ouvre pas les documents pour
   // décider, il exige que la requête PROUVE d'elle-même qu'elle ne rapportera
@@ -168,45 +168,45 @@ describe("les REQUÊTES de la purge (deleteMyDocuments)", () => {
   // `deleteMyDocuments` — sans eux, la suite passerait au vert avec une purge
   // qui échoue dès son premier aller-retour.
 
-  it("le filtre `hostUid == moi` est la condition de la purge", async () => {
+  it('le filtre `hostUid == moi` est la condition de la purge', async () => {
     await assertSucceeds(
       getDocs(
-        query(collection(fs(ALICE), "results"), where("hostUid", "==", ALICE)),
-      ),
+        query(collection(fs(ALICE), 'results'), where('hostUid', '==', ALICE))
+      )
     );
   });
 
-  it("lister les results SANS filtre est refusé", async () => {
+  it('lister les results SANS filtre est refusé', async () => {
     // Le refus ne dépend pas de ce que contient la base : même si ALICE était
     // le seul host du monde, la requête ne le prouve pas.
-    await assertFails(getDocs(collection(fs(ALICE), "results")));
+    await assertFails(getDocs(collection(fs(ALICE), 'results')));
   });
 
   it("lister ceux d'un AUTRE host est refusé", async () => {
     await assertFails(
       getDocs(
-        query(collection(fs(ALICE), "results"), where("hostUid", "==", BOB)),
-      ),
+        query(collection(fs(ALICE), 'results'), where('hostUid', '==', BOB))
+      )
     );
   });
 
-  it("le filtre `ownerUid == moi` liste les quiz à effacer", async () => {
+  it('le filtre `ownerUid == moi` liste les quiz à effacer', async () => {
     await assertSucceeds(
       getDocs(
-        query(collection(fs(ALICE), "quizzes"), where("ownerUid", "==", ALICE)),
-      ),
+        query(collection(fs(ALICE), 'quizzes'), where('ownerUid', '==', ALICE))
+      )
     );
   });
 });
 
-describe("users (profil privé)", () => {
+describe('users (profil privé)', () => {
   it("chacun efface SON document, pas celui d'un autre", async () => {
-    await env.withSecurityRulesDisabled(async (ctx) => {
+    await env.withSecurityRulesDisabled(async ctx => {
       const db = ctx.firestore() as unknown as Firestore;
-      await setDoc(doc(db, "users", ALICE), { pseudo: "Alice" });
-      await setDoc(doc(db, "users", BOB), { pseudo: "Bob" });
+      await setDoc(doc(db, 'users', ALICE), { pseudo: 'Alice' });
+      await setDoc(doc(db, 'users', BOB), { pseudo: 'Bob' });
     });
-    await assertFails(deleteDoc(doc(fs(ALICE), "users", BOB)));
-    await assertSucceeds(deleteDoc(doc(fs(ALICE), "users", ALICE)));
+    await assertFails(deleteDoc(doc(fs(ALICE), 'users', BOB)));
+    await assertSucceeds(deleteDoc(doc(fs(ALICE), 'users', ALICE)));
   });
 });

@@ -1,10 +1,10 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import { App } from "./App";
-import { ErrorBoundary } from "./components/ErrorBoundary";
-import { installGlobalErrorHandlers } from "./lib/report";
-import "./index.css";
-import { initSentry } from "@mister-guiiug/dev-pwa-config/react/observability";
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { App } from './App';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { installGlobalErrorHandlers } from './lib/report';
+import './index.css';
+import { initSentry } from '@mister-guiiug/dev-pwa-config/react/observability';
 
 /*
  * L'OBSERVABILITÉ, ET ELLE NE COÛTE RIEN TANT QU'AUCUN DSN N'EST POSÉ.
@@ -24,18 +24,18 @@ void initSentry({
   environment: import.meta.env.MODE,
   // `loader` rend l’import analysable par Vite, ce qui permet au
   // `manualChunks` de ranger le SDK dans son propre morceau.
-  loader: () => import("@sentry/react"),
+  loader: () => import('@sentry/react'),
 });
 
 installGlobalErrorHandlers();
 
-const rootEl = document.getElementById("root");
-if (!rootEl) throw new Error("Élément racine #root introuvable.");
+const rootEl = document.getElementById('root');
+if (!rootEl) throw new Error('Élément racine #root introuvable.');
 
 createRoot(rootEl).render(
   <StrictMode>
     <ErrorBoundary>
       <App />
     </ErrorBoundary>
-  </StrictMode>,
+  </StrictMode>
 );

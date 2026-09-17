@@ -36,7 +36,7 @@
       // Applique la langue mémorisée AVANT le rendu React (évite le flash de
       // langue / le mauvais `lang` au chargement). Clé persist Zustand.
       try {
-        var l = JSON.parse(localStorage.getItem("mister-qowa:lang")).state.lang;
+        var l = JSON.parse(localStorage.getItem('mister-qowa:lang')).state.lang;
         if (l) document.documentElement.lang = l;
       } catch (e) {
         /* pas de préférence : on garde fr */

@@ -3,7 +3,7 @@
  * importer le SDK Firebase. Importable depuis l'entrée (App.tsx) sans tirer
  * `firebase/*` dans le chunk initial (le SDK reste chargé à la demande via app.ts).
  */
-export const useEmulator = import.meta.env.VITE_USE_EMULATOR === "1";
+export const useEmulator = import.meta.env.VITE_USE_EMULATOR === '1';
 
 /**
  * App Check OBLIGATOIRE ? Opt-in via `VITE_REQUIRE_APPCHECK="true"` (prod, hors
@@ -13,7 +13,7 @@ export const useEmulator = import.meta.env.VITE_USE_EMULATOR === "1";
 const requireAppCheck =
   !useEmulator &&
   import.meta.env.PROD &&
-  import.meta.env.VITE_REQUIRE_APPCHECK === "true";
+  import.meta.env.VITE_REQUIRE_APPCHECK === 'true';
 
 /**
  * Configuration exploitable, évaluée AU RENDU (App.tsx) sans initialiser

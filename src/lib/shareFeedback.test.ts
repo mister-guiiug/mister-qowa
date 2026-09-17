@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { shareInfoKey } from "./shareFeedback";
+import { describe, expect, it } from 'vitest';
+import { shareInfoKey } from './shareFeedback';
 
 /**
  * LE CAS QUI MOTIVE TOUT LE MODULE. La copie locale de `shareOrCopy` renvoyait
@@ -9,20 +9,20 @@ import { shareInfoKey } from "./shareFeedback";
  *
  * Le socle distingue `'cancelled'`, et ce test tient la conséquence côté app.
  */
-describe("shareInfoKey", () => {
+describe('shareInfoKey', () => {
   it("ne dit RIEN quand l'utilisateur annule", () => {
-    expect(shareInfoKey("cancelled")).toBeNull();
+    expect(shareInfoKey('cancelled')).toBeNull();
   });
 
-  it("ne dit rien non plus quand le partage natif a abouti", () => {
-    expect(shareInfoKey("shared")).toBeNull();
+  it('ne dit rien non plus quand le partage natif a abouti', () => {
+    expect(shareInfoKey('shared')).toBeNull();
   });
 
   it("annonce la copie, seule issue qu'aucun écran ne montre", () => {
-    expect(shareInfoKey("copied")).toBe("host.linkCopied");
+    expect(shareInfoKey('copied')).toBe('host.linkCopied');
   });
 
   it("signale l'échec réel", () => {
-    expect(shareInfoKey("failed")).toBe("host.shareUnavailable");
+    expect(shareInfoKey('failed')).toBe('host.shareUnavailable');
   });
 });

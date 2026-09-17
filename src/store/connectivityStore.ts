@@ -15,7 +15,7 @@
  * `null` = INCONNU, et ce n'est pas `true` : personne n'observe le socket, donc
  * on ne prétend rien. Le shell retombe alors sur `navigator.onLine` seul.
  */
-import { create } from "zustand";
+import { create } from 'zustand';
 
 interface ConnectivityState {
   /** Socket RTDB : `true` connecté, `false` coupé, `null` non observé. */
@@ -23,7 +23,7 @@ interface ConnectivityState {
   setRtdb: (v: boolean | null) => void;
 }
 
-export const useConnectivity = create<ConnectivityState>()((set) => ({
+export const useConnectivity = create<ConnectivityState>()(set => ({
   rtdb: null,
-  setRtdb: (rtdb) => set({ rtdb }),
+  setRtdb: rtdb => set({ rtdb }),
 }));

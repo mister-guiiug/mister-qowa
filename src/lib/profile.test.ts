@@ -1,10 +1,10 @@
-import { describe, it, expect } from "vitest";
-import { applyGameResult, emptyProfile, BADGES } from "./profile";
+import { describe, it, expect } from 'vitest';
+import { applyGameResult, emptyProfile, BADGES } from './profile';
 
-describe("applyGameResult", () => {
-  it("compte une 1re partie et débloque le badge firstGame", () => {
+describe('applyGameResult', () => {
+  it('compte une 1re partie et débloque le badge firstGame', () => {
     const p = applyGameResult(emptyProfile(), {
-      sessionId: "s1",
+      sessionId: 's1',
       rank: 4,
       points: 1200,
     });
@@ -15,14 +15,14 @@ describe("applyGameResult", () => {
     expect(p.badges).not.toContain(BADGES.podium);
   });
 
-  it("est idempotent par sessionId (anti double-comptage au PODIUM)", () => {
+  it('est idempotent par sessionId (anti double-comptage au PODIUM)', () => {
     const once = applyGameResult(emptyProfile(), {
-      sessionId: "s1",
+      sessionId: 's1',
       rank: 1,
       points: 1000,
     });
     const twice = applyGameResult(once, {
-      sessionId: "s1",
+      sessionId: 's1',
       rank: 1,
       points: 1000,
     });
@@ -31,9 +31,9 @@ describe("applyGameResult", () => {
     expect(twice.totalPoints).toBe(1000);
   });
 
-  it("débloque podium (top 3) et victoire (1er)", () => {
+  it('débloque podium (top 3) et victoire (1er)', () => {
     const podium = applyGameResult(emptyProfile(), {
-      sessionId: "s1",
+      sessionId: 's1',
       rank: 3,
       points: 500,
     });
@@ -41,7 +41,7 @@ describe("applyGameResult", () => {
     expect(podium.badges).not.toContain(BADGES.win);
 
     const win = applyGameResult(podium, {
-      sessionId: "s2",
+      sessionId: 's2',
       rank: 1,
       points: 900,
     });
@@ -49,16 +49,16 @@ describe("applyGameResult", () => {
     expect(win.bestRank).toBe(1);
   });
 
-  it("cumule les points et retient le meilleur rang", () => {
+  it('cumule les points et retient le meilleur rang', () => {
     let p = emptyProfile();
-    p = applyGameResult(p, { sessionId: "a", rank: 5, points: 300 });
-    p = applyGameResult(p, { sessionId: "b", rank: 2, points: 700 });
+    p = applyGameResult(p, { sessionId: 'a', rank: 5, points: 300 });
+    p = applyGameResult(p, { sessionId: 'b', rank: 2, points: 700 });
     expect(p.gamesPlayed).toBe(2);
     expect(p.totalPoints).toBe(1000);
     expect(p.bestRank).toBe(2);
   });
 
-  it("débloque veteran à 5 parties et borne la liste de dédup", () => {
+  it('débloque veteran à 5 parties et borne la liste de dédup', () => {
     let p = emptyProfile();
     for (let i = 0; i < 60; i += 1) {
       p = applyGameResult(p, { sessionId: `s${i}`, rank: 2, points: 100 });
@@ -68,16 +68,16 @@ describe("applyGameResult", () => {
     expect(p.counted.length).toBeLessThanOrEqual(50);
     // Les sessions récentes restent dédupliquées.
     const again = applyGameResult(p, {
-      sessionId: "s59",
+      sessionId: 's59',
       rank: 2,
       points: 100,
     });
     expect(again.gamesPlayed).toBe(60);
   });
 
-  it("ignore des points négatifs (clamp à 0)", () => {
+  it('ignore des points négatifs (clamp à 0)', () => {
     const p = applyGameResult(emptyProfile(), {
-      sessionId: "s1",
+      sessionId: 's1',
       rank: 9,
       points: -50,
     });

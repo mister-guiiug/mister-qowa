@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
 /**
  * Barre de temps qui se vide (vert → rouge sous 25 %). Auto-tickée, SANS
@@ -32,8 +32,8 @@ export function TimerBar({
       className="h-2 w-full overflow-hidden rounded-full bg-white/10"
     >
       <div
-        className={`h-full ${pct < 25 ? "bg-answer-red" : "bg-brand"}`}
-        style={{ width: `${pct}%`, transition: "width 100ms linear" }}
+        className={`h-full ${pct < 25 ? 'bg-answer-red' : 'bg-brand'}`}
+        style={{ width: `${pct}%`, transition: 'width 100ms linear' }}
       />
     </div>
   );

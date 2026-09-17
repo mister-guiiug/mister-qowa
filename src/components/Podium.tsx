@@ -1,10 +1,10 @@
-import { m } from "framer-motion";
-import { Trophy } from "lucide-react";
-import type { LeaderboardEntry } from "@shared/contracts";
-import { Confetti } from "./Confetti";
+import { m } from 'framer-motion';
+import { Trophy } from 'lucide-react';
+import type { LeaderboardEntry } from '@shared/contracts';
+import { Confetti } from './Confetti';
 
-const MEDALS = ["🥇", "🥈", "🥉"];
-const HEIGHTS = ["h-40", "h-28", "h-20"];
+const MEDALS = ['🥇', '🥈', '🥉'];
+const HEIGHTS = ['h-40', 'h-28', 'h-20'];
 const ORDER = [1, 0, 2]; // 2e · 1er · 3e
 
 export function Podium({ entries }: { entries: LeaderboardEntry[] }) {
@@ -14,7 +14,7 @@ export function Podium({ entries }: { entries: LeaderboardEntry[] }) {
       <Confetti />
       <Trophy className="size-12 text-answer-yellow" />
       <div className="flex w-full items-end justify-center gap-2">
-        {ORDER.map((rank) => {
+        {ORDER.map(rank => {
           const e = top[rank];
           if (!e) return <div key={rank} className="flex-1" />;
           return (
@@ -22,7 +22,7 @@ export function Podium({ entries }: { entries: LeaderboardEntry[] }) {
               key={e.uid}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 * (3 - rank), type: "spring" }}
+              transition={{ delay: 0.1 * (3 - rank), type: 'spring' }}
               className="flex flex-1 flex-col items-center gap-2"
             >
               <span className="text-2xl">{MEDALS[rank]}</span>

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate, Navigate } from "react-router-dom";
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import {
   X,
   Share2,
@@ -8,26 +8,26 @@ import {
   Pause,
   Play,
   RotateCcw,
-} from "lucide-react";
-import { Screen, Button, Spinner } from "../lib/ui";
+} from 'lucide-react';
+import { Screen, Button, Spinner } from '../lib/ui';
 import {
   useHostView,
   useAnswerStats,
   useReactions,
   useTeamLeaderboard,
   useSessionMeta,
-} from "../hooks/useGameSubscription";
+} from '../hooks/useGameSubscription';
 import {
   useServerOffset,
   useRtdbPresence,
   serverNow,
-} from "../hooks/useServerTime";
-import { useAsyncAction } from "../hooks/useAsyncAction";
-import { feedback } from "../lib/feedback";
-import { AnswerDistribution } from "../components/AnswerDistribution";
-import { JoinQr } from "../components/JoinQr";
-import { useGameStore } from "../store/gameStore";
-import { useQuizLibrary } from "../store/quizStore";
+} from '../hooks/useServerTime';
+import { useAsyncAction } from '../hooks/useAsyncAction';
+import { feedback } from '../lib/feedback';
+import { AnswerDistribution } from '../components/AnswerDistribution';
+import { JoinQr } from '../components/JoinQr';
+import { useGameStore } from '../store/gameStore';
+import { useQuizLibrary } from '../store/quizStore';
 import {
   nextQuestion,
   closeQuestion,
@@ -39,32 +39,32 @@ import {
   kickPlayer,
   pauseQuestion,
   replayQuestion,
-} from "../firebase/api";
+} from '../firebase/api';
 import {
   shareOrCopy,
   currentAppUrl,
   type ShareResult,
-} from "@mister-guiiug/dev-pwa-config/share";
-import { shareInfoKey } from "../lib/shareFeedback";
-import { FloatingReactions, ReactionBar } from "../components/Reactions";
-import { TeamLeaderboard } from "../components/TeamLeaderboard";
-import { PinBadge } from "../components/PinBadge";
-import { Countdown } from "../components/Countdown";
-import { TimerBar } from "../components/TimerBar";
-import { Leaderboard } from "../components/Leaderboard";
-import { Podium } from "../components/Podium";
-import { useNetworkGuard } from "../hooks/useNetworkGuard";
-import { useErr, useT } from "../i18n";
+} from '@mister-guiiug/dev-pwa-config/share';
+import { shareInfoKey } from '../lib/shareFeedback';
+import { FloatingReactions, ReactionBar } from '../components/Reactions';
+import { TeamLeaderboard } from '../components/TeamLeaderboard';
+import { PinBadge } from '../components/PinBadge';
+import { Countdown } from '../components/Countdown';
+import { TimerBar } from '../components/TimerBar';
+import { Leaderboard } from '../components/Leaderboard';
+import { Podium } from '../components/Podium';
+import { useNetworkGuard } from '../hooks/useNetworkGuard';
+import { useErr, useT } from '../i18n';
 
 export function Host() {
   const t = useT();
   const err = useErr();
   const { sessionId } = useParams();
   const nav = useNavigate();
-  const pin = useGameStore((s) => s.pin);
-  const quiz = useGameStore((s) => s.hostQuiz);
-  const reset = useGameStore((s) => s.reset);
-  const setHost = useGameStore((s) => s.setHost);
+  const pin = useGameStore(s => s.pin);
+  const quiz = useGameStore(s => s.hostQuiz);
+  const reset = useGameStore(s => s.reset);
+  const setHost = useGameStore(s => s.setHost);
   const {
     state,
     current,
@@ -76,7 +76,7 @@ export function Host() {
     leaderboard,
   } = useHostView(sessionId ?? null);
   const eliminatedCount = Object.values(scores).filter(
-    (s) => s.eliminated,
+    s => s.eliminated
   ).length;
   const survivors = Math.max(0, playerCount - eliminatedCount);
   const { busy, error, setError, run: act } = useAsyncAction();
@@ -84,7 +84,7 @@ export function Host() {
   const [quizLost, setQuizLost] = useState(false);
   const [info, setInfo] = useState<string | null>(null);
   const { quizId: metaQuizId, pin: metaPin } = useSessionMeta(
-    sessionId ?? null,
+    sessionId ?? null
   );
   const offset = useServerOffset();
   // Publie `.info/connected` pour le bandeau du shell (cet écran a déjà payé le SDK).
@@ -103,15 +103,15 @@ export function Host() {
   // Deps exhaustives (activatedAt/timeLimitMs/index) + erreurs remontées.
   // En pause : on n'arme pas le timer (la reprise étend timeLimitMs → ré-armement).
   useEffect(() => {
-    if (state !== "QUESTION_ACTIVE" || !current || !quiz || !sessionId) return;
+    if (state !== 'QUESTION_ACTIVE' || !current || !quiz || !sessionId) return;
     if (paused) return;
     const ms = current.activatedAt + current.timeLimitMs - serverNow(offset);
     const id = setTimeout(
       () =>
-        closeQuestion(sessionId, quiz, current.index).catch((e) =>
-          setError(err(e)),
+        closeQuestion(sessionId, quiz, current.index).catch(e =>
+          setError(err(e))
         ),
-      Math.max(0, ms) + 400,
+      Math.max(0, ms) + 400
     );
     return () => clearTimeout(id);
     // deps volontairement primitives (pas l'objet `current` qui change à chaque snapshot)
@@ -169,12 +169,12 @@ export function Host() {
 
   // Fanfare au podium (host).
   useEffect(() => {
-    if (state === "PODIUM") feedback.finish();
+    if (state === 'PODIUM') feedback.finish();
   }, [state]);
 
   // Ambiance sonore pendant la question (coupée en pause, à la clôture, au démontage).
   useEffect(() => {
-    if (state !== "QUESTION_ACTIVE" || !current || paused) {
+    if (state !== 'QUESTION_ACTIVE' || !current || paused) {
       feedback.ambient.stop();
       return;
     }
@@ -198,20 +198,20 @@ export function Host() {
       <Screen className="justify-center">
         {notFound ? (
           <div className="flex flex-col items-center gap-4 text-center">
-            <p className="font-display text-2xl">{t("common.notFound")}</p>
-            <p className="text-white/60">{t("common.sessionGone")}</p>
+            <p className="font-display text-2xl">{t('common.notFound')}</p>
+            <p className="text-white/60">{t('common.sessionGone')}</p>
             <Button
               variant="ghost"
               onClick={() => {
                 reset();
-                nav("/");
+                nav('/');
               }}
             >
-              {t("common.toHome")}
+              {t('common.toHome')}
             </Button>
           </div>
         ) : (
-          <Spinner label={t("host.connecting")} />
+          <Spinner label={t('host.connecting')} />
         )}
       </Screen>
     );
@@ -224,21 +224,21 @@ export function Host() {
       <Screen className="justify-center">
         {quizLost ? (
           <div className="flex flex-col items-center gap-4 text-center">
-            <p className="font-display text-2xl">{t("host.quizLostTitle")}</p>
-            <p className="max-w-sm text-white/60">{t("host.quizLostBody")}</p>
+            <p className="font-display text-2xl">{t('host.quizLostTitle')}</p>
+            <p className="max-w-sm text-white/60">{t('host.quizLostBody')}</p>
             <Button
               variant="danger"
               onClick={() => {
                 closeSession(sessionId, metaPin ?? pin).catch(() => undefined);
                 reset();
-                nav("/");
+                nav('/');
               }}
             >
-              {t("host.closeRoom")}
+              {t('host.closeRoom')}
             </Button>
           </div>
         ) : (
-          <Spinner label={t("host.connecting")} />
+          <Spinner label={t('host.connecting')} />
         )}
       </Screen>
     );
@@ -246,14 +246,14 @@ export function Host() {
   const isLast = current ? current.index >= current.total - 1 : false;
   const curQ = quiz && current ? quiz.questions[current.index] : undefined;
   const correctId =
-    curQ?.type === "multiple_choice"
+    curQ?.type === 'multiple_choice'
       ? curQ.correctOptionId
-      : curQ?.type === "true_false"
+      : curQ?.type === 'true_false'
         ? curQ.correct
-          ? "true"
-          : "false"
+          ? 'true'
+          : 'false'
         : undefined;
-  const joinUrl = pin ? `${currentAppUrl()}#/join?pin=${pin}` : "";
+  const joinUrl = pin ? `${currentAppUrl()}#/join?pin=${pin}` : '';
 
   // `shareInfoKey` décide QUOI dire ; l'i18n décide COMMENT. Annuler ne dit
   // plus rien — avant la migration, fermer la feuille de partage affichait
@@ -264,18 +264,18 @@ export function Host() {
   };
   const invite = () =>
     shareOrCopy({
-      title: "Mister Qowa",
-      text: t("host.inviteText"),
+      title: 'Mister Qowa',
+      text: t('host.inviteText'),
       url: joinUrl,
     }).then(flash);
   const shareResult = () => {
     const top = leaderboard
       .slice(0, 3)
       .map((e, i) => `${i + 1}. ${e.pseudo} (${e.total})`)
-      .join("\n");
+      .join('\n');
     return shareOrCopy({
-      title: t("host.resultTitle"),
-      text: `🏆 ${t("host.resultTitle")}\n${top}`,
+      title: t('host.resultTitle'),
+      text: `🏆 ${t('host.resultTitle')}\n${top}`,
     }).then(flash);
   };
 
@@ -301,7 +301,7 @@ export function Host() {
         </p>
       ) : null}
 
-      {state === "LOBBY" ? (
+      {state === 'LOBBY' ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-8">
           {pin ? <PinBadge pin={pin} /> : null}
           {pin ? (
@@ -310,7 +310,7 @@ export function Host() {
             </div>
           ) : null}
           <p className="text-white/70">
-            {t("host.playersConnected", { n: playerCount })}
+            {t('host.playersConnected', { n: playerCount })}
           </p>
           <div className="flex max-h-40 flex-wrap justify-center gap-2 overflow-auto">
             {Object.entries(players).map(([puid, p]) => (
@@ -324,7 +324,7 @@ export function Host() {
                   type="button"
                   {...guard.disabledProps}
                   onClick={guard.wrap(() => void kickPlayer(sessionId, puid))}
-                  aria-label={t("host.kickAria", { pseudo: p.pseudo })}
+                  aria-label={t('host.kickAria', { pseudo: p.pseudo })}
                   className="rounded-full p-0.5 text-white/40 hover:bg-rose-500/30 hover:text-rose-200 aria-disabled:opacity-50"
                 >
                   <X className="size-3.5" />
@@ -335,7 +335,7 @@ export function Host() {
           <div className="flex w-full flex-col gap-2">
             {pin ? (
               <Button full variant="ghost" onClick={() => void invite()}>
-                <Share2 className="size-4" /> {t("host.invite")}
+                <Share2 className="size-4" /> {t('host.invite')}
               </Button>
             ) : null}
             <Button
@@ -343,27 +343,27 @@ export function Host() {
               disabled={busy || playerCount === 0 || !quiz}
               {...guard.disabledProps}
               onClick={guard.wrap(
-                () => quiz && act(() => nextQuestion(sessionId, quiz, 0)),
+                () => quiz && act(() => nextQuestion(sessionId, quiz, 0))
               )}
             >
-              {t("host.start")}
+              {t('host.start')}
             </Button>
           </div>
         </div>
       ) : null}
 
-      {state === "QUESTION_ACTIVE" && current ? (
+      {state === 'QUESTION_ACTIVE' && current ? (
         <div className="flex flex-1 flex-col gap-6">
           <div className="flex items-center justify-between text-white/60">
             <span>
-              {t("common.questionN", {
+              {t('common.questionN', {
                 n: current.index + 1,
                 total: current.total,
               })}
             </span>
             {paused ? (
               <span className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500/20 px-3 py-1 font-display text-amber-200">
-                <Pause className="size-4" /> {t("host.pause")}
+                <Pause className="size-4" /> {t('host.pause')}
               </span>
             ) : (
               <Countdown endsAt={current.activatedAt + current.timeLimitMs} />
@@ -381,7 +381,7 @@ export function Host() {
             <div className="h-48 w-full overflow-hidden rounded-2xl bg-white/5">
               <img
                 src={current.mediaUrl}
-                alt={current.mediaAlt ?? ""}
+                alt={current.mediaAlt ?? ''}
                 decoding="async"
                 className="h-full w-full object-contain"
               />
@@ -389,7 +389,7 @@ export function Host() {
           ) : null}
           {current.options ? (
             <ul className="grid grid-cols-2 gap-2">
-              {current.options.map((o) => (
+              {current.options.map(o => (
                 <li
                   key={o.id}
                   className="rounded-xl bg-white/5 p-3 font-medium"
@@ -400,8 +400,8 @@ export function Host() {
             </ul>
           ) : null}
           <p className="text-center text-white/70">
-            {t("host.answered", { count: stats.count, total: playerCount })}
-            {eliminationMode ? t("host.inPlaySuffix", { n: survivors }) : ""}
+            {t('host.answered', { count: stats.count, total: playerCount })}
+            {eliminationMode ? t('host.inPlaySuffix', { n: survivors }) : ''}
           </p>
           <div className="flex flex-col gap-2">
             <div className="flex gap-2">
@@ -411,16 +411,16 @@ export function Host() {
                 disabled={busy}
                 {...guard.disabledProps}
                 onClick={guard.wrap(() =>
-                  act(() => pauseQuestion(sessionId, !paused)),
+                  act(() => pauseQuestion(sessionId, !paused))
                 )}
               >
                 {paused ? (
                   <>
-                    <Play className="size-4" /> {t("host.resume")}
+                    <Play className="size-4" /> {t('host.resume')}
                   </>
                 ) : (
                   <>
-                    <Pause className="size-4" /> {t("host.pause")}
+                    <Pause className="size-4" /> {t('host.pause')}
                   </>
                 )}
               </Button>
@@ -432,10 +432,10 @@ export function Host() {
                 onClick={guard.wrap(
                   () =>
                     quiz &&
-                    act(() => replayQuestion(sessionId, quiz, current.index)),
+                    act(() => replayQuestion(sessionId, quiz, current.index))
                 )}
               >
-                <RotateCcw className="size-4" /> {t("host.replay")}
+                <RotateCcw className="size-4" /> {t('host.replay')}
               </Button>
             </div>
             <div className="flex gap-2">
@@ -447,10 +447,10 @@ export function Host() {
                 onClick={guard.wrap(
                   () =>
                     quiz &&
-                    act(() => skipQuestion(sessionId, quiz, current.index)),
+                    act(() => skipQuestion(sessionId, quiz, current.index))
                 )}
               >
-                <SkipForward className="size-4" /> {t("host.skip")}
+                <SkipForward className="size-4" /> {t('host.skip')}
               </Button>
               <Button
                 full
@@ -460,20 +460,20 @@ export function Host() {
                 onClick={guard.wrap(
                   () =>
                     quiz &&
-                    act(() => closeQuestion(sessionId, quiz, current.index)),
+                    act(() => closeQuestion(sessionId, quiz, current.index))
                 )}
               >
-                {t("host.closeNow")}
+                {t('host.closeNow')}
               </Button>
             </div>
           </div>
         </div>
       ) : null}
 
-      {state === "LEADERBOARD" ? (
+      {state === 'LEADERBOARD' ? (
         <div className="flex flex-1 flex-col gap-6">
           <h2 className="text-center font-display text-2xl">
-            {t("host.leaderboardTitle")}
+            {t('host.leaderboardTitle')}
           </h2>
           {teamStandings.length ? (
             <TeamLeaderboard standings={teamStandings} />
@@ -488,7 +488,7 @@ export function Host() {
           ) : null}
           {eliminationMode ? (
             <p className="text-center text-white/70">
-              {t("host.survivorsLine", { n: survivors })}
+              {t('host.survivorsLine', { n: survivors })}
             </p>
           ) : null}
           <Leaderboard entries={leaderboard} />
@@ -502,31 +502,31 @@ export function Host() {
                   () =>
                     quiz &&
                     current &&
-                    act(() => nextQuestion(sessionId, quiz, current.index + 1)),
+                    act(() => nextQuestion(sessionId, quiz, current.index + 1))
                 )}
               >
-                {t("host.nextQuestion")}
+                {t('host.nextQuestion')}
               </Button>
             ) : null}
             <Button
               full
-              variant={isLast ? "primary" : "ghost"}
+              variant={isLast ? 'primary' : 'ghost'}
               disabled={busy}
               {...guard.disabledProps}
               onClick={guard.wrap(() =>
-                act(() => endGame(sessionId, quiz ?? undefined)),
+                act(() => endGame(sessionId, quiz ?? undefined))
               )}
             >
-              {t("host.endPodium")}
+              {t('host.endPodium')}
             </Button>
           </div>
         </div>
       ) : null}
 
-      {state === "PODIUM" ? (
+      {state === 'PODIUM' ? (
         <div className="flex flex-1 flex-col justify-center gap-8">
           <h2 className="text-center font-display text-3xl">
-            {t("host.podiumTitle")}
+            {t('host.podiumTitle')}
           </h2>
           {teamStandings.length ? (
             <TeamLeaderboard standings={teamStandings} />
@@ -538,13 +538,13 @@ export function Host() {
               disabled={busy || !quiz}
               {...guard.disabledProps}
               onClick={guard.wrap(
-                () => quiz && act(() => restartSession(sessionId, quiz)),
+                () => quiz && act(() => restartSession(sessionId, quiz))
               )}
             >
-              <RefreshCw className="size-4" /> {t("host.replayWithSame")}
+              <RefreshCw className="size-4" /> {t('host.replayWithSame')}
             </Button>
             <Button full variant="ghost" onClick={() => void shareResult()}>
-              <Share2 className="size-4" /> {t("host.shareResult")}
+              <Share2 className="size-4" /> {t('host.shareResult')}
             </Button>
             <Button
               full
@@ -553,18 +553,18 @@ export function Host() {
                 // Libère la salle (session + PIN) — best-effort, sans bloquer la sortie.
                 closeSession(sessionId, pin).catch(() => undefined);
                 reset();
-                nav("/");
+                nav('/');
               }}
             >
-              {t("host.newGame")}
+              {t('host.newGame')}
             </Button>
           </div>
         </div>
       ) : null}
 
-      {state !== "LOBBY" ? (
+      {state !== 'LOBBY' ? (
         <div className="mt-auto pt-4">
-          <ReactionBar onSend={(e) => void sendReaction(sessionId, e)} />
+          <ReactionBar onSend={e => void sendReaction(sessionId, e)} />
         </div>
       ) : null}
     </Screen>
