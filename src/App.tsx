@@ -55,14 +55,15 @@ const Account = lazy(() =>
  * Ce que le changement de route déclenche, et qui ne rend rien.
  *
  * Deux usages, un seul endroit : le fil d'Ariane du diagnostic d'erreur, et la
- * vue de page GA4. Les séparer en deux composants ferait deux abonnements à la
+ * vue de page. Les séparer en deux composants ferait deux abonnements à la
  * même valeur pour le même évènement.
  *
  * `usePageViews` ne fait rien tant que le consentement n'est pas accordé — il
- * se monte donc sans condition. Sans lui, GA4 ne compterait qu'une vue par
- * chargement de document : toute la navigation du quiz serait invisible, et
- * `initAnalytics` pose en plus `send_page_view: false` pour que la première vue
- * passe par ici comme les autres.
+ * se monte donc sans condition. Sans lui, toute la navigation du quiz serait
+ * invisible ; et si on laissait PostHog compter seul, chaque navigation serait
+ * comptée DEUX fois — il envoie une vue au chargement ET à chaque changement
+ * d'historique. `initAnalytics` pose donc `capture_pageview: false` pour que
+ * toutes passent par ici, la première comprise.
  */
 function RouteBreadcrumbs() {
   const loc = useLocation();
@@ -135,9 +136,10 @@ export function App() {
           {/* Une `region`, pas une boîte modale : elle ne recouvre rien et ne
               piège pas le focus — un bandeau qui bloquerait une partie en cours
               serait exactement le « dark pattern » que le RGPD nomme. Ne rend
-              RIEN tant que `VITE_GA_MEASUREMENT_ID` n'est pas posée. */}
+              RIEN tant que `VITE_POSTHOG_KEY` n'est pas posée. */}
           <ConsentBanner
-            gaMeasurementId={import.meta.env.VITE_GA_MEASUREMENT_ID}
+            posthogKey={import.meta.env.VITE_POSTHOG_KEY}
+            loader={() => import('posthog-js/dist/module.slim.js')}
           />
           <UpdatePrompt />
           {/* L'INVITE D'INSTALLATION A QUITTÉ LA COQUILLE pour l'accueil. Le
