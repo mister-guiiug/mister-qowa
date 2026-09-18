@@ -3726,7 +3726,7 @@ export const joinGame = onCall({ region: 'europe-west1', enforceAppCheck: true }
 - **Minimisation** : Auth anonyme pour les joueurs ; aucune donnée perso requise pour jouer. Le pseudo est libre et **filtré** (longueur ≤ 24, anti-injection, liste de mots interdits) — on documente qu'il ne doit pas contenir d'identité réelle.
 - **Durée de conservation** : l'état live (RTDB) est **éphémère** — la branche `games/$pin` est supprimée à `ENDED` (ou via TTL / Function planifiée). Seuls les **résultats agrégés** (scores, stats par question) sont conservés en Firestore, rattachés au pseudo, pas à une identité.
 - **Droit à l'effacement** : une Function `deleteGameData(pin)` (réservée au host) purge RTDB + documents `results` liés. Les comptes host Google relèvent de la politique Auth standard (suppression du compte → suppression des quiz via Function `onUserDeleted`).
-- **Localisation** : projet et Functions en **europe-west** (données dans l'UE). Cookie/consentement uniquement si Google Analytics est activé (bandeau côté PWA, GA chargé à l'opt-in).
+- **Localisation** : projet et Functions en **europe-west** (données dans l'UE). Cookie/consentement uniquement si la mesure d'audience est activée : PostHog, nuage EUROPÉEN (ADR 0012), chargé à l'opt-in par le bandeau côté PWA — donc dans l'UE lui aussi, comme le projet et les Functions.
 
 ---
 
@@ -3811,7 +3811,7 @@ export const exportResults = onRequest(
 );
 ```
 
-Côté client, le host déclenche le téléchargement (l'export par-question utilise le même encodeur avec les colonnes `prompt;correctRate;distribution;medianTimeMs`). Pour un export 100 % local (petites parties), le même `toCsv` peut tourner dans le navigateur et générer un `Blob` — sans Function. **Google Analytics** (`VITE_GA_MEASUREMENT_ID`, opt-in) couvre l'usage produit (parties créées, taux de complétion), distinct de ces analytics de jeu.
+Côté client, le host déclenche le téléchargement (l'export par-question utilise le même encodeur avec les colonnes `prompt;correctRate;distribution;medianTimeMs`). Pour un export 100 % local (petites parties), le même `toCsv` peut tourner dans le navigateur et générer un `Blob` — sans Function. **PostHog**, nuage européen (`VITE_POSTHOG_KEY`, après consentement) couvre l'usage produit (parties créées, taux de complétion), distinct de ces analytics de jeu.
 
 ---
 
