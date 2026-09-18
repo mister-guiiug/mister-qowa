@@ -36,7 +36,7 @@
   "dependencies": {
     "@sentry/react": "^10.75.0",
     "firebase": "^12.19.0",
-    "framer-motion": "^12.38.0",
+    "motion": "^12.38.0",
     "lucide-react": "^1.47.0",
     "posthog-js": "^1.434.2",
     "react": "^19.3.0",
