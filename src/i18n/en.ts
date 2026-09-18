@@ -314,9 +314,6 @@ export const en = {
   'connection.offline': 'Offline — reconnecting…',
   'guard.offline': 'Unavailable offline — this needs a connection.',
   'pin.label': 'PIN code',
-  'update.available': 'New version available',
-  'update.updating': 'Updating…',
-  'update.later': 'Later',
   'install.prompt': 'Install Mister Qowa on your device?',
   'install.action': 'Install',
 

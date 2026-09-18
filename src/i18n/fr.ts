@@ -312,9 +312,6 @@ export const fr = {
   'connection.offline': 'Hors ligne — reconnexion…',
   'guard.offline': 'Indisponible hors ligne — il faut du réseau pour ça.',
   'pin.label': 'Code PIN',
-  'update.available': 'Nouvelle version disponible',
-  'update.updating': 'Mise à jour…',
-  'update.later': 'Plus tard',
   'install.prompt': 'Installer Mister Qowa sur ton appareil ?',
   'install.action': 'Installer',
 

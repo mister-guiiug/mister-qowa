@@ -37,11 +37,13 @@ describe('bannière de mise à jour', () => {
 
     const banner = screen.getByRole('status');
     expect(banner).toHaveAttribute('data-dwc', 'update-banner');
-    // Le titre est celui de l'app (i18n maison), pas le défaut du socle.
-    expect(banner).toHaveTextContent('Nouvelle version disponible');
+    // Le titre est celui du SOCLE, servi dans la langue de l'app par le
+    // `LabelsProvider` que ce composant monte — c'est lui, désormais, qui
+    // évite le repli silencieux en français des quatre autres langues.
+    expect(banner).toHaveTextContent('Mise à jour disponible');
     // Et il offre une sortie : un bandeau sans échappatoire est un piège.
     expect(
-      screen.getByRole('button', { name: 'Recharger' })
+      screen.getByRole('button', { name: 'Mettre à jour' })
     ).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: 'Plus tard' })

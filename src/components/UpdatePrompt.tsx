@@ -1,6 +1,7 @@
 import { registerSW } from 'virtual:pwa-register';
 import { AppUpdates } from '@mister-guiiug/dev-pwa-config/react/app-updates';
-import { useT } from '../i18n';
+import { LabelsProvider } from '@mister-guiiug/dev-pwa-config/react/labels';
+import { useLang } from '../i18n';
 
 /**
  * Bannière de mise à jour PWA. Le SW est en `prompt` (pas d'auto-reload pendant
@@ -27,27 +28,35 @@ import { useT } from '../i18n';
  * donc qu'un seul enregistrement — d'où l'import direct de `virtual:pwa-register`,
  * stable au niveau module.
  *
- * Ne reste ici que ce que le socle ne sait pas : les libellés traduits par
- * l'i18n de l'app (5 langues, le socle n'en connaît que 2) et le placement
- * flottant en bas d'écran, que le socle laisse à l'app.
+ * LES LIBELLÉS VENAIENT DE L'APP, ET LA RAISON A DISPARU. Elle était écrite
+ * ici : « 5 langues, le socle n'en connaît que 2 ». C'était vrai ; le socle en
+ * livre SEPT, les cinq de Qowa comprises. La surcharge ne protégeait donc plus
+ * de rien — elle ajoutait une neuvième façon d'annoncer une mise à jour dans
+ * un parc qui en comptait déjà huit.
+ *
+ * `LabelsProvider` EST NÉCESSAIRE, et c'est ce qui rend le retrait sûr : sans
+ * lui, le socle sert le FRANÇAIS à tout le monde, en silence. L'app n'en
+ * montait un que dans `FamilyLinks` ; il est ici au plus près du bandeau,
+ * plutôt qu'à la racine, pour ne rien changer d'autre à l'écran.
+ *
+ * Ne reste donc ici que le placement flottant en bas d'écran, que le socle
+ * laisse à l'app.
  *
  * `snoozeHours` est à 0, et ÉCRIT : « Plus tard » écarte le bandeau pour la
  * session, exactement comme la bannière locale qu'elle remplace.
  */
 export function UpdatePrompt() {
-  const t = useT();
+  const lang = useLang(s => s.lang);
   return (
-    <AppUpdates
-      snoozeHours={0}
-      registerSW={registerSW}
-      checkEvery="1h"
-      bannerProps={{
-        title: t('update.available'),
-        updateLabel: t('common.reload'),
-        updatingLabel: t('update.updating'),
-        dismissLabel: t('update.later'),
-        className: 'fixed inset-x-3 bottom-3 z-50 mx-auto max-w-md',
-      }}
-    />
+    <LabelsProvider locale={lang}>
+      <AppUpdates
+        snoozeHours={0}
+        registerSW={registerSW}
+        checkEvery="1h"
+        bannerProps={{
+          className: 'fixed inset-x-3 bottom-3 z-50 mx-auto max-w-md',
+        }}
+      />
+    </LabelsProvider>
   );
 }
