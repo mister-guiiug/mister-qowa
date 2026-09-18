@@ -312,9 +312,6 @@ export const de = {
   'guard.offline':
     'Offline nicht verfügbar — dafür braucht es eine Verbindung.',
   'pin.label': 'PIN-Code',
-  'update.available': 'Neue Version verfügbar',
-  'update.updating': 'Wird aktualisiert…',
-  'update.later': 'Später',
   'install.prompt': 'Mister Qowa auf deinem Gerät installieren?',
   'install.action': 'Installieren',
   'leaderboard.empty': 'Noch niemand…',
