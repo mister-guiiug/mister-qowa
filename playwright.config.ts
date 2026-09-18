@@ -11,6 +11,6 @@ export default defineConfig(
     // la garde de `entree.spec.ts` n'a rien à vérifier. Il ne touche que le
     // serveur de test ; la production garde sa variable de dépôt.
     command:
-      'cross-env VITE_GA_MEASUREMENT_ID=G-E2E0000000 npm run dev -- --port 5173 --strictPort',
+      'cross-env VITE_POSTHOG_KEY=phc_e2e0000000000000000000000 npm run dev -- --port 5173 --strictPort',
   })
 );
