@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { GESTES, trackEvent } from '@mister-guiiug/dev-pwa-config/analytics';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -90,9 +91,25 @@ export function AiGenerate() {
       return;
     }
     setBusy(true);
+    /*
+     * LA GÉNÉRATION IA EST LE SEUL GESTE DE CETTE APP QUI COÛTE DE L'ARGENT —
+     * la clé est celle de l'utilisateur, mais l'appel part quand même, et son
+     * taux d'échec est une information qu'on n'avait pas.
+     *
+     * TROIS ÉTAPES, parce que `lancee` sans `reussie` est précisément ce qu'il
+     * faut voir : un modèle qui refuse, un quota dépassé, une clé invalide
+     * produisent tous une génération lancée et jamais aboutie.
+     *
+     * NI LE SUJET, NI LE TEXTE SOURCE, NI LA CLÉ. Le sujet est saisi — il peut
+     * porter un nom de classe, un prénom, un contenu de cours. La clé est un
+     * secret. Aucun des trois ne part.
+     */
+    trackEvent(GESTES.OPERATION, { nom: 'generation_ia', etape: 'lancee' });
     try {
       setPreview(await generateQuiz(params, cfg));
+      trackEvent(GESTES.OPERATION, { nom: 'generation_ia', etape: 'reussie' });
     } catch (e) {
+      trackEvent(GESTES.OPERATION, { nom: 'generation_ia', etape: 'echouee' });
       setError(err(e));
     } finally {
       setBusy(false);
