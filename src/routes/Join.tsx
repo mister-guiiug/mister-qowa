@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { GESTES, trackEvent } from '@mister-guiiug/dev-pwa-config/analytics';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Screen, Button } from '../lib/ui';
@@ -48,6 +49,16 @@ export function Join() {
       );
       setPlayer({ sessionId, pin, pseudo: pseudo.trim() });
       setIdentity(pseudo.trim(), avatar); // mémorise pour la prochaine fois
+      /*
+       * REJOINDRE UNE PARTIE, UNE FOIS QUE C'EST FAIT. Après `joinSession`,
+       * qui lève sur un PIN inconnu ou une session fermée : compter le clic
+       * gonflerait le chiffre de toutes les tentatives ratées.
+       *
+       * NI LE PIN, NI LE PSEUDO. Le PIN est l'identifiant que les joueurs se
+       * partagent — c'est exactement le type de valeur que `mister-puzzle`
+       * refuse déjà d'envoyer comme chemin de page. Le pseudo est saisi.
+       */
+      trackEvent(GESTES.PARTIE, { etape: 'demarree', role: 'joueur' });
       nav(`/play/${sessionId}`);
     } catch (e) {
       setError(err(e));
