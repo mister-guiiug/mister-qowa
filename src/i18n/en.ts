@@ -35,6 +35,7 @@ export const en = {
   'home.solo': 'Play solo',
   'home.myGames': 'My games',
   'home.myAccount': 'My account',
+  'home.loading': 'Loading…',
 
   // player profile (local)
   'profile.summary': v =>

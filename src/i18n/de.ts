@@ -31,6 +31,7 @@ export const de = {
   'home.solo': 'Solo spielen',
   'home.myGames': 'Meine Spiele',
   'home.myAccount': 'Mein Konto',
+  'home.loading': 'Wird geladen…',
 
   // Spielerprofil (lokal)
   'profile.summary': v =>
