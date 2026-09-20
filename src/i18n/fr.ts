@@ -28,6 +28,7 @@ export const fr = {
   'home.solo': 'Jouer en solo',
   'home.myGames': 'Mes parties',
   'home.myAccount': 'Mon compte',
+  'home.loading': 'Chargement…',
 
   // profil joueur (local)
   'profile.summary': v =>
