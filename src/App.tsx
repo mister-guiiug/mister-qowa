@@ -9,6 +9,7 @@ import {
 import { LazyMotion, domMax, MotionConfig } from 'framer-motion';
 import { ConsentBanner } from '@mister-guiiug/dev-pwa-config/react/consent-banner';
 import { usePageViews } from '@mister-guiiug/dev-pwa-config/react/use-page-views';
+import { useIdlePrefetch } from '@mister-guiiug/dev-pwa-config/react/use-prefetch';
 import { Home } from './routes/Home';
 import { UpdatePrompt } from './components/UpdatePrompt';
 import { ConnectionBanner } from './components/ConnectionBanner';
@@ -22,7 +23,7 @@ import { addBreadcrumb } from './lib/breadcrumbs';
 // Firebase (host/join/play/historique) sont en chunks séparés, chargés à la demande.
 // CHAQUE IMPORT D'UN ÉCRAN DE L'ACCUEIL EST NOMMÉ, parce qu'il sert DEUX FOIS :
 // à `lazy` ci-dessous, et au préchargement à l'inactivité de
-// `usePrechargeLesEcransDeLAccueil`. Deux `import()` du même spécificateur ne
+// `chargeLesEcransDeLAccueil`. Deux `import()` du même spécificateur ne
 // téléchargent qu'une fois — le registre de modules dédoublonne — mais encore
 // faut-il que ce soit LITTÉRALEMENT le même spécificateur, sinon le bundler
 // émet deux morceaux et le préchargement ne sert plus à rien.
@@ -48,11 +49,8 @@ const CHARGEURS_DE_L_ACCUEIL = [
   chargeAccount,
 ];
 
-/** `navigator.connection` n'est pas dans les types du DOM : il reste un brouillon. */
-type NavigateurEconome = Navigator & { connection?: { saveData?: boolean } };
-
 /**
- * PRÉCHARGE LES ÉCRANS DE L'ACCUEIL DÈS QUE LE FIL PRINCIPAL SOUFFLE.
+ * LES CINQ ÉCRANS EN UN SEUL CHARGEUR, pour `useIdlePrefetch` du socle.
  *
  * Sans préchargement, le morceau d'un écran n'est demandé qu'AU CLIC : un
  * aller-retour réseau complet, payé au pire moment — pendant que le reste du
@@ -61,42 +59,20 @@ type NavigateurEconome = Navigator & { connection?: { saveData?: boolean } };
  * mister-settle, 161 ms sur mister-molkky, pendant lesquelles l'URL indique
  * déjà la nouvelle route et l'écran affiche encore l'ancien.
  *
+ * Le socle ne lance un chargeur qu'UNE fois — il le reconnaît à son identité,
+ * d'où une fonction de module et non une flèche écrite dans le composant — et
+ * n'en laisse échapper aucun rejet. `Promise.allSettled` tient la même
+ * promesse à l'intérieur : un morceau qui n'arrive pas n'empêche pas les
+ * quatre autres de partir, et n'est pas un incident. Au clic, `lazy`
+ * redemandera le morceau et c'est LUI qui portera l'erreur, dans son propre
+ * `Suspense`.
+ *
  * N'entre PAS dans `bundleBudget.preloadGzipKb` : ce budget ne compte que ce
  * qui est `modulepreload` dans le document, et un `import()` tardif n'y entre
  * pas.
  */
-function usePrechargeLesEcransDeLAccueil() {
-  useEffect(() => {
-    // `saveData` : le visiteur a demandé qu'on épargne son forfait. On ne
-    // télécharge alors que ce qu'il demande vraiment — et c'est précisément
-    // pour ce cas-là que l'accueil, lui, sait désormais dire qu'il charge.
-    if ((navigator as NavigateurEconome).connection?.saveData) return;
-
-    let annule = false;
-    const precharge = () => {
-      if (annule) return;
-      // Un échec ici est sans conséquence : au clic, `lazy` redemandera le
-      // morceau et c'est LUI qui portera l'erreur, dans son propre `Suspense`.
-      for (const charge of CHARGEURS_DE_L_ACCUEIL)
-        void charge().catch(() => {});
-    };
-
-    // `requestIdleCallback` manque encore à Safari avant la 17 ; le repli
-    // minuté vaut mieux que rien.
-    if (typeof window.requestIdleCallback === 'function') {
-      const id = window.requestIdleCallback(precharge, { timeout: 3000 });
-      return () => {
-        annule = true;
-        window.cancelIdleCallback?.(id);
-      };
-    }
-    const id = window.setTimeout(precharge, 1200);
-    return () => {
-      annule = true;
-      window.clearTimeout(id);
-    };
-  }, []);
-}
+const chargeLesEcransDeLAccueil = () =>
+  Promise.allSettled(CHARGEURS_DE_L_ACCUEIL.map(charge => charge()));
 
 const Create = lazy(() => chargeCreate().then(m => ({ default: m.Create })));
 const QuizEditor = lazy(() =>
@@ -153,7 +129,13 @@ function ConfigError() {
 }
 
 export function App() {
-  usePrechargeLesEcransDeLAccueil();
+  // PRÉCHARGE LES ÉCRANS DE L'ACCUEIL DÈS QUE LE FIL PRINCIPAL SOUFFLE — et le
+  // socle décide du reste : `requestIdleCallback` plafonné à 3 s, un minuteur
+  // du même délai sur Safari avant la 17, et rien du tout quand le visiteur a
+  // demandé qu'on épargne son forfait (`saveData`) ou que la connexion est en
+  // 2G. C'est précisément pour ces cas-là que l'accueil, lui, sait dire qu'il
+  // charge.
+  useIdlePrefetch(chargeLesEcransDeLAccueil, { timeout: 3000 });
   const lang = useLang(s => s.lang);
   useEffect(() => {
     document.documentElement.lang = lang;
