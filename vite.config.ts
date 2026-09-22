@@ -35,10 +35,35 @@ export default defineConfig(({ command }) => {
        * entrer dans la liste de `modulepreload` de l'entrée — mesuré le
        * 16/09/2026 sur miss-ticket-pwa, 435,4 kB préchargés au lieu de
        * 280,1. `resolveDependencies` l'en retire.
+       *
+       * ET IL FAUT UNE TROISIÈME OPTION, parce que les deux premières
+       * fabriquaient une URL QUI MEURT À CHAQUE DÉPLOIEMENT.
+       *
+       * Le morceau Sentry est le SEUL que l'entrée référence sans qu'il soit
+       * précaché — c'était le but. Mais son nom de fichier portait une
+       * empreinte de contenu : `sentry-EYLFX1f0.js`. Le service worker sert la
+       * coquille précachée jusqu'à ce que l'utilisateur accepte la mise à
+       * jour ; cette coquille-là demande l'ANCIENNE empreinte, que le
+       * déploiement suivant a supprimée de `assets/`. Résultat mesuré le
+       * 22/09/2026 sur le site en ligne : HTTP 404, et « Échec du chargement
+       * pour le module » dans la console. `initSentry` avale l'échec (son
+       * `try/catch`), donc l'application ne casse pas — elle rapporte
+       * simplement ses erreurs à personne, sans le dire.
+       *
+       * Un nom SANS empreinte supprime la cause : l'URL ne change plus, le
+       * déploiement écrase le fichier, et la coquille périmée charge la version
+       * courante. Rien n'est perdu au cache, parce qu'il n'y avait rien à
+       * gagner : GitHub Pages répond `Cache-Control: max-age=600` sur TOUS les
+       * fichiers, empreinte ou pas — mesuré, pas supposé.
+       *
+       * Les trois options se lisent ensemble ou pas du tout : le filtre de
+       * `modulePreload` et le `globIgnores` visaient `sentry-*`, motif que ce
+       * fichier ne porte plus. Ils acceptent désormais les deux formes, pour
+       * qu'un retour de l'empreinte ne les rende pas muets en silence.
        */
       modulePreload: {
         resolveDependencies: (_fichier: string, deps: string[]) =>
-          deps.filter(d => !/sentry-/.test(d)),
+          deps.filter(d => !/(^|\/)sentry(-[\w-]+)?\.js$/.test(d)),
       },
       rollupOptions: {
         output: {
@@ -47,6 +72,10 @@ export default defineConfig(({ command }) => {
               ? 'sentry'
               : undefined;
           },
+          chunkFileNames: chunk =>
+            chunk.name === 'sentry'
+              ? 'assets/sentry.js'
+              : 'assets/[name]-[hash].js',
         },
       },
     },
@@ -98,8 +127,14 @@ export default defineConfig(({ command }) => {
            *
            * Hors précache, il part au premier `initSentry` réussi, et jamais si
            * l'observabilité reste éteinte : rapporter une erreur demande le réseau.
+           *
+           * Le motif accepte les DEUX formes de nom. Le fichier s'appelle
+           * désormais `sentry.js`, sans empreinte (cf. `chunkFileNames` plus
+           * haut, et le 404 qu'elle causait à chaque déploiement) ; `sentry-*`
+           * reste accepté pour qu'un retour de l'empreinte ne fasse pas entrer
+           * 158 kB de SDK dans le précache sans que rien ne le signale.
            */
-          globIgnores: ['**/sentry-*.js'],
+          globIgnores: ['**/sentry.js', '**/sentry-*.js'],
           navigateFallback: 'index.html',
           cleanupOutdatedCaches: true,
           runtimeCaching: [
