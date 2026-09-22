@@ -36,11 +36,11 @@
     "_pourquoi": "RELEVÉ DE 689 À 746 LE 19/09/2026, APRÈS la bascule PostHog (ADR 0012). Le plafond tenait sans rien toucher — 677,9 kB pour 689 — et c'est justement le piège : 11,1 kB de marge, soit 1,6 %, là où la convention du parc en laisse 10 %. Un budget qu'on ne relève pas parce qu'il passe DE JUSTESSE casse au commit suivant, sur un changement sans rapport, et c'est le suivant qui cherche pourquoi. 746 = mesure + 10 %. Le morceau PostHog est DIFFÉRÉ : il n'est chargé qu'après l'accord, et preloadGzipKb — inchangé — garde le chemin critique."
   },
   "dependencies": {
-    "@sentry/react": "^10.75.0",
+    "@sentry/react": "^10.75.2",
     "firebase": "^12.19.0",
     "lucide-react": "^1.47.0",
     "motion": "^12.43.0",
-    "posthog-js": "^1.434.2",
+    "posthog-js": "^1.434.7",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-router-dom": "^7.18.4",
@@ -66,7 +66,7 @@
     "cross-env": "^10.1.0",
     "eslint": "^10.11.0",
     "husky": "^9.1.7",
-    "jsdom": "^30.1.0",
+    "jsdom": "^30.1.1",
     "lint-staged": "^17.5.1",
     "prettier": "^3.9.8",
     "rollup-plugin-visualizer": "^7.1.1",
