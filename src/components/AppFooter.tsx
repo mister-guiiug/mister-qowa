@@ -6,11 +6,10 @@ import { useT, useLang, LANGS } from '../i18n';
  * Pied de page de l'ACCUEIL : les commandes propres à l'app — langue, son,
  * rechargement.
  *
- * LES LIENS FAMILLE N'Y SONT PLUS. Ils y étaient, et cet écran est le seul à
- * rendre ce composant : le code source et le soutien n'existaient donc que sur
- * l'accueil. La règle famille du 05/09/2026 les veut aussi ailleurs, et la
- * réponse du socle est de les rendre dans la COQUILLE, hors des routes. C'est
- * ce que fait `App.tsx`.
+ * LES LIENS FAMILLE N'Y SONT PAS : ils ont leur composant, `FamilyLinks`, que
+ * l'accueil rend juste après celui-ci et que le Compte rend aussi — les deux
+ * écrans, et seulement eux, que la règle famille du 06/09/2026 leur réserve.
+ * Rendus un temps par la coquille, ils suivaient une partie en cours.
  */
 export function AppFooter() {
   const t = useT();
