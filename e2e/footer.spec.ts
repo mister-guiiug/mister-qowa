@@ -8,16 +8,23 @@ import { test, expect } from '@playwright/test';
  * `FamilyLinks.tsx` l'écrit entre guillemets doubles. Un test vaut mieux qu'un
  * codemod plus malin — il ne dépend pas de la façon dont la ligne est écrite.
  *
- * SUR UN AUTRE ÉCRAN QUE L'ACCUEIL, délibérément : ce pied de page est rendu
- * par la COQUILLE, hors des routes. C'est toute la différence avec la version
- * précédente, où les liens famille n'existaient que sur l'accueil — donc jamais
- * sur l'écran où l'on rencontre le problème qu'on veut signaler.
+ * SUR LE COMPTE, ET NULLE PART AILLEURS QU'AVEC L'ACCUEIL. Ce test a d'abord
+ * vérifié l'inverse : les liens étaient rendus par la coquille, sur tous les
+ * écrans. La règle famille du 06/09/2026 les réserve à l'accueil et aux
+ * Réglages — ici, le Compte — et `FamilyLinks` a quitté la coquille le
+ * 24/09/2026. Le test vérifie donc les deux moitiés de la règle : présents sur
+ * le Compte, absents d'un écran de jeu (« Mes parties »).
  */
-test("« Signaler un problème » est présent hors de l'accueil @critical", async ({
+test('« Signaler un problème » est sur le Compte, et pas dans « Mes parties » @critical', async ({
   page,
 }) => {
   await page.goto('/');
   await page.getByRole('button', { name: /Mes parties/ }).click();
+  await expect(page.locator('[data-dwc="footer-issues"]')).toHaveCount(0);
+  await expect(page.locator('[data-dwc="footer-source"]')).toHaveCount(0);
+
+  await page.goto('/');
+  await page.getByRole('button', { name: /Mon compte/ }).click();
 
   const signaler = page.locator('[data-dwc="footer-issues"]');
   await expect(signaler).toBeVisible();
@@ -32,8 +39,7 @@ test("« Signaler un problème » est présent hors de l'accueil @critical", asy
   expect(href).toContain('template=bug.yml');
   expect(href).toContain('environnement=');
 
-  // Le code source aussi, sur le même écran : lui non plus n'était nulle part
-  // ailleurs que sur l'accueil.
+  // Le code source aussi, sur le même écran.
   await expect(page.locator('[data-dwc="footer-source"]')).toBeVisible();
 });
 
