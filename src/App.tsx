@@ -13,7 +13,6 @@ import { useIdlePrefetch } from '@mister-guiiug/dev-pwa-config/react/use-prefetc
 import { Home } from './routes/Home';
 import { UpdatePrompt } from './components/UpdatePrompt';
 import { ConnectionBanner } from './components/ConnectionBanner';
-import { FamilyLinks } from './components/FamilyLinks';
 import { Spinner } from './lib/ui';
 import { useLang, tStatic } from './i18n';
 import { isConfigOk } from './firebase/env';
@@ -179,11 +178,9 @@ export function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>
-          {/* HORS des routes : le code source et le soutien sont ainsi sur
-              TOUS les écrans, et plus seulement sur l'accueil — la règle
-              famille. Les libellés viennent de l'i18n de l'app, qui connaît
-              cinq langues là où le socle en connaît deux. */}
-          <FamilyLinks />
+          {/* PAS DE LIENS FAMILLE ICI : la règle du 06/09/2026 les veut sur
+              l'accueil et le Compte seulement — voir Home et Account. Sous
+              toutes les routes, ils suivaient une partie en cours. */}
           {/* Une `region`, pas une boîte modale : elle ne recouvre rien et ne
               piège pas le focus — un bandeau qui bloquerait une partie en cours
               serait exactement le « dark pattern » que le RGPD nomme. Ne rend

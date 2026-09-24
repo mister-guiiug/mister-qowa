@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Screen, Button } from '../lib/ui';
 import { AppFooter } from '../components/AppFooter';
+import { FamilyLinks } from '../components/FamilyLinks';
 import { PwaInstallPrompt } from '@mister-guiiug/dev-pwa-config/react/pwa-install-prompt';
 import { useGameStore } from '../store/gameStore';
 import { useProfile } from '../store/profileStore';
@@ -174,6 +175,9 @@ export function Home() {
           de reproposer l'installation à qui l'avait déjà écartée. */}
       <PwaInstallPrompt dismissKey="mister-qowa:install-dismissed" />
       <AppFooter />
+      {/* Le code source, le soutien et le signalement : ici et sur le Compte,
+          nulle part ailleurs (règle famille du 06/09/2026). */}
+      <FamilyLinks />
     </Screen>
   );
 }

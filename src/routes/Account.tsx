@@ -6,6 +6,7 @@ import { createLogger } from '@mister-guiiug/dev-pwa-config/logger';
 import { Screen, Card, Button } from '../lib/ui';
 import { deleteMyAccount, outcomeMessageKey } from '../lib/account';
 import { useT, type Key } from '../i18n';
+import { FamilyLinks } from '../components/FamilyLinks';
 
 const log = createLogger('account');
 
@@ -206,6 +207,9 @@ export function Account() {
           onCancel={() => setAskSignOut(false)}
         />
       ) : null}
+      {/* Le code source, le soutien et le signalement : ici et sur l'accueil,
+          nulle part ailleurs (règle famille du 06/09/2026). */}
+      <FamilyLinks />
     </Screen>
   );
 }

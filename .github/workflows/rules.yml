@@ -28,10 +28,10 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       # Les émulateurs RTDB et Firestore (firebase-tools ≥ 15) exigent Java 21+.
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '25'
 
       - name: Tests des rules (émulateur)
         run: npm run test:rules
