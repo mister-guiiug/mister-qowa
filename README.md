@@ -49,5 +49,14 @@ Dossier complet dans [`docs/`](docs/) :
 
 ## Reste à faire
 
-Créer le repo GitHub + Pages, projet Firebase + `.env.local`, icônes PNG, activer App Check en prod
-(`enforceAppCheck: true`). Périmètre V1/V2 : voir `docs/08-deploiement-roadmap.md`.
+Le dépôt, les Pages, le projet Firebase et les icônes sont en place. Il reste **une seule chose, et elle se
+fait dans la console Firebase** : activer **App Check** en production. Tant qu'il ne l'est pas, la base
+accepte les requêtes de n'importe quel script qui connaît la config web (publique par nature) ; l'app le
+signale d'ailleurs en production par une erreur dans la console du navigateur.
+
+Depuis le passage en mode Spark, il n'y a plus de Cloud Functions : le `enforceAppCheck: true` des `onCall`
+qu'annonçait cette section n'a plus d'objet. L'activation passe par la clé de site, puis par l'_enforcement_
+sur la Realtime Database. La marche à suivre est dans
+[`docs/FIREBASE_SETUP.md` § 4](docs/FIREBASE_SETUP.md#4-app-check-anti-abus--d7d8).
+
+Périmètre V1/V2 : voir `docs/08-deploiement-roadmap.md`.
