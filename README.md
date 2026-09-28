@@ -13,8 +13,8 @@ Membre de la famille `miss-*`/`mister-*` (owner GitHub **mister-guiiug**).
   host écrit l'état/scores, que `/answers` n'est lisible que par le host, et qu'un joueur n'écrit que sa propre
   réponse (`serverTs` forcé), sa fiche et ses réactions. La variante **Cloud Functions autoritaires** (plan Blaze)
   reste documentée dans `docs/07-backend.md` (chemin de montée en charge).
-- **Ce qui part vers des tiers** : Sentry (région européenne) démarre à l'ouverture, sans consentement (il signale la
-  session et reçoit un rapport à chaque erreur) ; PostHog (nuage européen) ne mesure l'audience qu'après accord dans le
+- **Ce qui part vers des tiers** : Sentry (région européenne) démarre à l'ouverture, sans consentement, et ne reçoit
+  un rapport qu'en cas d'erreur ; PostHog (nuage européen) ne mesure l'audience qu'après accord dans le
   bandeau ; la génération par IA envoie le sujet ou le texte à Gemini ou à Anthropic, avec la clé de l'utilisateur ;
   les polices sont chargées depuis Google Fonts.
 
