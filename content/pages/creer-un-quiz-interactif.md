@@ -1,6 +1,9 @@
 ---
 title: Créer un quiz interactif : questions, règles et animation
 description: Créer un quiz interactif en direct : choisir ses questions, régler le temps et les points, faire rejoindre les joueurs par QR code, animer jusqu'au podium.
+date: 2026-09-25
+updated: 2026-09-29
+answer: Pour créer un quiz interactif, écrivez des questions courtes et variées (choix multiple, vrai ou faux, réponse libre, sondage), réglez le temps et les points de chacune, puis ouvrez une salle : les joueurs la rejoignent sur leur téléphone avec un code ou un QR code, répondent en direct, et le classement s'affiche après chaque question.
 ---
 
 # Créer un quiz interactif en direct, de la première question au podium
@@ -29,6 +32,8 @@ Avant d'écrire la moindre question, répondez à trois questions :
 3. **Pas d'ambiguïté.** Évitez les questions à deux réponses défendables et les chiffres obscurs, et vérifiez chaque réponse dans une source fiable.
 4. **Une explication courte** après la réponse : les joueurs apprennent quelque chose, même quand ils se trompent.
 5. **Une difficulté qui monte**, avec quelques questions faciles au début pour que tout le monde entre dans le jeu.
+
+Pour démarrer, piochez dans nos [idées de questions pour un quiz de soirée](idees-de-questions-pour-un-quiz.html), classées par thème.
 
 ## Régler le temps et les points
 
@@ -89,3 +94,10 @@ Par défaut, non : les accents, les majuscules et les espaces en trop sont ignor
 ### Faut-il une connexion internet ?
 
 Oui. L'animateur et les joueurs doivent être connectés pendant toute la partie en direct.
+
+## Sources
+
+- [Mister Qowa : le calcul des points dans le code source](https://github.com/mister-guiiug/mister-qowa/blob/main/shared/scoring.ts)
+- [Google : obtenir une clé d'API Gemini, en anglais](https://ai.google.dev/gemini-api/docs/api-key)
+- [Anthropic : prise en main de l'API Claude, en anglais](https://platform.claude.com/docs/en/api/overview)
+- [Wikipédia : Kahoot!](https://fr.wikipedia.org/wiki/Kahoot!)
