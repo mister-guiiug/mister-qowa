@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, LogOut, TriangleAlert } from 'lucide-react';
 import { ConfirmDialog } from '@mister-guiiug/dev-pwa-config/react/confirm-dialog';
+import { ConsentSection } from '@mister-guiiug/dev-pwa-config/react/consent-section';
+import { LabelsProvider } from '@mister-guiiug/dev-pwa-config/react/labels';
 import { createLogger } from '@mister-guiiug/dev-pwa-config/logger';
 import { Screen, Card, Button } from '../lib/ui';
 import { deleteMyAccount, outcomeMessageKey } from '../lib/account';
-import { useT, type Key } from '../i18n';
+import { useT, useLang, type Key } from '../i18n';
 import { FamilyLinks } from '../components/FamilyLinks';
 
 const log = createLogger('account');
@@ -32,6 +34,7 @@ const log = createLogger('account');
  */
 export function Account() {
   const t = useT();
+  const lang = useLang(s => s.lang);
   const nav = useNavigate();
   const [uid, setUid] = useState<string | null>(null);
   const [typed, setTyped] = useState('');
@@ -151,6 +154,21 @@ export function Account() {
           <LogOut className="size-4" /> {t('account.signOut')}
         </Button>
       </Card>
+
+      {/* Revenir sur son choix de mesure d'audience : le retrait se fait ici,
+          en un clic (RGPD, art. 7.3). Mêmes clé et chargeur que le bandeau.
+          Les classes de `Card` sont posées sur la section elle-même : sans clé
+          de mesure elle ne rend rien, là où `<Card>` laisserait une carte
+          vide. `LabelsProvider`, parce que la coquille ne relaie pas la langue
+          de l'app aux libellés du socle. */}
+      <LabelsProvider locale={lang}>
+        <ConsentSection
+          posthogKey={import.meta.env.VITE_POSTHOG_KEY}
+          loader={() => import('posthog-js/dist/module.slim.js')}
+          className="mt-4 rounded-3xl bg-white/5 p-5 ring-1 ring-white/10 backdrop-blur"
+          titleClassName="font-display text-xl"
+        />
+      </LabelsProvider>
 
       {/* Zone dangereuse : cadre rouge, titre explicite, et la liste de ce qui
           part — pas « toutes vos données », qui ne dit rien de vérifiable. */}

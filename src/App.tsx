@@ -8,6 +8,7 @@ import {
 } from 'react-router-dom';
 import { LazyMotion, domMax, MotionConfig } from 'framer-motion';
 import { ConsentBanner } from '@mister-guiiug/dev-pwa-config/react/consent-banner';
+import { LabelsProvider } from '@mister-guiiug/dev-pwa-config/react/labels';
 import { usePageViews } from '@mister-guiiug/dev-pwa-config/react/use-page-views';
 import { useIdlePrefetch } from '@mister-guiiug/dev-pwa-config/react/use-prefetch';
 import { Home } from './routes/Home';
@@ -184,11 +185,16 @@ export function App() {
           {/* Une `region`, pas une boîte modale : elle ne recouvre rien et ne
               piège pas le focus — un bandeau qui bloquerait une partie en cours
               serait exactement le « dark pattern » que le RGPD nomme. Ne rend
-              RIEN tant que `VITE_POSTHOG_KEY` n'est pas posée. */}
-          <ConsentBanner
-            posthogKey={import.meta.env.VITE_POSTHOG_KEY}
-            loader={() => import('posthog-js/dist/module.slim.js')}
-          />
+              RIEN tant que `VITE_POSTHOG_KEY` n'est pas posée.
+              `LabelsProvider` : sans lui, la question était posée en français
+              quelle que soit la langue choisie — la coquille ne relaie pas la
+              langue de l'app aux libellés du socle. */}
+          <LabelsProvider locale={lang}>
+            <ConsentBanner
+              posthogKey={import.meta.env.VITE_POSTHOG_KEY}
+              loader={() => import('posthog-js/dist/module.slim.js')}
+            />
+          </LabelsProvider>
           <UpdatePrompt />
           {/* L'INVITE D'INSTALLATION A QUITTÉ LA COQUILLE pour l'accueil. Le
               bandeau maison était une barre flottante, celui du socle est un
