@@ -30,5 +30,8 @@ jobs:
       # Variable absente = chaîne vide = aucune mesure. Elle n'active donc
       # rien par elle-même : elle rend la variable capable d'agir.
       build-env: |
+        VITE_ERROR_ENDPOINT=${{ vars.VITE_ERROR_ENDPOINT }}
+        VITE_FIREBASE_APPCHECK_KEY=${{ vars.VITE_FIREBASE_APPCHECK_KEY }}
         VITE_POSTHOG_KEY=${{ vars.VITE_POSTHOG_KEY }}
+        VITE_REQUIRE_APPCHECK=${{ vars.VITE_REQUIRE_APPCHECK }}
         VITE_SENTRY_DSN=${{ vars.VITE_SENTRY_DSN }}
