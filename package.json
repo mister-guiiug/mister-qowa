@@ -36,15 +36,16 @@
     "_pourquoi": "RELEVÉ DE 689 À 746 LE 19/09/2026, APRÈS la bascule PostHog (ADR 0012). Le plafond tenait sans rien toucher — 677,9 kB pour 689 — et c'est justement le piège : 11,1 kB de marge, soit 1,6 %, là où la convention du parc en laisse 10 %. Un budget qu'on ne relève pas parce qu'il passe DE JUSTESSE casse au commit suivant, sur un changement sans rapport, et c'est le suivant qui cherche pourquoi. 746 = mesure + 10 %. Le morceau PostHog est DIFFÉRÉ : il n'est chargé qu'après l'accord, et preloadGzipKb — inchangé — garde le chemin critique."
   },
   "dependencies": {
-    "@sentry/react": "^11.4.0",
+    "@sentry/react": "^11.5.0",
     "firebase": "^12.19.0",
     "lucide-react": "^1.52.0",
     "motion": "^14.0.0",
-    "posthog-js": "^1.438.1",
+    "posthog-js": "^1.438.2",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-router-dom": "^7.18.4",
     "uqr": "^0.1.3",
+    "web-vitals": "^6.2.3",
     "zod": "^4.6.5",
     "zustand": "^5.0.15"
   },
@@ -61,7 +62,7 @@
     "@types/node": "^26.6.4",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "@vitejs/plugin-react": "^6.1.1",
+    "@vitejs/plugin-react": "^6.1.2",
     "@vitest/coverage-v8": "^5.0.3",
     "eslint": "^10.12.0",
     "husky": "^9.1.7",
@@ -81,6 +82,9 @@
     "@grpc/grpc-js": "^1.14.5",
     "eslint-plugin-jsx-a11y": {
       "eslint": "$eslint"
+    },
+    "@rolldown/plugin-babel": {
+      "@babel/plugin-transform-runtime": "^7.29.0"
     }
   }
 }
