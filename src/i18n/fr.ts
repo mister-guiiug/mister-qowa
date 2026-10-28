@@ -61,8 +61,6 @@ export const fr = {
   'footer.reload': 'Recharger',
   'footer.soundOn': 'Son activé',
   'footer.soundOff': 'Son coupé',
-  'footer.muteAria': 'Couper le son',
-  'footer.unmuteAria': 'Activer le son',
   'footer.langAria': 'Langue',
 
   // bibliothèque / création

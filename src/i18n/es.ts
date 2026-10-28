@@ -65,8 +65,6 @@ export const es = {
   'footer.reload': 'Recargar',
   'footer.soundOn': 'Sonido activado',
   'footer.soundOff': 'Sonido apagado',
-  'footer.muteAria': 'Silenciar el sonido',
-  'footer.unmuteAria': 'Activar el sonido',
   'footer.langAria': 'Idioma',
 
   // biblioteca / creación

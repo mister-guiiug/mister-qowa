@@ -64,8 +64,6 @@ export const de = {
   'footer.reload': 'Neu laden',
   'footer.soundOn': 'Ton an',
   'footer.soundOff': 'Ton aus',
-  'footer.muteAria': 'Ton stummschalten',
-  'footer.unmuteAria': 'Ton aktivieren',
   'footer.langAria': 'Sprache',
 
   // Bibliothek / Erstellung

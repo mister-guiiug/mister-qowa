@@ -68,8 +68,6 @@ export const en = {
   'footer.reload': 'Reload',
   'footer.soundOn': 'Sound on',
   'footer.soundOff': 'Sound off',
-  'footer.muteAria': 'Mute sound',
-  'footer.unmuteAria': 'Enable sound',
   'footer.langAria': 'Language',
 
   // library / create
