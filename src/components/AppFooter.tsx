@@ -29,7 +29,9 @@ export function AppFooter() {
             type="button"
             onClick={() => setLang(l.code)}
             aria-pressed={lang === l.code}
-            aria-label={l.label}
+            // Le nom commence par ce qui est écrit (« FR ») : WCAG 2.5.3,
+            // axe 4.14, le 29/10/2026.
+            aria-label={`${l.code.toUpperCase()}, ${l.label}`}
             className={`rounded-lg px-2 py-1 transition ${
               lang === l.code ? 'bg-white/10 text-white' : 'hover:text-white'
             }`}
@@ -43,7 +45,9 @@ export function AppFooter() {
           type="button"
           onClick={() => setSoundOn(!soundOn)}
           aria-pressed={soundOn}
-          aria-label={soundOn ? t('footer.muteAria') : t('footer.unmuteAria')}
+          // Pas d'aria-label : le bouton montre son état (« Son activé ») et
+          // aria-pressed le dit ; un nom d'action à part (« Couper le son »)
+          // laissait ce texte hors du nom accessible (WCAG 2.5.3, axe 4.14).
           className="inline-flex items-center gap-1.5 hover:text-white"
         >
           {soundOn ? (

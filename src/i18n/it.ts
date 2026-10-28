@@ -64,8 +64,6 @@ export const it = {
   'footer.reload': 'Ricarica',
   'footer.soundOn': 'Audio attivo',
   'footer.soundOff': 'Audio disattivato',
-  'footer.muteAria': "Disattiva l'audio",
-  'footer.unmuteAria': "Attiva l'audio",
   'footer.langAria': 'Lingua',
 
   // libreria / creazione
