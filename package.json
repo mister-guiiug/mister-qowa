@@ -39,7 +39,7 @@
     "@sentry/react": "^11.10.0",
     "firebase": "^13.1.0",
     "lucide-react": "^1.64.0",
-    "motion": "^14.7.1",
+    "motion": "^14.8.0",
     "posthog-js": "^1.442.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
