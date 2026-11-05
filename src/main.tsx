@@ -23,7 +23,7 @@ void initSentry({
   dsn: import.meta.env.VITE_SENTRY_DSN,
   environment: import.meta.env.MODE,
   // `loader` rend l’import analysable par Vite, ce qui permet au
-  // `manualChunks` de ranger le SDK dans son propre morceau.
+  // groupe `codeSplitting` de ranger le SDK dans son propre morceau.
   loader: () => import('@sentry/react'),
 });
 

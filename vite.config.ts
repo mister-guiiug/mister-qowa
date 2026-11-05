@@ -29,10 +29,10 @@ export default defineConfig(({ command }) => {
       chunkSizeWarningLimit: 900,
       /*
        * NOMMER N'EST PAS PRÉCHARGER, et il faut les deux options pour les
-       * séparer. `manualChunks` donne au morceau Sentry un NOM stable —
-       * sans règle, Rollup le nomme d'après le module (`esm-*`), instable
-       * d'une version à l'autre : le `globIgnores` du service worker
-       * n'aurait pas de cible fiable. Mais nommer un morceau le fait
+       * séparer. Le groupe `codeSplitting` donne au morceau Sentry un NOM
+       * stable — sans règle, Rollup le nomme d'après le module (`esm-*`),
+       * instable d'une version à l'autre : le `globIgnores` du service
+       * worker n'aurait pas de cible fiable. Mais nommer un morceau le fait
        * entrer dans la liste de `modulepreload` de l'entrée — mesuré le
        * 16/09/2026 sur miss-ticket-pwa, 435,4 kB préchargés au lieu de
        * 280,1. `resolveDependencies` l'en retire.
@@ -68,10 +68,44 @@ export default defineConfig(({ command }) => {
       },
       rollupOptions: {
         output: {
-          manualChunks(id: string) {
-            return id.replace(/\\/g, '/').includes('/@sentry/')
-              ? 'sentry'
-              : undefined;
+          /*
+           * REACT HORS DU MORCEAU SENTRY, PAR UN GROUPE QUI PASSE AVANT LUI.
+           *
+           * Le morceau était posé par `manualChunks`, que Rolldown traduit en
+           * un groupe de `codeSplitting`… qui capture aussi, par défaut
+           * (`includeDependenciesRecursively`), les DÉPENDANCES des modules
+           * qu'il prend. `@sentry/react` importe `react` : React est parti dans
+           * `sentry.js` (450 kB, `react.transitional.element` dedans), et
+           * l'entrée a commencé par `import{n}from"./sentry.js"`. Ce fichier
+           * étant hors du précache, le site ne démarrait plus hors ligne —
+           * constaté en production le 05/11/2026, rejoué depuis par
+           * `e2e/hors-ligne.spec.ts`. Les applications du parc qui rangent
+           * React à part (`react-vendor`) y échappaient sans le savoir.
+           *
+           * Le groupe `react`, de priorité plus haute, prend React le premier ;
+           * le groupe `sentry` ne peut plus l'emporter. React est la seule
+           * dépendance que Sentry partage avec l'application : c'est son pair.
+           *
+           * LA RÉCURSION EST GARDÉE, et c'est voulu. Coupée
+           * (`includeDependenciesRecursively: false`), elle laissait
+           * `web-vitals` — dépendance de `@sentry/browser-utils` — dans un
+           * morceau à part, avec la façade de l'`import()` : ce morceau
+           * importait `sentry.js`, qui l'importait en retour. Un cycle entre
+           * morceaux, mesuré le 05/11/2026, et que seul un DSN posé aurait
+           * exécuté.
+           */
+          codeSplitting: {
+            groups: [
+              {
+                name: 'react',
+                test: /[\\/]node_modules[\\/]react[\\/]/,
+                priority: 1,
+              },
+              {
+                name: 'sentry',
+                test: /[\\/]node_modules[\\/]@sentry[\\/]/,
+              },
+            ],
           },
           chunkFileNames: chunk =>
             chunk.name === 'sentry'
@@ -150,6 +184,36 @@ export default defineConfig(({ command }) => {
                 expiration: {
                   maxEntries: 60,
                   maxAgeSeconds: 60 * 60 * 24 * 30,
+                },
+                cacheableResponse: { statuses: [0, 200] },
+              },
+            },
+            /*
+             * LES POLICES GOOGLE, chargées par `index.html` et que rien ne
+             * gardait : hors ligne, l'app retombait sur les polices système
+             * (audit du 05/11/2026). Deux hôtes, deux régimes. La feuille de
+             * style varie selon le navigateur, on la sert du cache en la
+             * rafraîchissant ; les fichiers de `fonts.gstatic.com` portent une
+             * URL versionnée, ils ne changent jamais. Le `<link>` n'a pas de
+             * `crossorigin` : la feuille arrive OPAQUE (statut 0), d'où le 0.
+             */
+            {
+              urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+              handler: 'StaleWhileRevalidate',
+              options: {
+                cacheName: 'qowa-google-fonts-css',
+                expiration: { maxEntries: 10 },
+                cacheableResponse: { statuses: [0, 200] },
+              },
+            },
+            {
+              urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'qowa-google-fonts',
+                expiration: {
+                  maxEntries: 30,
+                  maxAgeSeconds: 60 * 60 * 24 * 365,
                 },
                 cacheableResponse: { statuses: [0, 200] },
               },
