@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, LogOut, TriangleAlert } from 'lucide-react';
 import { ConfirmDialog } from '@mister-guiiug/dev-pwa-config/react/confirm-dialog';
 import { ConsentSection } from '@mister-guiiug/dev-pwa-config/react/consent-section';
+import { PrivacyNotice } from '@mister-guiiug/dev-pwa-config/react/privacy-notice';
 import { LabelsProvider } from '@mister-guiiug/dev-pwa-config/react/labels';
 import { createLogger } from '@mister-guiiug/dev-pwa-config/logger';
 import { Screen, Card, Button } from '../lib/ui';
@@ -162,6 +163,11 @@ export function Account() {
           vide. `LabelsProvider`, parce que la coquille ne relaie pas la langue
           de l'app aux libellés du socle. */}
       <LabelsProvider locale={lang}>
+        <PrivacyNotice
+          env={import.meta.env}
+          className="mt-4 rounded-3xl bg-white/5 p-5 ring-1 ring-white/10 backdrop-blur"
+          titleClassName="font-display text-xl"
+        />
         <ConsentSection
           posthogKey={import.meta.env.VITE_POSTHOG_KEY}
           loader={() => import('posthog-js/dist/module.slim.js')}
