@@ -18,6 +18,11 @@ Membre de la famille `miss-*`/`mister-*` (owner GitHub **mister-guiiug**).
   bandeau ; la génération par IA envoie le sujet ou le texte à Gemini ou à Anthropic, avec la clé de l'utilisateur ;
   les polices sont chargées depuis Google Fonts.
 
+## Guides
+
+- [Créer un quiz interactif](https://mister-guiiug.github.io/mister-qowa/creer-un-quiz-interactif.html)
+- [Idées de questions pour un quiz](https://mister-guiiug.github.io/mister-qowa/idees-de-questions-pour-un-quiz.html)
+
 ## Statut — 🎮 JOUABLE EN LIGNE → **https://mister-guiiug.github.io/mister-qowa/**
 
 Boucle live complète : héberger un quiz → PIN → joueurs → questions chronométrées (choix multiple, vrai/faux, réponse
