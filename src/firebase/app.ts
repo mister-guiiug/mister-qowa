@@ -15,6 +15,7 @@ import {
   type User,
 } from 'firebase/auth';
 import {
+  forceWebSockets,
   getDatabase,
   connectDatabaseEmulator,
   type Database,
@@ -71,6 +72,15 @@ function ensure(): void {
   app = initializeApp(firebaseConfig);
   initAppCheck(app); // doit précéder getDatabase (et l'init Firestore lazy)
   auth = getAuth(app);
+  // WEBSOCKET SEUL, AVANT getDatabase : sinon la base pouvait ne plus JAMAIS
+  // se connecter dans un navigateur. Le SDK inscrit
+  // `firebase:previous_websocket_failure` dans le stockage local à CHAQUE
+  // ouverture du WebSocket et ne l'efface qu'une fois la connexion jugée
+  // saine ; une page fermée avant ce délai le laisse en place, et le chargement
+  // suivant démarre en long polling : des <script src="….lp?…"> (JSONP) que la
+  // CSP refuse (script-src). Il ne remonte au WebSocket qu'après une connexion
+  // en long polling : jamais. Relevé sur mister-puzzle le 24/11/2026.
+  forceWebSockets();
   db = getDatabase(app);
   // Firestore (historique) vit dans ./fs.ts, importé à la demande.
 
